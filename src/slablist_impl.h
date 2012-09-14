@@ -34,9 +34,9 @@
  * both doubly linked lists and arrays.
  *
  * The main structure of the slab list, is the slab. It is a structure that can
- * hold 1KB of data plus some metadata. The metadata is 66 bytes in size (80
- * bytes with compiler-inserted padding). The 1KB of data is carved into 8-byte
- * elements, meaning that each slab can hold 119 elements.
+ * hold 952 bytes  of data plus some metadata. The metadata is 66 bytes in size
+ * (80 bytes with compiler-inserted padding). The 952 bytes of data is carved
+ * into 8-byte elements, meaning that each slab can hold 119 elements.
  *
  * Elements can be any 8-byte sequence (64-bit integers, 64-bit double
  * precision floating point numbers, 64-bit pointers, and so on).
