@@ -1,0 +1,4 @@
+#!/usr/bin/ksh
+
+#ls | egrep -e '$drv'
+rm `ls | egrep -e '$drv'`

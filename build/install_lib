@@ -1,0 +1,13 @@
+#!/usr/bin/ksh
+
+libfname=libslablist.so.1
+libfnamebase=libslablist.so
+libdir=/usr/lib/64/
+libxlator=slablist.d
+
+cp $libfname $libdir$libfname
+ln -s $libdir$libfname $libdir$libfnamebase
+
+cp ../src/slablist.h /usr/include/slablist.h
+
+cp ../src/$libxlator /usr/lib/dtrace/$libxlator

@@ -1,0 +1,7 @@
+`libslablist` is an implementation of slab lists.
+
+Slab lists are a memory efficient data structure, that can optionally keep data
+sorted in logarithmic time.
+
+See the block comment at the top of src/slablist_impl.h for implementation
+overview.
