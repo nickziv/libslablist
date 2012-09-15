@@ -339,9 +339,6 @@
 		(*(((uint8_t)(&y))+1) = x)
 
 
-#define	IS_IX_GAP(i, s)\
-	!(s->s_bitmap[i >> 9] & (1 << ((i%64)-1)))
-
 #define	IS_SL_OBJ_SZ_LOCAL(x)\
 	(x <= 8)
 

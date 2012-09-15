@@ -11,7 +11,7 @@ typedef struct slabinfo {
 	uint16_t		si_elems;
 	uintptr_t		si_max;
 	uintptr_t		si_min;
-	uintptr_t		si_arr[120];
+	uintptr_t		si_arr[119];
 	uintptr_t		si_next;
 	uintptr_t		si_prev;
 } slabinfo_t;
@@ -38,16 +38,16 @@ typedef struct slinfo {
  * file from the latest release. Otherwise the translators won't work.
  */
 struct slab {
-        mutex_t                 s_mutex;
+        pthread_mutex_t         s_mutex;
         slab_t                  *s_next;
         slab_t                  *s_prev;
         slablist_t              *s_list;
-        uint16_t                s_elems;
+        uint8_t                 s_elems;
         uintptr_t               s_max;
         uintptr_t               s_min;
-        uintptr_t               s_arr[120];
-        uint64_t                *s_bitmap;
+        uintptr_t               s_arr[119];
 };
+
 
 struct slablist {
         pthread_mutex_t         sl_mutex;
