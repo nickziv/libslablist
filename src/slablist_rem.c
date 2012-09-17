@@ -126,31 +126,19 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		small_list_t *sml = sl->sl_head;
 		sml = sl->sl_head;
 
-SLABLIST_GOT_HERE(0);
 
 		if (sl->sl_elems < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-SLABLIST_GOT_HERE(1);
 			return (SL_ENCIRC);
 		}
-SLABLIST_GOT_HERE(2);
 
-SLABLIST_GOT_HERE(3);
 		int i = 0;
 		while (i < mod) {
-SLABLIST_GOT_HERE(4);
 			prev = sml;
 			sml = sml->sml_next;
-SLABLIST_GOT_HERE(5);
 		}
-SLABLIST_GOT_HERE(6);
 		*rdl = sml->sml_data;
-SLABLIST_GOT_HERE(7);
 		unlink_sml_node(sl, prev);
-SLABLIST_GOT_HERE(8);
-		// sml->sml_next = sml->sml_next->sml_next;
 		rm_sml_node(sml);
-SLABLIST_GOT_HERE(9);
-		// sl->sl_elems--;
 		return (SL_SUCCESS);
 	}
 }
