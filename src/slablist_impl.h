@@ -35,13 +35,17 @@
  *
  * The main structure of the slab list, is the slab. It is a structure that can
  * hold 952 bytes  of data plus some metadata. The metadata is 66 bytes in size
- * (80 bytes with compiler-inserted padding). The 952 bytes of data is carved
- * into 8-byte elements, meaning that each slab can hold 119 elements.
+ * (80 bytes with compiler-inserted padding). This makes the slab exactly 1K in
+ * size, meaning that we can fit 4 slabs on one page. The 952 bytes of data is
+ * carved into 8-byte elements, meaning that each slab can hold 119 elements.
  *
  * Elements can be any 8-byte sequence (64-bit integers, 64-bit double
  * precision floating point numbers, 64-bit pointers, and so on).
  *
  * The data to total-data ratio per slab is 952/1024 which is 93% efficiency.
+ * Increasing the number of elements per-slab increases the efficiency, but
+ * decreases performace. Empiracally, the 1K slab offers the best performace
+ * improvement per percentage of memory efficiency sacrificed.
  *
  * To get a more visual perspective of what the ratio between data and metadata
  * in a slab is look at the diagrams below:
@@ -190,7 +194,11 @@
  * a sublayer for that slab list. A sublayer is an internal slab list that
  * contains pointers to slabs as elements. All of the slab-pointers are sorted,
  * and the sublayer's slabs are also ranged. A sublayer is only created for
- * sorted slab lists.
+ * sorted slab lists. Slabs in a sublayer are called sub-slabs. Superslabs are
+ * subslabs that are refered to from a lower subslab. Slabs at the highest
+ * superlayer (slabs that contain the user's data) are simply known as slabs,
+ * or superslabs from the perspective of the highest sublayer.
+ *
  *
  *    slabs from superlayer -------->  [ ][ ][ ][ ][ ][ ][ ][ ] .....
  *                                      ^  ^  ^  ^  ^  ^  ^  ^
