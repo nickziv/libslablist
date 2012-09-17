@@ -12,7 +12,7 @@ slablist_umem_init()
 slablist_t *
 mk_slablist()
 {
-	return (malloc(sizeof (slablist_t)));
+	return (calloc(1, sizeof (slablist_t)));
 }
 
 void
@@ -25,7 +25,7 @@ rm_slablist(slablist_t *s)
 slab_t *
 mk_slab()
 {
-	slab_t *s = malloc(sizeof (slab_t));
+	slab_t *s = calloc(1, sizeof (slab_t));
 	return (s);
 }
 
@@ -38,7 +38,7 @@ rm_slab(slab_t *s)
 small_list_t *
 mk_sml_node()
 {
-	small_list_t *s = malloc(sizeof (small_list_t));
+	small_list_t *s = calloc(1, sizeof (small_list_t));
 	return (s);
 }
 
@@ -64,4 +64,18 @@ void
 rm_buf(void *s, size_t sz)
 {
 	free(s);
+}
+
+
+void *
+mk_bc()
+{
+	return (calloc(1, MAX_LYRS * sizeof (slab_t *)));
+
+}
+
+void
+rm_bc(void *f)
+{
+        free(f);
 }
