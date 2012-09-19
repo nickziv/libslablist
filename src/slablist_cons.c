@@ -308,7 +308,7 @@ sublayer_cmp(uintptr_t e1, uintptr_t e2)
 }
 
 /*
- * This function attached a new sublayer to `sl`. Be careful not to attach a
+ * This function attaches a new sublayer to `sl`. Be careful not to attach a
  * new sublayer to a list which already has a sublayer. This is the caller's
  * responsibility.
  */
@@ -323,6 +323,12 @@ attach_sublayer(slablist_t *sl)
 
 	sub->sl_head = mk_slab();
 	sub->sl_cmp_elem = sublayer_cmp;
+
+	/*
+	 * We set the sublayer's mcap to 100, so as to minimize its memory
+	 * overhead.
+	 */
+	sub->sl_mcap = 100;
 	SLABLIST_SLAB_MK(sub);
 	SLIST_SET_SUBLAYER(sub->sl_flags);
 
@@ -429,4 +435,52 @@ small_list_to_slab(slablist_t *sl)
 		s->s_min = s->s_arr[0];
 		s->s_max = s->s_arr[(s->s_elems - 1)];
 	}
+}
+
+/*
+ * This function tries to reap all the slabs in a slab list (not counting any
+ * subslabs). It will only reap if the slab list is below its minimum memory
+ * capacity.
+ */
+void
+try_reap(slablist_t *sl)
+{
+	double es = (double)sl->sl_elems;
+	double ss = (double)sl->sl_slabs;
+	/* the minimum number of elems with 1 partial-slab */
+	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
+	/* the maximum efficiency with 1 partial-slab */
+	double mxss = mxe / (ss*(double)SELEM_MAX);
+	/* the current utilization ration */
+	double cratio = es / (ss * SELEM_MAX);
+	/* the mcap in double foating point form */
+	double dmcap = ((double)sl->sl_mcap)/100;
+	if (!(sl->sl_mcap > 100) && ss > 1 &&
+	    mxss >= dmcap && (cratio <= dmcap)) {
+		/*
+		 * If we have a valid mcap (minimum capacity) value, the mcap
+		 * is not greater than the maximum possible efficiency of the
+		 * slablist, and the current utilization is not at or above the
+		 * mcap value, we initiate a reap.
+		 */
+		slablist_reap(sl);
+	}
+}
+
+/*
+ * This function tries to reap all the slabs in a slab list, including all the
+ * subslabs.
+ */
+void
+try_reap_all(slablist_t *sl)
+{
+	slablist_t *csl = sl;
+	int i = 0;
+	//try_reap(csl);
+	//return;
+	do {
+		try_reap(csl);
+		csl = csl->sl_sublayer;
+		i++;
+	} while (i < sl->sl_sublayers);
 }

@@ -733,21 +733,7 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		}
 	}
 
-	double es = (double)sl->sl_elems;
-	double ss = (double)sl->sl_slabs;
-	/* the minimum number of elems with 1 partial-slab */
-	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
-	/* the maximum efficiency with 1 partial-slab */
-	double mxss = mxe / (ss*(double)SELEM_MAX);
-	/* the current utilization ration */
-	double cratio = es / (ss * SELEM_MAX);
-	/* the mcap in double foating point form */
-	double dmcap = ((double)sl->sl_mcap)/100;
-	if (!(sl->sl_mcap > 100) && ss > 1 &&
-	    mxss >= dmcap && (cratio <= dmcap)) {
-		slablist_reap(sl);
-	}
-
+	try_reap_all(sl);
 
 	if (edup != SL_SUCCESS) {
 		SLABLIST_ADD_END(SL_EDUP);

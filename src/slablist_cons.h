@@ -30,3 +30,5 @@ extern void small_list_to_slab(slablist_t *);
 extern void slab_to_small_list(slablist_t *);
 extern void attach_sublayer(slablist_t *);
 extern void detach_sublayer(slablist_t *);
+extern void try_reap(slablist_t *);
+extern void try_reap_all(slablist_t *);

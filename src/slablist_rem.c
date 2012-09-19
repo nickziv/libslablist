@@ -709,13 +709,13 @@ slablist_reap(slablist_t *sl)
 	/* the minimum number of elems with 1 partial-slab */
 	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
 	/* the maximum efficiency with 1 partial-slab */
-	double mxss = mxe / (ss*(double)SELEM_MAX);
+	double mxss = mxe / (ss * (double)SELEM_MAX);
 	double cratio = es / (ss * SELEM_MAX);
 	if (ss == 1 || mxss <= cratio) {
 		/*
 		 * We check to see if reaping will actually save us space. If
 		 * the maximum efficiency is greater than the current
-		 * efficiency, we do the rap. If not, we return.
+		 * efficiency, we do the reap. If not, we return.
 		 */
 		return;
 	}
@@ -886,26 +886,8 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		 */
 		detach_sublayer(supl);
 	}
-	double es = (double)sl->sl_elems;
-	double ss = (double)sl->sl_slabs;
-	/* the minimum number of elems with 1 partial-slab */
-	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
-	/* the maximum efficiency with 1 partial-slab */
-	double mxss = mxe / (ss*(double)SELEM_MAX);
-	/* the current utilization ratio */
-	double cratio = es / (ss * SELEM_MAX);
-	/* the mcap in double floating point form */
-	double dmcap = ((double)sl->sl_mcap)/100;
-	if (!(sl->sl_mcap > 100) && ss > 1 &&
-	    mxss >= dmcap && (cratio <= dmcap)) {
-		/*
-		 * If we have a valid mcap (minimum capacity) value, the mcap
-		 * is not greater than the maximum possible efficiency of the
-		 * slablist, and the current utilization is not at or above the
-		 * mcap value, we initiate a reap.
-		 */
-		slablist_reap(sl);
-	}
+
+	try_reap_all(sl);
 
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
