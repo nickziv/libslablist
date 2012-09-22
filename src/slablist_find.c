@@ -226,70 +226,8 @@ is_elem_in_range(uintptr_t elem, slab_t *s)
 	}
 
 	return (404);
-
 }
 
-/*
- * This function determines if the element can fit in a slabs existing range.
- */
-int
-old_is_elem_in_range(uintptr_t elem, slab_t *s)
-{
-	int eq_min;
-	int eq_max;
-	slablist_t *sl = s->s_list;
-	if (sl->sl_layer) {
-		/*
-		 * If we are checking to see if an element is in the range of a
-		 * _subslab_, we have to use the comparison function saved in
-		 * the superlayer (defined by user). Using the comparison
-		 * function in the current layer will result in using
-		 * is_elem_in_range as a comparison function, which will cause
-		 * a crash.
-		 */
-		eq_min = (sl->sl_cmp_super(elem, s->s_min));
-		eq_max = (sl->sl_cmp_super(elem, s->s_max));
-	} else {
-		eq_min = (sl->sl_cmp_elem(elem, s->s_min));
-		eq_max = (sl->sl_cmp_elem(elem, s->s_max));
-	}
-
-	if ((eq_max == 0 || eq_max == -1) && (eq_min == 1 || eq_min == 0)) {
-		return (FS_IN_RANGE);
-	}
-
-	if (eq_max == 1) {
-		return (FS_OVER_RANGE);
-	}
-
-	if (eq_min == -1) {
-		return (FS_UNDER_RANGE);
-	}
-
-	return (404);
-
-}
-
-/*
- * This function determines if the element can replace a slabs current extrema.
- */
-int
-is_elem_extrema(uintptr_t elem, slab_t *s)
-{
-	slablist_t *sl = s->s_list;
-	int eq_min = (sl->sl_cmp_elem(elem, s->s_min));
-	int eq_max = (sl->sl_cmp_elem(elem, s->s_max));
-
-	if (eq_min == -1) {
-		return (-1);
-	}
-
-	if (eq_max == 1) {
-		return (1);
-	}
-
-	return (0);
-}
 
 extern void link_slab(slab_t *, slab_t *, int);
 
