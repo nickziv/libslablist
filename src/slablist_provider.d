@@ -128,12 +128,24 @@ provider slablist {
 	probe bin_search(int, int, int);
 	probe bin_search_loop(int, int, int, int, int, void *);
 	/*
+	 * The following two probes fire when a linear scan begins and ends.
+	 */
+	probe linear_scan_begin(slablist_t *sl) :
+		(slinfo_t *sl);
+	probe linear_scan_end(int);
+	/*
 	 * Fires every time we move to a slab (in the lowest sublayer) until we
 	 * find a slab that is of appropriate range, or until we run out of
 	 * slabs. `s` is the slab that we are currently inspecting.
 	 */
 	probe linear_scan(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);
+	/*
+	 * The following two probes fire when a bubble up begins and ends.
+	 */
+	probe bubble_up_begin(slablist_t *sl) :
+		(slinfo_t *sl);
+	probe bubble_up_end(int);
 	/*
 	 * Fires every time we bubble up to a superslab. `s` is the superslab
 	 * that we just bubbled up to. `sl` is the list.

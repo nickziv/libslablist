@@ -166,6 +166,24 @@ extern "C" {
 #define	SLABLIST_BUBBLE_UP_ENABLED() \
 	__dtraceenabled_slablist___bubble_up(0)
 #endif
+#define	SLABLIST_BUBBLE_UP_BEGIN(arg0) \
+	__dtrace_slablist___bubble_up_begin(arg0)
+#ifndef	__sparc
+#define	SLABLIST_BUBBLE_UP_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___bubble_up_begin()
+#else
+#define	SLABLIST_BUBBLE_UP_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___bubble_up_begin(0)
+#endif
+#define	SLABLIST_BUBBLE_UP_END(arg0) \
+	__dtrace_slablist___bubble_up_end(arg0)
+#ifndef	__sparc
+#define	SLABLIST_BUBBLE_UP_END_ENABLED() \
+	__dtraceenabled_slablist___bubble_up_end()
+#else
+#define	SLABLIST_BUBBLE_UP_END_ENABLED() \
+	__dtraceenabled_slablist___bubble_up_end(0)
+#endif
 #define	SLABLIST_BWDSHIFT_BEGIN(arg0, arg1, arg2) \
 	__dtrace_slablist___bwdshift_begin(arg0, arg1, arg2)
 #ifndef	__sparc
@@ -291,6 +309,24 @@ extern "C" {
 #else
 #define	SLABLIST_LINEAR_SCAN_ENABLED() \
 	__dtraceenabled_slablist___linear_scan(0)
+#endif
+#define	SLABLIST_LINEAR_SCAN_BEGIN(arg0) \
+	__dtrace_slablist___linear_scan_begin(arg0)
+#ifndef	__sparc
+#define	SLABLIST_LINEAR_SCAN_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___linear_scan_begin()
+#else
+#define	SLABLIST_LINEAR_SCAN_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___linear_scan_begin(0)
+#endif
+#define	SLABLIST_LINEAR_SCAN_END(arg0) \
+	__dtrace_slablist___linear_scan_end(arg0)
+#ifndef	__sparc
+#define	SLABLIST_LINEAR_SCAN_END_ENABLED() \
+	__dtraceenabled_slablist___linear_scan_end()
+#else
+#define	SLABLIST_LINEAR_SCAN_END_ENABLED() \
+	__dtraceenabled_slablist___linear_scan_end(0)
 #endif
 #define	SLABLIST_LINK_SLAB_AFTER(arg0, arg1, arg2) \
 	__dtrace_slablist___link_slab_after(arg0, arg1, arg2)
@@ -936,6 +972,18 @@ extern int __dtraceenabled_slablist___bubble_up(void);
 #else
 extern int __dtraceenabled_slablist___bubble_up(long);
 #endif
+extern void __dtrace_slablist___bubble_up_begin(slablist_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___bubble_up_begin(void);
+#else
+extern int __dtraceenabled_slablist___bubble_up_begin(long);
+#endif
+extern void __dtrace_slablist___bubble_up_end(int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___bubble_up_end(void);
+#else
+extern int __dtraceenabled_slablist___bubble_up_end(long);
+#endif
 extern void __dtrace_slablist___bwdshift_begin(slablist_t *, slab_t *, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___bwdshift_begin(void);
@@ -1019,6 +1067,18 @@ extern void __dtrace_slablist___linear_scan(slablist_t *, slab_t *);
 extern int __dtraceenabled_slablist___linear_scan(void);
 #else
 extern int __dtraceenabled_slablist___linear_scan(long);
+#endif
+extern void __dtrace_slablist___linear_scan_begin(slablist_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___linear_scan_begin(void);
+#else
+extern int __dtraceenabled_slablist___linear_scan_begin(long);
+#endif
+extern void __dtrace_slablist___linear_scan_end(int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___linear_scan_end(void);
+#else
+extern int __dtraceenabled_slablist___linear_scan_end(long);
 #endif
 extern void __dtrace_slablist___link_slab_after(slablist_t *, slab_t *, slab_t *);
 #ifndef	__sparc
@@ -1417,6 +1477,10 @@ extern int __dtraceenabled_slablist___unlink_sml_node(long);
 #define	SLABLIST_BIN_SEARCH_LOOP_ENABLED() (0)
 #define	SLABLIST_BUBBLE_UP(arg0, arg1)
 #define	SLABLIST_BUBBLE_UP_ENABLED() (0)
+#define	SLABLIST_BUBBLE_UP_BEGIN(arg0)
+#define	SLABLIST_BUBBLE_UP_BEGIN_ENABLED() (0)
+#define	SLABLIST_BUBBLE_UP_END(arg0)
+#define	SLABLIST_BUBBLE_UP_END_ENABLED() (0)
 #define	SLABLIST_BWDSHIFT_BEGIN(arg0, arg1, arg2)
 #define	SLABLIST_BWDSHIFT_BEGIN_ENABLED() (0)
 #define	SLABLIST_BWDSHIFT_END()
@@ -1445,6 +1509,10 @@ extern int __dtraceenabled_slablist___unlink_sml_node(long);
 #define	SLABLIST_GOT_HERE_ENABLED() (0)
 #define	SLABLIST_LINEAR_SCAN(arg0, arg1)
 #define	SLABLIST_LINEAR_SCAN_ENABLED() (0)
+#define	SLABLIST_LINEAR_SCAN_BEGIN(arg0)
+#define	SLABLIST_LINEAR_SCAN_BEGIN_ENABLED() (0)
+#define	SLABLIST_LINEAR_SCAN_END(arg0)
+#define	SLABLIST_LINEAR_SCAN_END_ENABLED() (0)
 #define	SLABLIST_LINK_SLAB_AFTER(arg0, arg1, arg2)
 #define	SLABLIST_LINK_SLAB_AFTER_ENABLED() (0)
 #define	SLABLIST_LINK_SLAB_BEFORE(arg0, arg1, arg2)

@@ -228,6 +228,7 @@ is_elem_in_range(uintptr_t elem, slab_t *s)
 	return (404);
 
 }
+
 /*
  * This function determines if the element can fit in a slabs existing range.
  */
@@ -548,12 +549,13 @@ int
 find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 {
 
-
+	SLABLIST_LINEAR_SCAN_BEGIN(sl);
 	uint64_t i = 0;
 	slab_t *s = sl->sl_head;
 	int r = is_elem_in_range(elem, s);
 	if (r != FS_OVER_RANGE) {
 		*l = s;
+		SLABLIST_LINEAR_SCAN_END(r);
 		return (r);
 	}
 
@@ -562,28 +564,25 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 		int r = is_elem_in_range(elem, s);
 		if (r != FS_OVER_RANGE) {
 			*l = s;
+			SLABLIST_LINEAR_SCAN_END(r);
 			return (r);
 		} else {
 			if (s->s_next != NULL) {
 				s = s->s_next;
 			} else {
 				*l = s;
+				SLABLIST_LINEAR_SCAN_END(r);
 				return (r);
 			}
 		}
 		i++;
 	}
-
-	/*
-	 * Easily recognizable error code. We should never get here. But if we
-	 * do, it will stand out in the DTrace output.
-	 */
-	return (404);
 }
 
 int
 find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
 {
+	SLABLIST_BUBBLE_UP_BEGIN(sl);
 	/* `l` is used as the bread crumb array */
 	slablist_t *u = get_lowest_sublayer(sl);
 	int nu = sl->sl_sublayers;
@@ -597,6 +596,7 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
 		bc++;
 		cu++;
 	}
+	SLABLIST_BUBBLE_UP_END(fs);
 	return (fs);
 }
 
