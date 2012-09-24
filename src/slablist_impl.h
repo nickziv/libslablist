@@ -220,7 +220,7 @@
  *				      \   /
  *        lowest sublayer -------->    \_/
  *
- * If the maximum number of elements the lowest sublayer can have is N, then it
+ * If the maximum number of slabs the lowest sublayer can have is N, then it
  * can have at most N*119 elems. If we have only 1 sublayer attached to the
  * slab list, then we have N*119 elems. If we have two we have N*(119^2)
  * user-inserted elems. If we have 3, N*(119^3) elems. And so on.
