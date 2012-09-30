@@ -214,32 +214,60 @@ main(int ac, char *av[])
 		times = (uintptr_t) atoi(av[1]);
 	}
 
+	int intsrt = 0;
+	int intord = 0;
+	int strsrt = 0;
+	int strord = 0;
+	int aci = 2;
+	while (aci < ac) {
+		if (strcmp("intsrt", av[aci]) == 0) {
+			intsrt++;
+		}
+		if (strcmp("intord", av[aci]) == 0) {
+			intord++;
+		}
+		if (strcmp("strsrt", av[aci]) == 0) {
+			strsrt++;
+		}
+		if (strcmp("strord", av[aci]) == 0) {
+			strord++;
+		}
+		aci++;
+	}
 	uint64_t maxops = times;
 	slablist_t *sl_str_s = NULL;
 	slablist_t *sl_int_s = NULL;
 	slablist_t *sl_str_o = NULL;
 	slablist_t *sl_int_o = NULL;
 
-	printf("=2=\n");
-	sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 70, 8,
-				SL_SORTED);
-	do_ops(sl_int_s, maxops, INT, SRT);
-	do_free_remaining(sl_int_s, INT, SRT);
-	printf("=1=\n");
-	sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
-				10, 70, 8, SL_SORTED);
-	do_ops(sl_str_s, maxops, STR, SRT);
-	do_free_remaining(sl_str_s, STR, SRT);
-	printf("=4=\n");
-	sl_int_o = slablist_create("intlistord", 8, cmpfun, 10, 70,
-				8, SL_ORDERED);
-	do_ops(sl_int_o, maxops, INT, ORD);
-	do_free_remaining(sl_int_o, INT, ORD);
-	printf("=3=\n");
-	sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str, 10, 70,
-				8, SL_ORDERED);
-	do_ops(sl_str_o, maxops, STR, ORD);
-	do_free_remaining(sl_str_o, STR, ORD);
+	if (strsrt) {
+		printf("=1=\n");
+		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
+					10, 70, 8, SL_SORTED);
+		do_ops(sl_str_s, maxops, STR, SRT);
+		do_free_remaining(sl_str_s, STR, SRT);
+	}
+	if (intsrt) {
+		printf("=2=\n");
+		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 70, 8,
+					SL_SORTED);
+		do_ops(sl_int_s, maxops, INT, SRT);
+		do_free_remaining(sl_int_s, INT, SRT);
+	}
+	if (strord) {
+		printf("=3=\n");
+		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
+					10, 70, 8, SL_ORDERED);
+		do_ops(sl_str_o, maxops, STR, ORD);
+		do_free_remaining(sl_str_o, STR, ORD);
+	}
+	if (intord) {
+		printf("=4=\n");
+		sl_int_o = slablist_create("intlistord", 8, cmpfun, 10, 70,
+					8, SL_ORDERED);
+		do_ops(sl_int_o, maxops, INT, ORD);
+		do_free_remaining(sl_int_o, INT, ORD);
+	}
 	end();
 	close(fd);
 	return (0);
