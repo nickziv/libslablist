@@ -134,9 +134,9 @@ provider slablist {
 		(slinfo_t *sl);
 	probe linear_scan_end(int);
 	/*
-	 * Fires every time we move to a slab (in the lowest sublayer) until we
-	 * find a slab that is of appropriate range, or until we run out of
-	 * slabs. `s` is the slab that we are currently inspecting.
+	 * Fires every time we move to a slab (in the baselayer) until we find
+	 * a slab that is of appropriate range, or until we run out of slabs.
+	 * `s` is the slab that we are currently inspecting.
 	 */
 	probe linear_scan(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);

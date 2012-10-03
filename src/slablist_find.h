@@ -31,5 +31,4 @@ extern int gen_bin_srch(uintptr_t, slab_t *, int);
 extern int slab_srch(uintptr_t, slab_t *, int);
 extern int find_bubble_up(slablist_t *, uintptr_t, slab_t **);
 extern int find_linear_scan(slablist_t *, uintptr_t, slab_t **);
-extern slablist_t *get_lowest_sublayer(slablist_t *sl);
 extern int is_elem_in_range(uintptr_t, slab_t *);

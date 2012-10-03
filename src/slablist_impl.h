@@ -197,7 +197,8 @@
  * sorted slab lists. Slabs in a sublayer are called sub-slabs. Superslabs are
  * subslabs that are refered to from a lower subslab. Slabs at the highest
  * superlayer (slabs that contain the user's data) are simply known as slabs,
- * or superslabs from the perspective of the highest sublayer.
+ * or superslabs from the perspective of the highest sublayer. The lowest
+ * sublayer is called the baselayer.
  *
  *
  *    slabs from superlayer -------->  [ ][ ][ ][ ][ ][ ][ ][ ] .....
@@ -218,9 +219,9 @@
  *				    \       /
  *				     \     /
  *				      \   /
- *        lowest sublayer -------->    \_/
+ *        baselayer -------------->    \_/
  *
- * If the maximum number of slabs the lowest sublayer can have is N, then it
+ * If the maximum number of slabs the baselayer can have is N, then it
  * can have at most N*119 elems. If we have only 1 sublayer attached to the
  * slab list, then we have N*119 elems. If we have two we have N*(119^2)
  * user-inserted elems. If we have 3, N*(119^3) elems. And so on.
@@ -231,15 +232,15 @@
  * any amount _RAM_ one could cram into computer.
  *
  * If we wanted to find a slab with element `E`, and our slab list has
- * sublayers, we 1) go to the lowest sublayer, 2) we do a linear search on that
+ * sublayers, we 1) go to the baselayer , 2) we do a linear search on that
  * sublayer, until we find a slab with the range into which `E` could belong
  * to.
  *
- * The slab that has been found at the lowest sublayer, contains pointers to
- * slabs in the superlayer. We use binary search find the slab in the
- * superlayer into which `E` could belong to. We keep doing this repeatedly
- * until we get to the highest superlayer. The highest superlayer is the layer
- * that contains data that the _user_ gave it.
+ * The slab that has been found at the baselayer, contains pointers to slabs in
+ * the superlayer. We use binary search find the slab in the superlayer into
+ * which `E` could belong to. We keep doing this repeatedly until we get to the
+ * highest superlayer. The highest superlayer is the layer that contains data
+ * that the _user_ gave it.
  *
  * The use of sublayers of slab lists, and binary search gives a search time
  * comparable to balanced binary trees (that is, logarithmic time).
@@ -407,6 +408,7 @@ struct slablist {
 	slablist_t		*sl_prev;
 	slablist_t		*sl_next;
 	slablist_t		*sl_sublayer;
+	slablist_t		*sl_baselayer;
 	slablist_t		*sl_superlayer;
 	uint16_t		sl_req_sublayer;
 	uint8_t			sl_brk;

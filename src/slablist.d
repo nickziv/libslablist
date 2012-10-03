@@ -54,6 +54,7 @@ struct slablist {
         slablist_t              *sl_prev;
         slablist_t              *sl_next;
         slablist_t              *sl_sublayer;
+        slablist_t              *sl_baselayer;
         slablist_t              *sl_superlayer;
         uint16_t                sl_req_sublayer;
         uint8_t                 sl_brk;

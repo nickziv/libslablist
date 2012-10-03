@@ -568,7 +568,7 @@ ripple_update_extrema(slab_t *l[], int i)
 /*
  * If a new slab was added to the slablist, in order to complete an insertion,
  * this function "ripples" this change through the sublayers, so that the new
- * slab is potentially reachable from the lowest sublayer.
+ * slab is potentially reachable from the baselayer.
  */
 static void
 ripple_add_to_sublayers(slablist_t *sl, slab_t *new, slab_t *l[])
@@ -693,17 +693,16 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		if (sl->sl_sublayer == NULL) {
 			usl = sl;
 		} else {
-			usl = get_lowest_sublayer(sl);
+			usl = sl->sl_baselayer;
 		}
 
 		if (sl->sl_req_sublayer &&
 		    usl->sl_slabs >= sl->sl_req_sublayer) {
 			/*
-			 * If we have sl_req_sublayer slabs at the lowest
-			 * underlying slab (or, if we have no sublayers, in the
-			 * slablist in general) we map the slabs in the
-			 * slablist/lowest_sublayer to a newly created
-			 * sublayer. 
+			 * If we have sl_req_sublayer slabs at the baselayer
+			 * (or, if we have no sublayers, in the slablist in
+			 * general) we map the slabs in the slablist/baselayer
+			 * to a newly created baselayer.
 			 */
 			attach_sublayer(usl);
 		}

@@ -460,21 +460,6 @@ find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l)
 }
 
 
-
-slablist_t *
-get_lowest_sublayer(slablist_t *sl)
-{
-	int l = sl->sl_sublayers;
-
-	slablist_t *cur_layer = sl;
-	int i = 0;
-	while (i < l) {
-		cur_layer = cur_layer->sl_sublayer;
-		i++;
-	}
-	return (cur_layer);
-}
-
 /*
  * TODO
  * Replace this with min cmp version.
@@ -522,7 +507,7 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
 	/* `l` is used as the bread crumb array */
-	slablist_t *u = get_lowest_sublayer(sl);
+	slablist_t *u = sl->sl_baselayer;
 	int nu = sl->sl_sublayers;
 	int cu = 0;
 	int fs = find_linear_scan(u, elem, l);

@@ -295,6 +295,7 @@ detach_sublayer(slablist_t *sl)
 	rm_slablist(sub);
 	slablist_t *sup = sl;
 	while (sup != NULL) {
+		sup->sl_baselayer = sl;
 		sup->sl_sublayers--;
 		sup = sup->sl_superlayer;
 	}
@@ -320,6 +321,7 @@ attach_sublayer(slablist_t *sl)
 	sub->sl_req_sublayer = sl->sl_req_sublayer;
 	bcopy(sl, sub, sizeof (slablist_t));
 	sl->sl_sublayer = sub;
+	sl->sl_baselayer = sub;
 
 	sub->sl_head = mk_slab();
 	sub->sl_cmp_elem = sublayer_cmp;
@@ -348,6 +350,7 @@ attach_sublayer(slablist_t *sl)
 
 	while (sup != NULL) {
 		sup->sl_sublayers++;
+		sup->sl_baselayer = sub;
 		SLABLIST_SL_INC_SUBLAYERS(sup);
 		sup = sup->sl_superlayer;
 	}
