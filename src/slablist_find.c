@@ -424,37 +424,28 @@ slab_srch(uintptr_t elem, slab_t *s, int is_slab)
 static int
 find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l)
 {
-	slab_t *sb = (slab_t *)s->s_arr[0];
-	int r = is_elem_in_range(elem, sb);
-
-	if (r != FS_OVER_RANGE) {
-		*l = sb;
+	int x = 0;
+	x = slab_srch(elem, s, 0);
+	if (x > s->s_elems - 1) {
+		/*
+		 * If we get an index `x` that is larger than the index
+		 * of the last element, we set x to the index of the
+		 * last element. This is neccessary, since
+		 * slab_bin_srch always assumes that we are searching
+		 * for an _insertion point_. That is, we want the index
+		 * at which a new element will be inserted. In the
+		 * context of this function, we really want the slab
+		 * who's range is closest to that of `elem`. Hence why
+		 * if we exceed the maximum index, we know that the
+		 * last slab is the one we are looking for. Note that
+		 * this is not a problem for an `elem` that is below
+		 * the slab's range, as the insertion point (0) and the
+		 * slab-index we are looking for are the same.
+		 */
+		x = s->s_elems - 1;
 	}
-
-	if (r == FS_OVER_RANGE) {
-		int x = 0;
-		x = slab_srch(elem, s, 0);
-		if (x > s->s_elems - 1) {
-			/*
-			 * If we get an index `x` that is larger than the index
-			 * of the last element, we set x to the index of the
-			 * last element. This is neccessary, since
-			 * slab_bin_srch always assumes that we are searching
-			 * for an _insertion point_. That is, we want the index
-			 * at which a new element will be inserted. In the
-			 * context of this function, we really want the slab
-			 * who's range is closest to that of `elem`. Hence why
-			 * if we exceed the maximum index, we know that the
-			 * last slab is the one we are looking for. Note that
-			 * this is not a problem for an `elem` that is below
-			 * the slab's range, as the insertion point (0) and the
-			 * slab-index we are looking for are the same.
-			 */
-			x = s->s_elems - 1;
-		}
-		r = is_elem_in_range(elem, (slab_t *)(s->s_arr[x]));
-		*l = (slab_t *)s->s_arr[x];
-	}
+	int r = is_elem_in_range(elem, (slab_t *)(s->s_arr[x]));
+	*l = (slab_t *)s->s_arr[x];
 
 	return (r);
 }
