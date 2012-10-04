@@ -265,7 +265,10 @@ insert_spill_next(uintptr_t elem, slab_t *s)
 	}
 	SLABLIST_SLAB_SET_MAX(s);
 
-	int j = slab_srch(lst_elem, snx, sl->sl_layer);
+	int j = 0;
+	if (snx->s_elems) {
+		j = slab_srch(lst_elem, snx, sl->sl_layer);
+	}
 	int q = slab_srch(elem, s, sl->sl_layer);
 	insert_elem(lst_elem, snx, j);
 	insert_elem(elem, s, q);
@@ -300,7 +303,10 @@ insert_spill_prev(uintptr_t elem, slab_t *s)
 	}
 	SLABLIST_SLAB_SET_MIN(s);
 
-	int j = slab_srch(fst_elem, spv, sl->sl_layer);
+	int j = 0;
+	if (spv->s_elems) {
+		j = slab_srch(fst_elem, spv, sl->sl_layer);
+	}
 	int q = slab_srch(elem, s, sl->sl_layer);
 	insert_elem(fst_elem, spv, j);
 	insert_elem(elem, s, q);

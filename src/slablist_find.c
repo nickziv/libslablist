@@ -384,11 +384,7 @@ gen_bin_srch(uintptr_t elem, slab_t *s, int is_slab)
 	}
 
 	SLABLIST_FIND_SLAB_POS_BEGIN(sublayer);
-	if (s->s_elems > 0) {
-		i = slab_bin_srch(srch_for, s);
-	} else {
-		i = 0;
-	}
+	i = slab_bin_srch(srch_for, s);
 	SLABLIST_FIND_SLAB_POS_END(i);
 
 	return (i);
@@ -401,18 +397,14 @@ gen_bin_srch(uintptr_t elem, slab_t *s, int is_slab)
 int
 slab_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
-	if (s->s_elems == 0) {
-		return (0);
-	}
-
 	slablist_t *sl = s->s_list;
 	int i;
 
-	if (sl->sl_layer == 0 && s->s_elems < sl->sl_brk) {
-		i = gen_lin_srch(elem, s, is_slab);
+	if (!(sl->sl_layer == 0 && s->s_elems < sl->sl_brk)) {
+		i = gen_bin_srch(elem, s, is_slab);
 		return (i);
 	}
-	i = gen_bin_srch(elem, s, is_slab);
+	i = gen_lin_srch(elem, s, is_slab);
 	return (i);
 }
 
