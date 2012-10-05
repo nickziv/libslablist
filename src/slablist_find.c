@@ -213,7 +213,7 @@ is_elem_in_range(uintptr_t elem, slab_t *s)
 		eq_max = (sl->sl_cmp_elem(elem, max));
 	}
 
-	if ((eq_max == 0 || eq_max == -1) && (eq_min == 1 || eq_min == 0)) {
+	if ((eq_max <= 0) && (eq_min >= 0)) {
 		return (FS_IN_RANGE);
 	}
 
@@ -326,21 +326,16 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 			SLABLIST_SLAB_BIN_SRCH(s, mid_elem);
 		}
 		c = sl->sl_cmp_elem(elem, mid_elem);
-		if (c == 1) {
+		if (c > 0) {
 			min = mid + 1;
 			continue;
 		}
-		if (c == -1) {
+		if (c < 0) {
 			max = mid - 1;
 			continue;
 		}
 		if (c == 0) {
 			return (mid);
-		}
-		if (c < -1 || c > 1) {
-			fprintf(stderr,
-				"libslablist: cmp func invalid return value\n");
-			abort();
 		}
 	}
 
@@ -351,7 +346,7 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 		min = s->s_elems - 1;
 	}
 
-	if (sl->sl_cmp_elem(elem, s->s_arr[min]) == 1) {
+	if (sl->sl_cmp_elem(elem, s->s_arr[min]) > 0) {
 		/*
 		 * If the binary search took us to an element that is smaller
 		 * than `elem`, we return the index of the next element, which

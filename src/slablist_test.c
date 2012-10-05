@@ -83,7 +83,7 @@ test_smlist_elems_sorted(slablist_t *sl)
 		sml = sml->sml_next;
 		e1 = prev->sml_data;
 		e2 = sml->sml_data;
-		if (sl->sl_cmp_elem(e1, e2) == 1) {
+		if (sl->sl_cmp_elem(e1, e2) > 0) {
 			return (1);
 		}
 		i++;
@@ -135,7 +135,7 @@ test_slab_elems_sorted(slablist_t *sl)
 			uintptr_t e1 = s->s_arr[j];
 			uintptr_t e2 = s->s_arr[(j+1)];
 			int c = sl->sl_cmp_elem(e1, e2);
-			if (c == 1) {
+			if (c > 0) {
 				return (1);
 			}
 			j++;
@@ -163,10 +163,10 @@ test_slabs_sorted(slablist_t *sl, slab_t **sp1, slab_t **sp2)
 			s1 = s1->s_next;
 		}
 		s2 = s1->s_next;
-		if (sl->sl_cmp_elem(s1->s_max, s2->s_max) == 1 ||
-		    sl->sl_cmp_elem(s1->s_min, s2->s_min) == 1 ||
-		    sl->sl_cmp_elem(s1->s_max, s2->s_min) == 1 ||
-		    sl->sl_cmp_elem(s1->s_min, s2->s_max) == 1) {
+		if (sl->sl_cmp_elem(s1->s_max, s2->s_max) > 0 ||
+		    sl->sl_cmp_elem(s1->s_min, s2->s_min) > 0 ||
+		    sl->sl_cmp_elem(s1->s_max, s2->s_min) > 0 ||
+		    sl->sl_cmp_elem(s1->s_min, s2->s_max) > 0) {
 			*sp1 = s1;
 			*sp2 = s2;
 			return (1);
@@ -432,7 +432,7 @@ test_sublayers_sorted(slablist_t *sl, int *l)
 				s1 = s1->s_next;
 			}
 			s2 = s1->s_next;
-			if (sl->sl_cmp_elem(s1->s_max, s2->s_max) == 1) {
+			if (sl->sl_cmp_elem(s1->s_max, s2->s_max) > 0) {
 				*l = u->sl_layer;
 				return (1);
 			}

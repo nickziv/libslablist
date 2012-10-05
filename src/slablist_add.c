@@ -109,7 +109,7 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		small_list_t *prev = NULL;
 		int i = 0;
 		while (i < sl->sl_elems) {
-			if (sl->sl_cmp_elem(elem, sml->sml_data) == -1) {
+			if (sl->sl_cmp_elem(elem, sml->sml_data) < 0) {
 				/*
 				 * If `elem` is less than the data in the
 				 * current sml_node, we insert `elem` before
