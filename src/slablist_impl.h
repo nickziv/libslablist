@@ -252,6 +252,11 @@
  * slab list, to number of possible elems [119*nslabs]), name, slabs for
  * sublayer, object size, and comparison function.
  *
+ * If a slab is added to or removed from the superlayer, we have ripple the
+ * changes down to the sublayer by removeing or adding a reference to the slab.
+ * If that sublayer, gains or loses a slab as a result of the previous ripple,
+ * we have to ripple that change down to the next sublayer, and so on.
+ *
  * DTrace Probes / Test Suite
  * --------------------------
  *
