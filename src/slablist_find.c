@@ -318,7 +318,7 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 	slablist_t *sl = s->s_list;
 	uint64_t lyr = sl->sl_layer;
 	while (max >= min) {
-		int mid = (min + max)/2;
+		int mid = (min + max) >> 1;
 		uintptr_t mid_elem = s->s_arr[mid];
 		if (lyr) {
 			SLABLIST_SUBSLAB_BIN_SRCH(s, (slab_t *)mid_elem);
