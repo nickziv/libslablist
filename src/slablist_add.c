@@ -252,16 +252,17 @@ insert_spill_next(uintptr_t elem, slab_t *s)
 {
 	slablist_t *sl = s->s_list;
 	uintptr_t lst_elem = s->s_arr[(s->s_elems - 1)];
+	uintptr_t b4_lst_elem = s->s_arr[(s->s_elems - 2)];
 	slab_t *snx = s->s_next;
 	slab_t *p;
 	s->s_elems--;
 	SLABLIST_SLAB_DEC_ELEMS(s);
 
 	if (sl->sl_layer) {
-		p = (slab_t *)s->s_arr[(s->s_elems - 1)];
+		p = (slab_t *)b4_lst_elem;
 		s->s_max = p->s_max;
 	} else {
-		s->s_max = s->s_arr[(s->s_elems - 1)];
+		s->s_max = b4_lst_elem;
 	}
 	SLABLIST_SLAB_SET_MAX(s);
 
