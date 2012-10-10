@@ -63,8 +63,8 @@ slablist_create(
 	list->sl_cmp_super = cmpfun;
 	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
-	if (mcap > 100) {
-		list->sl_mcap = 100;
+	if (mcap > 99) {
+		list->sl_mcap = 99;
 	}
 	list->sl_mcap = mcap;
 	list->sl_brk = brk;
@@ -84,10 +84,10 @@ slablist_create(
 void
 slablist_setmcap(slablist_t *sl, uint8_t new)
 {
-	if (new <= 100) {
+	if (new <= 99) {
 		sl->sl_mcap = new;
 	} else {
-		sl->sl_mcap = 100;
+		sl->sl_mcap = 99;
 	}
 }
 
@@ -327,10 +327,10 @@ attach_sublayer(slablist_t *sl)
 	sub->sl_cmp_elem = sublayer_cmp;
 
 	/*
-	 * We set the sublayer's mcap to 100, so as to minimize its memory
+	 * We set the sublayer's mcap to 99, so as to minimize its memory
 	 * overhead.
 	 */
-	sub->sl_mcap = 100;
+	sub->sl_mcap = 99;
 	SLABLIST_SLAB_MK(sub);
 	SLIST_SET_SUBLAYER(sub->sl_flags);
 
