@@ -51,36 +51,15 @@
 static int
 small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 {
+	int ret;
 	if (sl->sl_head == NULL || sl->sl_elems == 0) {
 		return (SL_EMPTY);
 	}
 
-	if (SLABLIST_TEST_ENABLED()) {
-
-		if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
-			SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
-		}
-
-		if (SLABLIST_TEST_SMLIST_NELEMS_ENABLED()) {
-			int f = test_smlist_nelems(sl);
-			SLABLIST_TEST_SMLIST_NELEMS(f);
-		}
-
-	}
 
 	small_list_t *prev = NULL;
 
 	if (SLIST_SORTED(sl->sl_flags)) {
-
-		if (SLABLIST_TEST_ENABLED() &&
-			SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
-			/*
-			 * If test probe is enabled, we verify that the elems
-			 * are sorted.
-			 */
-			int f = test_smlist_elems_sorted(sl);
-			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
-		}
 
 		/*
 		 * We initialize sml to the head of the list, and prev to NULL.
@@ -101,7 +80,8 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 				*rdl = sml->sml_data;
 				unlink_sml_node(sl, prev);
 				rm_sml_node(sml);
-				return (SL_SUCCESS);
+				ret = SL_SUCCESS;
+				goto end;
 			} else {
 				/*
 				 * Otherwise, we go to the next element.
@@ -118,7 +98,7 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		 * node was not found.
 		 */
 		*rdl = NULL;
-		return (SL_ENFOUND);
+		ret = SL_ENFOUND;
 
 	} else {
 
@@ -128,7 +108,7 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 
 
 		if (sl->sl_elems < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-			return (SL_ENCIRC);
+			ret = SL_ENCIRC;
 		}
 
 		int i = 0;
@@ -139,8 +119,36 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		*rdl = sml->sml_data;
 		unlink_sml_node(sl, prev);
 		rm_sml_node(sml);
-		return (SL_SUCCESS);
+		ret = SL_SUCCESS;
 	}
+
+
+end:;
+	/*
+	 * We run tests, if DTrace test-probes are enabled.
+ 	 */
+	if (SLABLIST_TEST_ENABLED()) {
+
+		if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
+			SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
+		}
+
+		if (SLABLIST_TEST_SMLIST_NELEMS_ENABLED()) {
+			int f = test_smlist_nelems(sl);
+			SLABLIST_TEST_SMLIST_NELEMS(f);
+		}
+
+		if (SLIST_SORTED(sl->sl_flags) &&
+		    SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
+				/*
+				 * If test probe is enabled, we verify that the elems
+				 * are sorted.
+				 */
+				int f = test_smlist_elems_sorted(sl);
+				SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
+		}
+	}
+	return (ret);
 }
 
 /*
@@ -595,7 +603,7 @@ remove_elem(int i, slab_t *s)
 	SLABLIST_SLAB_DEC_ELEMS(s);
 
 	slab_t *sm = NULL;
-	if (i == 0) {
+	if (s->s_elems && i == 0) {
 		if (SLIST_SUBLAYER(sl->sl_flags)) {
 			sm = (slab_t *)s->s_arr[0];
 			s->s_min = sm->s_min;
@@ -605,7 +613,7 @@ remove_elem(int i, slab_t *s)
 		SLABLIST_SLAB_SET_MIN(s);
 	}
 
-	if (i == (s->s_elems)) {
+	if (s->s_elems && i == (s->s_elems)) {
 		if (SLIST_SUBLAYER(sl->sl_flags)) {
 			sm = (slab_t *)s->s_arr[(i - 1)];
 			s->s_max = sm->s_max;
@@ -784,6 +792,7 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	slab_t *s = NULL;
 	slab_t **bc;
 	int i;
+	int ret;
 
 	if (!(sl->sl_is_small_list) && sl->sl_elems == SMELEM_MAX) {
 		/*
@@ -800,19 +809,20 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		 * element.
 		 */
 		SLABLIST_REM_BEGIN(sl, elem, pos);
-		int ret = small_list_rem(sl, elem, pos, rdl);
-		SLABLIST_REM_END(ret);
-		return (ret);
+		ret = small_list_rem(sl, elem, pos, rdl);
+		goto end;
 	}
 
 
-	test_slab_consistency(sl);
 
 	if (SLIST_SORTED(sl->sl_flags)) {
 
+		if (SLABLIST_TEST_IS_SLAB_LIST_ENABLED()) {
+			SLABLIST_TEST_IS_SLAB_LIST(sl->sl_is_small_list);
+		}
+
 		SLABLIST_REM_BEGIN(sl, elem, pos);
 
-		test_slab_sorting(sl);
 
 		if (sl->sl_sublayers) {
 
@@ -847,8 +857,8 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 			if (sl->sl_sublayers) {
 				rm_bc(bc);
 			}
-			SLABLIST_REM_END(SL_ENFOUND);
-			return (SL_ENFOUND);
+			ret = SL_ENFOUND;
+			goto end;
 		}
 
 	} else {
@@ -857,7 +867,6 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 
 		s = slab_get(sl, pos, &off_pos, SLAB_VAL_POS);
 		i = pos - off_pos;
-
 	}
 
 	if (rdl != NULL) {
@@ -870,7 +879,6 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	remd = slab_generic_rem(s);
 	if (sl->sl_sublayers) {
 		ripple_rem_to_sublayers(sl, remd, bc);
-		test_sublayers(sl, elem);
 	}
 
 	if (sl->sl_sublayers) {
@@ -891,6 +899,19 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
-	SLABLIST_REM_END(SL_SUCCESS);
-	return (SL_SUCCESS);
+end:;
+	SLABLIST_REM_END(ret);
+
+	/*
+	 * If we have test probes enabled, via DTrace, we run the tests.
+	 */
+	test_slab_consistency(sl);
+	if (SLIST_SORTED(sl->sl_flags)) {
+		test_slab_sorting(sl);
+		if (sl->sl_sublayers) {
+			test_sublayers(sl, elem);
+		}
+	}
+
+	return (ret);
 }

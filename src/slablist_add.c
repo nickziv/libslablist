@@ -57,8 +57,9 @@ int
 small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 {
 
+	int ret;
 	/*
-	 * Here are the dtrace-driven tests for this function.
+	 * Here are some of the dtrace-driven tests for this function.
 	 */
 	if (SLABLIST_TEST_NULLARG_ENABLED()) {
 		if (sl == NULL) {
@@ -68,10 +69,6 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 				SLABLIST_TEST_NULLARG(1, 2);
 			}
 		}
-	}
-
-	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
-		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
 	}
 
 	if (sl->sl_head == NULL) {
@@ -85,7 +82,8 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		((small_list_t *)sl->sl_head)->sml_data = elem;
 		sl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(sl);
-		return (SL_SUCCESS);
+		ret = SL_SUCCESS;
+		goto end;
 	}
 
 	small_list_t *sml;
@@ -96,15 +94,6 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		 * We place the element in the position so that it is less than
 		 * the element after it.
 		 */
-		if (SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
-			/*
-			 * If test probe is enabled, we verify that the elems
-			 * are sorted.
-			 */
-			int f = test_smlist_elems_sorted(sl);
-			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
-		}
-
 		sml = sl->sl_head;
 		small_list_t *prev = NULL;
 		int i = 0;
@@ -118,7 +107,8 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 				nsml = mk_sml_node();
 				nsml->sml_data = elem;
 				link_sml_node(sl, prev, nsml);
-				return (SL_SUCCESS);
+				ret = SL_SUCCESS;
+				goto end;
 			}
 			if (sl->sl_cmp_elem(elem, sml->sml_data) == 0) {
 				/*
@@ -138,7 +128,8 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 					 * We don't want to insert duplicates.
 					 */
 					SLABLIST_ADD_REPLACE(sl, NULL, elem, 0);
-					return (SL_EDUP);
+					ret = SL_EDUP;
+					goto end;
 				}
 			}
 			/*
@@ -158,7 +149,8 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 			nsml = mk_sml_node();
 			nsml->sml_data = elem;
 			link_sml_node(sl, prev, nsml);
-			return (SL_SUCCESS);
+			ret = SL_SUCCESS;
+			goto end;
 		}
 
 
@@ -176,7 +168,27 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 	nsml = mk_sml_node();
 	nsml->sml_data = elem;
 	link_sml_node(sl, sml, nsml);
-	return (SL_SUCCESS);
+
+end:;
+
+	/*
+	 * Now that we have modifies the list, we run some tests, if DTrace has
+	 * enabled those probes.
+	 */
+	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
+		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
+	}
+
+	if (SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
+		/*
+		 * If test probe is enabled, we verify that the elems
+		 * are sorted.
+		 */
+		int f = test_smlist_elems_sorted(sl);
+		SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
+	}
+
+	return (ret);
 }
 
 /*
@@ -642,7 +654,6 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 	slab_t *s;
 
 	int edup = SL_SUCCESS;
-	test_slab_consistency(sl);
 
 	if (SLIST_SORTED(sl->sl_flags)) {
 		/*
@@ -650,8 +661,11 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		 * appropriate range and place the element there.
 		 */
 
+		if (SLABLIST_TEST_IS_SLAB_LIST_ENABLED()) {
+			SLABLIST_TEST_IS_SLAB_LIST(sl->sl_is_small_list);
+		}
+
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
-		test_slab_sorting(sl);
 
 		int fs;
 		slab_t **bc;
@@ -691,7 +705,6 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 			 * bread crumbs.
 			 */
 			ripple_add_to_sublayers(sl, new, bc);
-			test_sublayers(sl, elem);
 			rm_bc(bc);
 		}
 
@@ -743,11 +756,25 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 
 	if (edup != SL_SUCCESS) {
 		SLABLIST_ADD_END(SL_EDUP);
-		return (SL_EDUP);
+		ret = SL_EDUP;
 	} else {
 		sl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(sl);
 		SLABLIST_ADD_END(SL_SUCCESS);
-		return (SL_SUCCESS);
+		ret = SL_SUCCESS;
 	}
+
+	/*
+	 * Now that we've modified the slab list, we run tests on in (if DTrace
+	 * enables them).
+	 */
+	test_slab_consistency(sl);
+	if (SLIST_SORTED(sl->sl_flags)) {
+		test_slab_sorting(sl);
+		if (sl->sl_sublayers) {
+			test_sublayers(sl, elem);
+		}
+	}
+	return (ret);
+
 }

@@ -53,12 +53,19 @@ test_smlist_nelems(slablist_t *sl)
 	small_list_t *sml = sl->sl_head;
 
 
-	while (i < (sl->sl_elems - 1)) {
-		sml = sml->sml_next;
-		if (sml == NULL) {
+
+	if (sl->sl_elems) {
+		while (i < (sl->sl_elems - 1)) {
+			sml = sml->sml_next;
+			if (sml == NULL) {
+				return (1);
+			}
+			i++;
+		}
+	} else {
+		if (sml != NULL) {
 			return (1);
 		}
-		i++;
 	}
 
 	return (0);
@@ -297,11 +304,6 @@ test_slab_consistency(slablist_t *sl)
 	if (!SLABLIST_TEST_ENABLED()) {
 		return;
 	}
-
-	if (SLABLIST_TEST_IS_SLAB_LIST_ENABLED()) {
-		SLABLIST_TEST_IS_SLAB_LIST(sl->sl_is_small_list);
-	}
-
 
 	if (SLABLIST_TEST_SLAB_BKPTR_ENABLED()) {
 		int f = test_slab_bkptr(sl);
