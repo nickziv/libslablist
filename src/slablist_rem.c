@@ -159,11 +159,11 @@ end:;
 static void
 move_to_next(slab_t *s, slab_t *sn)
 {
-	uint64_t nelems = sn->s_elems;
-	uint64_t nfelems = SELEM_MAX - nelems;
-	uint64_t melems = s->s_elems;
-	uint64_t cpelems;
-	uint64_t from = 0;
+	uint64_t nelems = sn->s_elems;		/* num elems in next slab */
+	uint64_t nfelems = SELEM_MAX - nelems;	/* free elems in next slab */
+	uint64_t melems = s->s_elems;		/* elems in mid slab */
+	uint64_t cpelems;			/* elems to copy */
+	uint64_t from = 0;			/* ix to start cping from */
 	size_t sz = sizeof (uintptr_t);
 	slablist_t *sl = s->s_list;
 
@@ -252,11 +252,11 @@ move_to_next(slab_t *s, slab_t *sn)
 void
 move_to_prev(slab_t *s, slab_t *sp)
 {
-	uint64_t pelems = sp->s_elems;
-	uint64_t pfelems = SELEM_MAX - pelems;
-	uint64_t melems = s->s_elems;
-	uint64_t cpelems = 0;
-	uint64_t from = s->s_elems - 1;
+	uint64_t pelems = sp->s_elems;		/* elems in prev slab */
+	uint64_t pfelems = SELEM_MAX - pelems;	/* free elems in prev slab */
+	uint64_t melems = s->s_elems;		/* elems in middle slab */
+	uint64_t cpelems = 0;			/* elems to cp */
+	uint64_t from = s->s_elems - 1;		/* we copy from the end to front */
 	size_t sz = sizeof (uintptr_t);
 	slablist_t *sl = s->s_list;
 
@@ -265,7 +265,6 @@ move_to_prev(slab_t *s, slab_t *sp)
 	}
 
 	if (melems >= pfelems) {
-		// off = melems - pfelems;
 		cpelems = pfelems;
 		from = pfelems - 1;
 	}
@@ -505,6 +504,7 @@ slab_generic_rem(slab_t *s)
 
 
 	} else if (free_pelems + free_melems >= nelems) {
+
 		/*
 		 * We can consolidate the slabs by moving elements from the
 		 * next slab into the previous and middle slabs.

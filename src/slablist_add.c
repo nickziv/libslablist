@@ -211,7 +211,15 @@ insert_elem(uintptr_t elem, slab_t *s, int i)
 	SLABLIST_FWDSHIFT_END();
 
 end:;
+	/*
+	 * If we inserted at the beginning of the slab, we have to change the
+	 * minimum.
+	 */
 	if (ip == 0) {
+		/*
+		 * Depending on whether or not this is a subslab, we have to
+		 * vary _how_ we set the minimum.
+		 */
 		if (sublayer) {
 			slab_t *sm = (slab_t *)elem;
 			s->s_min = sm->s_min;
@@ -221,7 +229,15 @@ end:;
 		SLABLIST_SLAB_SET_MIN(s);
 	}
 
+	/*
+	 * If we inserted at the end of the slab, we have to change the
+	 * maximum.
+	 */
 	if (ip == (s->s_elems)) {
+		/*
+		 * Depending on whether or not this is a subslab, we have to
+		 * vary _how_ we set the maximum.
+		 */
 		if (sublayer) {
 			slab_t *sm = (slab_t *)elem;
 			s->s_max = sm->s_max;
@@ -343,6 +359,12 @@ gen_insert_ira(slablist_t *sl, slab_t *s, uintptr_t elem, int rep,
 	slab_t *ns = NULL;
 
 	int i = 0;
+	/*
+	 * If the slab `s` is not full, or if there is the possibility of
+	 * replacing an existing element we try to insert into the slab. On the
+	 * other hand, if the slab is full, we have to try to insert the elem
+	 * into the slab `s` while moving elems between the adjacent slabs.
+	 */
 	if (s->s_elems < SELEM_MAX || rep) {
 		i = slab_srch(elem, s, is_slab);
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) == 0) {

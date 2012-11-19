@@ -41,15 +41,19 @@ extern int slablist_umem_init();
 
 slablist_t *
 slablist_create(
-	char *name,
-	size_t obj_size,
-	slablist_cmp_t cmpfun,
-	uint16_t sublayer_req,
-	uint8_t mcap,
-	uint8_t brk,
-	uint8_t fl)
+	char *name,		/* descriptive name */
+	size_t obj_size,	/* size of elem */
+	slablist_cmp_t cmpfun,	/* comparison function callback */
+	uint16_t sublayer_req,	/* slabs needed to attach sublayer */
+	uint8_t mcap,		/* minimum capacity to maintain */
+	uint8_t brk,		/* elems needed to use bin search */
+	uint8_t fl)		/* flags */
 {
 	if (init == 0) {
+		/*
+		 * If this is the first use of libslablist, we initialize the
+		 * umem caches.
+		 */
 		slablist_umem_init();
 		init = 1;
 	}
@@ -63,13 +67,40 @@ slablist_create(
 	list->sl_cmp_super = cmpfun;
 	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
+	/*
+	 * Set the mcap, which can never be larger than 99.
+	 */
 	if (mcap > 99) {
 		list->sl_mcap = 99;
+	} else {
+		list->sl_mcap = mcap;
 	}
-	list->sl_mcap = mcap;
-	list->sl_brk = brk;
-	list->sl_req_sublayer = sublayer_req;
+
+	/*
+	 * Set the brk value, which can never be larger than the number of
+	 * elems that can fit in a slab.
+	 */
+	if (brk <= SELEM_MAX) {
+		list->sl_brk = brk;
+	} else {
+		list->sl_brk = SELEM_MAX;
+	}
+
+	/*
+	 * Set the sublayer_req value, which can never be larger than the
+	 * number of elems that can fit in a slab.
+	 */
+	if (sublayer_req <= SELEM_MAX) {
+		list->sl_req_sublayer = sublayer_req;
+	} else {
+		list->sl_req_sublayer = SELEM_MAX;
+	}
+
 	SLABLIST_CREATE(list);
+	/*
+	 * Add the newly created list to the head of the doubly linked list of
+	 * slab-lists. In libslablist, all slab lists are linked to each other.
+	 */
 	if (lst_sl == NULL) {
 		lst_sl = list;
 	} else {
@@ -81,6 +112,9 @@ slablist_create(
 	return (list);
 }
 
+/*
+ * This function allows the user to set a new minimum capacity.
+ */
 void
 slablist_setmcap(slablist_t *sl, uint8_t new)
 {
@@ -140,7 +174,7 @@ link_sml_node(slablist_t *sl, small_list_t *prev, small_list_t *to_link)
 }
 
 /*
- * `to_rem` is _always_ prev->sml_next...
+ * We unlink the node that comes after `prev` from the linked list.
  */
 void
 unlink_sml_node(slablist_t *sl, small_list_t *prev)
@@ -148,6 +182,10 @@ unlink_sml_node(slablist_t *sl, small_list_t *prev)
 	SLABLIST_UNLINK_SML_NODE(sl);
 	small_list_t *to_rem = NULL;
 
+	/*
+	 * If prev is NULL, we want to remove the head, otherwise we just
+	 * remove the next node.
+	 */
 	if (prev == NULL) {
 		to_rem = sl->sl_head;
 		sl->sl_head = to_rem->sml_next;
@@ -161,6 +199,10 @@ unlink_sml_node(slablist_t *sl, small_list_t *prev)
 	SLABLIST_SL_DEC_ELEMS(sl);
 }
 
+/*
+ * We link slab `s1` to slab `s2`. `flag` indicates if we link to the left or
+ * to the right of `s2`.
+ */
 void
 link_slab(slab_t *s1, slab_t *s2, int flag)
 {
@@ -195,6 +237,9 @@ link_slab(slab_t *s1, slab_t *s2, int flag)
 
 }
 
+/*
+ * Removes slab from slab list.
+ */
 void
 unlink_slab(slab_t *s)
 {
@@ -216,6 +261,9 @@ unlink_slab(slab_t *s)
 	SLABLIST_SL_DEC_SLABS(sl);
 }
 
+/*
+ * Removes all slabs from `sl`. Used as a catch-all.
+ */
 static void
 remove_slabs(slablist_t *sl)
 {
@@ -235,6 +283,10 @@ remove_slabs(slablist_t *sl)
 	}
 }
 
+/*
+ * Destroys a slab list, and frees all slabs as well as removing `sl` from
+ * memory.
+ */
 void
 slablist_destroy(slablist_t *sl)
 {
@@ -294,6 +346,7 @@ detach_sublayer(slablist_t *sl)
 
 	rm_slablist(sub);
 	slablist_t *sup = sl;
+	/* Update the sublayer counter in all the superlayers. */
 	while (sup != NULL) {
 		sup->sl_baselayer = sl;
 		sup->sl_sublayers--;
@@ -301,6 +354,13 @@ detach_sublayer(slablist_t *sl)
 	}
 }
 
+/*
+ * This function compares an element to a slab-pointer. If an element is
+ * "equal" to a slab pointer, that means that it can fit in the slab's range.
+ * If it is "less than" the slab pointer, it needs a slab with a lower range.
+ * If it is "greater than" it needs a slab with a higher range. This function
+ * is used when bubbling up, and binary-searching through a subslab.
+ */
 static int
 sublayer_cmp(uintptr_t e1, uintptr_t e2)
 {
@@ -348,6 +408,7 @@ attach_sublayer(slablist_t *sl)
 
 	slablist_t *sup = sub->sl_superlayer;
 
+	/* Update the sublayer counter in all the superlayers */
 	while (sup != NULL) {
 		sup->sl_sublayers++;
 		sup->sl_baselayer = sub;
@@ -359,6 +420,7 @@ attach_sublayer(slablist_t *sl)
 
 	int i = 0;
 
+	/* Copy pointers of all superslabs into the head subslab */
 	while (i < sl->sl_slabs) {
 		SLABLIST_ADD_INTO(sub, sh, (uintptr_t)c);
 		sh->s_arr[i] = (uintptr_t)c;
@@ -366,6 +428,7 @@ attach_sublayer(slablist_t *sl)
 		i++;
 	}
 
+	/* Set the max and the min of head subslab */
 	slab_t *f = (slab_t *)(sh->s_arr[0]);
 	slab_t *l = (slab_t *)(sh->s_arr[(i - 1)]);
 	sh->s_min = (uintptr_t)(f->s_min);
@@ -380,6 +443,12 @@ attach_sublayer(slablist_t *sl)
 int small_list_add(slablist_t *, uintptr_t, int, uintptr_t *);
 
 
+/*
+ * When we decrease to less than 50% capacity in a slab list with one remaining
+ * slab, we convert the slab into a singly linked list. This way, if we keep
+ * removing elements from this slab list, we will never dip below 50% memory
+ * efficiency.
+ */
 void
 slab_to_small_list(slablist_t *sl)
 {

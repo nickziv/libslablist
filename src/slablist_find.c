@@ -238,6 +238,10 @@ extern void link_slab(slab_t *, slab_t *, int);
  */
 
 
+/*
+ * This function finds the the index at which `elem` _should_ be located in the
+ * slab.
+ */
 static int
 slab_linear_srch(uintptr_t elem, slab_t *s, int start)
 {
@@ -266,6 +270,11 @@ sublayer_slab_linear_srch(uintptr_t elem, slab_t *s, int start)
 	return (i);
 }
 
+/*
+ * This function uses linear search to find `elem`. `is_slab` indicates whether
+ * or not `elem` is just an element or if it is a pointer to a slab. Recall
+ * that elems in subslabs are pointers to superslabs.
+ */
 static int
 gen_lin_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
@@ -309,6 +318,9 @@ sublayer_slab_ptr_srch(uintptr_t elem, slab_t *s, int start)
 	return (-1);
 }
 
+/*
+ * Binary search for `elem` in slab `s`.
+ */
 static int
 slab_bin_srch(uintptr_t elem, slab_t *s)
 {
@@ -341,7 +353,9 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 
 	if (min >= s->s_elems) {
 		/*
-		 * End of array.
+		 * Because `min` is the insertion point, if `min` is greater
+		 * than the largest possible insertion point, we have to
+		 * decrease `min` back to the largest possible insertion point.
 		 */
 		min = s->s_elems - 1;
 	}
@@ -365,6 +379,11 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 
 
 
+/*
+ * We do a binary search for `elem` in a slab `s`. `is_slab` indicates that
+ * `elem` is a pointer to a slab (all elems in subslabs are pointers to
+ * superslabs).
+ */
 static int
 gen_bin_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
@@ -480,6 +499,10 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 	}
 }
 
+/*
+ * Finds the slab into which `elem` could fit, by using the base-layer as a
+ * starting point. Records all subslabs that were walked over into the `l`.
+ */
 int
 find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
 {
@@ -501,6 +524,10 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
 	return (fs);
 }
 
+/*
+ * Function tries to find `key` in `sl`, and records the found elem into the
+ * user-supplied backpointer `found`.
+ */
 int
 slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 {
@@ -570,6 +597,11 @@ get_rand_num(int rfd)
 	return (rv);
 }
 
+/*
+ * Gets random element from `sl`. Unfortunately this function does not have a
+ * uniform distribution of returned positions, as a result of being written in
+ * a rush.
+ */
 uintptr_t
 slablist_get_rand(slablist_t *sl)
 {
@@ -604,6 +636,11 @@ slablist_get_rand(slablist_t *sl)
 	return (ret);
 }
 
+/*
+ * Gets random position from `sl`. Unfortunately this function does not have a
+ * uniform distribution of returned positions, as a result of being written in
+ * a rush.
+ */
 uint64_t
 slablist_get_rand_pos(slablist_t *sl)
 {
