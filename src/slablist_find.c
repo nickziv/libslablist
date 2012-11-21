@@ -473,6 +473,12 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 	uint64_t i = 0;
 	slab_t *s = sl->sl_head;
 	int r = is_elem_in_range(elem, s);
+
+	/*
+	 * Logically, this conditional is redundant, and can be removed.
+	 * However, having it here makes average insertion performance
+	 * empirically faster.
+	 */
 	if (r != FS_OVER_RANGE) {
 		*l = s;
 		SLABLIST_LINEAR_SCAN_END(r);
