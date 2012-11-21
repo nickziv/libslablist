@@ -28,6 +28,12 @@
 #include "slablist_find.h"
 #include "slablist_provider.h"
 
+/*
+ * The num of elems a slab list needs before we start running tests. This set
+ * at build-time and is non-dynamic.
+ */
+static uint64_t testfrom = 0; 
+
 int
 test_slab_to_sml(slablist_t *sl, slab_t *s)
 {
@@ -301,7 +307,7 @@ test_slab_elems_max(slablist_t *sl, uint64_t *l)
 void
 test_slab_consistency(slablist_t *sl)
 {
-	if (!SLABLIST_TEST_ENABLED()) {
+	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
 		return;
 	}
 
@@ -343,7 +349,7 @@ test_slab_consistency(slablist_t *sl)
 void
 test_slab_sorting(slablist_t *sl)
 {
-	if (!SLABLIST_TEST_ENABLED()) {
+	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
 		return;
 	}
 
@@ -617,7 +623,7 @@ test_sublayers_have_all_slabs(slablist_t *sl, int *l)
 void
 test_sublayers(slablist_t *sl, uintptr_t elem)
 {
-	if (!SLABLIST_TEST_ENABLED()) {
+	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
 		return;
 	}
 
@@ -629,6 +635,7 @@ test_sublayers(slablist_t *sl, uintptr_t elem)
 		int f = test_sublayer_extrema(sl, &l, &k, &m, &s);
 		SLABLIST_TEST_SUBLAYER_EXTREMA(f, l, k, m, s);
 	}
+
 	if (SLABLIST_TEST_SUBLAYERS_SORTED_ENABLED()) {
 		int l;
 		int f = test_sublayers_sorted(sl, &l);
