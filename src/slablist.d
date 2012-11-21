@@ -22,6 +22,7 @@ typedef struct slinfo {
 	uint8_t			sli_layer;
 	uint8_t			sli_is_small_list;
 	uintptr_t		sli_head;
+	uintptr_t		sli_end;
 	string			sli_name;
 	size_t			sli_obj_sz;
 	uint8_t 		sli_mcap;
@@ -62,6 +63,7 @@ struct slablist {
         uint8_t                 sl_layer;
         uint8_t                 sl_is_small_list;
         void                    *sl_head;
+        void                    *sl_end;
         char                    *sl_name;
         size_t                  sl_obj_sz;
         uint8_t			sl_mcap;
@@ -113,6 +115,8 @@ translator slinfo_t < slablist_t *sl >
 				sizeof (sl->sl_is_small_list));
 	sli_head = *(uintptr_t *)copyin((uintptr_t)&sl->sl_head,
 				sizeof (sl->sl_head));
+	sli_end = *(uintptr_t *)copyin((uintptr_t)&sl->sl_end,
+				sizeof (sl->sl_end));
 	sli_name = copyinstr(
 		*(uintptr_t *)
 		copyin(

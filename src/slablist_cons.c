@@ -229,6 +229,9 @@ link_slab(slab_t *s1, slab_t *s2, int flag)
 		if (s1->s_next != NULL) {
 			s1->s_next->s_prev = s1;
 		}
+		if (s2 == sl->sl_end) {
+			sl->sl_end = s1;
+		}
 	}
 
 	s2->s_list->sl_slabs++;
@@ -500,6 +503,7 @@ small_list_to_slab(slablist_t *sl)
 	SLABLIST_SLAB_INC_ELEMS(s);
 	sl->sl_is_small_list = 0;
 	sl->sl_head = s;
+	sl->sl_end = s;
 	sl->sl_slabs = 1;
 	SLABLIST_SL_INC_SLABS(sl);
 

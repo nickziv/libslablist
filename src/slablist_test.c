@@ -78,7 +78,7 @@ test_smlist_elems_sorted(slablist_t *sl)
 	small_list_t *sml = sl->sl_head;
 	small_list_t *prev = NULL;
 
-	if (sl->sl_elems <= 1) {
+	if (sl->sl_elems <= 1 || !(SLIST_SORTED(sl->sl_flags))) {
 		return (0);
 	}
 

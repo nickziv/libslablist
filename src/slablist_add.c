@@ -758,7 +758,7 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		 * of the list which is at the end of the last slab.
 		 */
 		uint64_t op;
-		s = slab_get(sl, sl->sl_slabs - 1, &op, SLAB_IN_POS);
+		s = (slab_t *)sl->sl_end;
 
 		if (s->s_elems < SELEM_MAX) {
 			s->s_arr[s->s_elems] = elem;

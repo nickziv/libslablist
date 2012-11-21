@@ -421,6 +421,7 @@ struct slablist {
 	uint8_t			sl_layer;
 	uint8_t			sl_is_small_list;
 	void			*sl_head;
+	void			*sl_end;
 	char			*sl_name;
 	size_t			sl_obj_sz;
 	uint8_t			sl_mcap;

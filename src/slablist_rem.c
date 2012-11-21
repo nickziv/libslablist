@@ -879,21 +879,18 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	remd = slab_generic_rem(s);
 	if (sl->sl_sublayers) {
 		ripple_rem_to_sublayers(sl, remd, bc);
-	}
-
-	if (sl->sl_sublayers) {
 		rm_bc(bc);
+		slablist_t *subl = sl->sl_baselayer;
+		slablist_t *supl = subl->sl_superlayer;
+		if (subl != sl && supl->sl_slabs < sl->sl_req_sublayer) {
+			/*
+			 * If the baselayer's superlayer has < sl_req_sublayer,
+			 * the baselayer is not needed. We remove it.
+			 */
+			detach_sublayer(supl);
+		}
 	}
 
-	slablist_t *subl = sl->sl_baselayer;
-	slablist_t *supl = subl->sl_superlayer;
-	if (subl != sl && supl->sl_slabs < sl->sl_req_sublayer) {
-		/*
-		 * If the baselayer's superlayer has < sl_req_sublayer, the
-		 * baselayer is not needed. We remove it.
-		 */
-		detach_sublayer(supl);
-	}
 
 	try_reap_all(sl);
 
