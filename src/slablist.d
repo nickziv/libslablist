@@ -25,7 +25,8 @@ typedef struct slinfo {
 	uintptr_t		sli_end;
 	string			sli_name;
 	size_t			sli_obj_sz;
-	uint8_t 		sli_mcap;
+	uint8_t 		sli_mpslabs;
+	uint64_t 		sli_mslabs;
 	uint64_t		sli_slabs;
 	uint64_t		sli_elems;
 	uint8_t			sli_is_sorted;
@@ -66,7 +67,8 @@ struct slablist {
         void                    *sl_end;
         char                    *sl_name;
         size_t                  sl_obj_sz;
-        uint8_t			sl_mcap;
+        uint8_t			sl_mpslabs;
+        uint64_t		sl_mslabs;
         uint64_t                sl_slabs;
         uint64_t                sl_elems;
         uint8_t                 sl_flags;
@@ -124,8 +126,10 @@ translator slinfo_t < slablist_t *sl >
 		sizeof (sl->sl_name)));
 	sli_obj_sz = *(size_t *)copyin((uintptr_t)&sl->sl_obj_sz,
 				sizeof (size_t));
-	sli_mcap = *(uint8_t *)copyin((uintptr_t)&sl->sl_mcap,
-	 			sizeof (sl->sl_mcap));
+	sli_mpslabs = *(uint8_t *)copyin((uintptr_t)&sl->sl_mpslabs,
+	 			sizeof (sl->sl_mpslabs));
+	sli_mslabs = *(uint64_t *)copyin((uintptr_t)&sl->sl_mslabs,
+				sizeof (sl->sl_mslabs));
 	sli_slabs = *(uint64_t *)copyin((uintptr_t)&sl->sl_slabs,
 				sizeof (sl->sl_slabs));
 	sli_elems = *(uint64_t *)copyin((uintptr_t)&sl->sl_elems,

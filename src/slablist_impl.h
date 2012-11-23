@@ -402,6 +402,7 @@ struct slab {
 	slab_t			*s_next;
 	slab_t 			*s_prev;
 	slablist_t		*s_list;
+	uint8_t			s_dens;
 	uint8_t			s_elems;
 	uintptr_t		s_max;
 	uintptr_t		s_min;
@@ -424,7 +425,8 @@ struct slablist {
 	void			*sl_end;
 	char			*sl_name;
 	size_t			sl_obj_sz;
-	uint8_t			sl_mcap;
+	uint8_t			sl_mpslabs;
+	uint64_t		sl_mslabs;
 	uint64_t		sl_slabs;
 	uint64_t		sl_elems;
 	uint8_t			sl_flags;

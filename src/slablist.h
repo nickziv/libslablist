@@ -47,11 +47,13 @@ typedef struct slablist slablist_t;
 typedef int slablist_cmp_t(uintptr_t, uintptr_t);
 
 
-slablist_t *slablist_create(char *, size_t, slablist_cmp_t, uint16_t, uint8_t,
-		uint8_t, uint8_t);
+slablist_t *slablist_create(char *, size_t, slablist_cmp_t, uint16_t, uint64_t,
+		uint8_t, uint8_t, uint8_t);
 extern void slablist_destroy(slablist_t *);
-extern void slablist_setmcap(slablist_t *, uint8_t);
-extern uint8_t slablist_getmcap(slablist_t *);
+extern void slablist_setmpslabs(slablist_t *, uint8_t);
+extern void slablist_setmslabs(slablist_t *, uint64_t);
+extern uint8_t slablist_getmpslabs(slablist_t *);
+extern uint64_t slablist_getmslabs(slablist_t *);
 extern uint64_t slablist_getelems(slablist_t *);
 extern uint64_t slablist_gettype(slablist_t *);
 extern char *slablist_getname(slablist_t *);

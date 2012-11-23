@@ -19,7 +19,7 @@ cmpfun(uintptr_t v1, uintptr_t v2)
 int
 main(int ac, char *av[])
 {
-	slablist_t *sl = slablist_create("test", 8, cmpfun, 100, 0.5, 64,
+	slablist_t *sl = slablist_create("test", 8, cmpfun, 10, 18, 30, 8,
 				SL_SORTED);
 	// printf("user's slablist: %p\n", sl);
 	uintptr_t times = 1;

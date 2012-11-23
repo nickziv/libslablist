@@ -243,27 +243,27 @@ main(int ac, char *av[])
 	if (strsrt) {
 		printf("=1=\n");
 		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
-					10, 70, 8, SL_SORTED);
+					10, 18, 30, 8, SL_SORTED);
 		do_ops(sl_str_s, maxops, STR, SRT);
 		do_free_remaining(sl_str_s, STR, SRT);
 	}
 	if (intsrt) {
 		printf("=2=\n");
-		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 70, 8,
+		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 18, 30, 8,
 					SL_SORTED);
 		do_ops(sl_int_s, maxops, INT, SRT);
-		do_free_remaining(sl_int_s, INT, SRT);
+		// do_free_remaining(sl_int_s, INT, SRT);
 	}
 	if (strord) {
 		printf("=3=\n");
 		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
-					10, 70, 8, SL_ORDERED);
+					10, 18, 30, 8, SL_ORDERED);
 		do_ops(sl_str_o, maxops, STR, ORD);
 		do_free_remaining(sl_str_o, STR, ORD);
 	}
 	if (intord) {
 		printf("=4=\n");
-		sl_int_o = slablist_create("intlistord", 8, cmpfun, 10, 70,
+		sl_int_o = slablist_create("intlistord", 8, cmpfun, 10, 18, 30,
 					8, SL_ORDERED);
 		do_ops(sl_int_o, maxops, INT, ORD);
 		do_free_remaining(sl_int_o, INT, ORD);

@@ -45,7 +45,8 @@ slablist_create(
 	size_t obj_size,	/* size of elem */
 	slablist_cmp_t cmpfun,	/* comparison function callback */
 	uint16_t sublayer_req,	/* slabs needed to attach sublayer */
-	uint8_t mcap,		/* minimum capacity to maintain */
+	uint64_t mslabs,	/* minimum number of slabs to reap */
+	uint8_t mpslabs,	/* minimum percentage of slabs to reap */
 	uint8_t brk,		/* elems needed to use bin search */
 	uint8_t fl)		/* flags */
 {
@@ -68,13 +69,15 @@ slablist_create(
 	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
 	/*
-	 * Set the mcap, which can never be larger than 99.
+	 * Set the mpslabs, which can never be larger than 99.
 	 */
-	if (mcap > 99) {
-		list->sl_mcap = 99;
+	if (mpslabs > 99) {
+		list->sl_mpslabs = 99;
 	} else {
-		list->sl_mcap = mcap;
+		list->sl_mpslabs = mpslabs;
 	}
+
+	list->sl_mslabs = mslabs;
 
 	/*
 	 * Set the brk value, which can never be larger than the number of
@@ -116,13 +119,19 @@ slablist_create(
  * This function allows the user to set a new minimum capacity.
  */
 void
-slablist_setmcap(slablist_t *sl, uint8_t new)
+slablist_setmpslabs(slablist_t *sl, uint8_t new)
 {
 	if (new <= 99) {
-		sl->sl_mcap = new;
+		sl->sl_mpslabs = new;
 	} else {
-		sl->sl_mcap = 99;
+		sl->sl_mpslabs = 99;
 	}
+}
+
+void
+slablist_setmslabs(slablist_t *sl, uint64_t new)
+{
+	sl->sl_mslabs = new;
 }
 
 char *
@@ -132,9 +141,15 @@ slablist_getname(slablist_t *sl)
 }
 
 uint8_t
-slablist_getmcap(slablist_t *sl)
+slablist_getmpslabs(slablist_t *sl)
 {
-	return (sl->sl_mcap);
+	return (sl->sl_mpslabs);
+}
+
+uint64_t
+slablist_getmslabs(slablist_t *sl)
+{
+	return (sl->sl_mslabs);
 }
 
 uint64_t
@@ -389,11 +404,6 @@ attach_sublayer(slablist_t *sl)
 	sub->sl_head = mk_slab();
 	sub->sl_cmp_elem = sublayer_cmp;
 
-	/*
-	 * We set the sublayer's mcap to 99, so as to minimize its memory
-	 * overhead.
-	 */
-	sub->sl_mcap = 99;
 	SLABLIST_SLAB_MK(sub);
 	SLIST_SET_SUBLAYER(sub->sl_flags);
 
@@ -515,30 +525,18 @@ small_list_to_slab(slablist_t *sl)
 
 /*
  * This function tries to reap all the slabs in a slab list (not counting any
- * subslabs). It will only reap if the slab list is below its minimum memory
- * capacity.
+ * subslabs). It will only reap if the slab list can have a minumum number of
+ * slabs AND a minimum percentage of slabs reaped. This way the user won't
+ * waste cycles on trivial memory savings.
  */
 void
 try_reap(slablist_t *sl)
 {
-	double es = (double)sl->sl_elems;
-	double ss = (double)sl->sl_slabs;
-	/* the minimum number of elems with 1 partial-slab */
-	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
-	/* the maximum efficiency with 1 partial-slab */
-	double mxss = mxe / (ss*(double)SELEM_MAX);
-	/* the current utilization ration */
-	double cratio = es / (ss * SELEM_MAX);
-	/* the mcap in double foating point form */
-	double dmcap = ((double)sl->sl_mcap)/100;
-	if (!(sl->sl_mcap > 100) && ss > 1 &&
-	    mxss >= dmcap && (cratio <= dmcap)) {
-		/*
-		 * If we have a valid mcap (minimum capacity) value, the mcap
-		 * is not greater than the maximum possible efficiency of the
-		 * slablist, and the current utilization is not at or above the
-		 * mcap value, we initiate a reap.
-		 */
+	uint64_t slabs_saveable = sl->sl_slabs - (sl->sl_elems / SELEM_MAX);
+	float percntg_slabs_saveable = ((float)slabs_saveable) / ((float)sl->sl_slabs);
+	float req_percntg = ((float)(sl->sl_mpslabs))/100.0;
+	if (slabs_saveable >= sl->sl_mslabs &&
+	    percntg_slabs_saveable >= req_percntg) {
 		slablist_reap(sl);
 	}
 }

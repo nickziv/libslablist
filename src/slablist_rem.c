@@ -712,22 +712,6 @@ slablist_reap(slablist_t *sl)
 		return;
 	}
 
-	double es = (double)sl->sl_elems;
-	double ss = (double)sl->sl_slabs;
-	/* the minimum number of elems with 1 partial-slab */
-	double mxe = (ss*(double)SELEM_MAX) - (double)(SELEM_MAX - 1);
-	/* the maximum efficiency with 1 partial-slab */
-	double mxss = mxe / (ss * (double)SELEM_MAX);
-	double cratio = es / (ss * SELEM_MAX);
-	if (ss == 1 || mxss <= cratio) {
-		/*
-		 * We check to see if reaping will actually save us space. If
-		 * the maximum efficiency is greater than the current
-		 * efficiency, we do the reap. If not, we return.
-		 */
-		return;
-	}
-
 	/*
 	 * For now, we iterate over all slabs. but this is not neccessary.  We
 	 * just have to iterate over all the slabs between the first and last
