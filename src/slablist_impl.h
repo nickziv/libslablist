@@ -402,7 +402,6 @@ struct slab {
 	slab_t			*s_next;
 	slab_t 			*s_prev;
 	slablist_t		*s_list;
-	uint8_t			s_dens;
 	uint8_t			s_elems;
 	uintptr_t		s_max;
 	uintptr_t		s_min;
