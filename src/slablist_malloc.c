@@ -65,17 +65,3 @@ rm_buf(void *s, size_t sz)
 {
 	free(s);
 }
-
-
-void *
-mk_bc()
-{
-	return (calloc(1, MAX_LYRS * sizeof (slab_t *)));
-
-}
-
-void
-rm_bc(void *f)
-{
-        free(f);
-}

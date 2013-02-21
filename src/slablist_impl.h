@@ -336,6 +336,11 @@
 #include "slablist.h"
 
 
+#define ON_RIGHT_EDGE		1
+#define ON_LEFT_EDGE		2
+#define ALMOST_ON_RIGHT_EDGE	3
+#define ALMOST_ON_LEFT_EDGE	4
+
 #define	SLADD_BEFORE		0
 #define	SLADD_AFTER		1
 #define	SLAB_LINK_BEFORE	0
@@ -408,6 +413,11 @@ struct slab {
 	uintptr_t		s_arr[SELEM_MAX];
 };
 
+typedef struct bc {
+	slab_t			*bc_slab;
+	uint8_t			bc_on_edge;
+} bc_t;
+
 struct slablist {
 	pthread_mutex_t		sl_mutex;
 	slablist_t		*sl_prev;
@@ -441,8 +451,6 @@ slablist_t *mk_slablist(void);
 void rm_slablist(slablist_t *);
 slab_t *mk_slab(void);
 void rm_slab(slab_t *);
-void *mk_bc();
-void rm_bc(void *);
 void *mk_buf(size_t);
 void *mk_zbuf(size_t);
 void rm_buf(void*, size_t);
@@ -452,11 +460,11 @@ void rm_sml_node(small_list_t *);
 /*
  * Shared ripple functions.
  */
-void ripple_update_extrema(slab_t **, int);
+void ripple_update_extrema(bc_t *, int);
 
 
 
 /*
  * Search functions
  */
-int find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l);
+int find_slab_in_slab(slab_t *s, uintptr_t elem, bc_t *l);

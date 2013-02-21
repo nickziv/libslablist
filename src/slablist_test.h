@@ -54,7 +54,7 @@ int test_sublayer_elems_sorted(slablist_t *sl, int *l);
 
 int test_sublayers_have_all_slabs(slablist_t *sl, int *l);
 
-int test_breadcrumbs(slab_t **bc, int *l, uint64_t bcn);
+int test_breadcrumbs(bc_t *bc, int *l, uint64_t bcn);
 
 int test_move_next(slab_t *s, slab_t *sn, slab_t *scp, slab_t *sncp, int *i);
 

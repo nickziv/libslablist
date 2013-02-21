@@ -250,7 +250,7 @@ main(int ac, char *av[])
 		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 30, 30, 8,
 					SL_SORTED);
 		do_ops(sl_int_s, maxops, INT, SRT);
-		// do_free_remaining(sl_int_s, INT, SRT);
+		do_free_remaining(sl_int_s, INT, SRT);
 	}
 	if (strord) {
 		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,

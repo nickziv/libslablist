@@ -24,8 +24,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #include <strings.h>
 #include <stdio.h>
 #include "slablist_impl.h"
@@ -60,7 +59,7 @@ slablist_create(
 	}
 	slablist_t *list = mk_slablist();
 	/* TODO: add this list to the master slablist */
-	// link_slablist(master_list, list);
+	/* link_slablist(master_list, list); */
 	size_t namesize = strlen(name);
 	list->sl_name = mk_buf(namesize);
 	strcpy(list->sl_name, name);
@@ -550,8 +549,6 @@ try_reap_all(slablist_t *sl)
 {
 	slablist_t *csl = sl;
 	int i = 0;
-	//try_reap(csl);
-	//return;
 	do {
 		try_reap(csl);
 		csl = csl->sl_sublayer;

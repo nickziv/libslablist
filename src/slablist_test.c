@@ -371,11 +371,10 @@ int
 test_bubble_up(slablist_t *sl, uintptr_t elem, int *l)
 {
 	slab_t *sls = NULL;
-	slab_t **bc = mk_buf(8 * 256);
+	bc_t bc_path[MAX_LYRS];
 	int fs = find_linear_scan(sl, elem, &sls);
-	int bs = find_bubble_up(sl, elem, bc);
-	if (fs == bs && bc[(sl->sl_sublayers)] == sls) {
-		rm_buf(bc, 8 * 256);
+	int bs = find_bubble_up(sl, elem, bc_path);
+	if (fs == bs && bc_path[(sl->sl_sublayers)].bc_slab == sls) {
 		return (0);
 	}
 	int ret = 0;
@@ -383,7 +382,7 @@ test_bubble_up(slablist_t *sl, uintptr_t elem, int *l)
 		ret = 1;
 	}
 
-	if (sls != bc[(sl->sl_sublayers)]) {
+	if (sls != bc_path[(sl->sl_sublayers)].bc_slab) {
 		if (ret == 1) {
 			ret = 3;
 		} else {
@@ -392,7 +391,6 @@ test_bubble_up(slablist_t *sl, uintptr_t elem, int *l)
 	}
 
 	*l = ret;
-	rm_buf(bc, 8 * 256);
 	return (1);
 }
 
@@ -670,14 +668,14 @@ test_sublayers(slablist_t *sl, uintptr_t elem)
 }
 
 int
-test_breadcrumbs(slab_t **bc, int *l, uint64_t bcn)
+test_breadcrumbs(bc_t *bc, int *l, uint64_t bcn)
 {
 	int i = 0;
 	int cl;
 	int nl;
 	while (i < (bcn - 1)) {
-		slab_t *s = bc[i];
-		slab_t *s1 = bc[(i + 1)];
+		slab_t *s = bc[i].bc_slab;
+		slab_t *s1 = bc[(i + 1)].bc_slab;
 		cl = s->s_list->sl_layer;
 		nl = s1->s_list->sl_layer;
 		if (cl <= nl) {

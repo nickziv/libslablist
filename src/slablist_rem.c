@@ -34,8 +34,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #include <strings.h>
 #include <stdio.h>
 #include "slablist_impl.h"
@@ -630,7 +629,7 @@ remove_elem(int i, slab_t *s)
  * removing any references to the slab that has been freed.
  */
 void
-ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, slab_t **l)
+ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, bc_t *crumbs)
 {
 	int nu = sl->sl_sublayers;
 	slablist_t *csl = sl;
@@ -645,15 +644,15 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, slab_t **l)
 	 * removed slab (r).
 	 */
 	while (r != NULL && cu < nu) {
-		SLABLIST_RIPPLE_REM_SLAB(sl, r, l[bc]);
+		SLABLIST_RIPPLE_REM_SLAB(sl, r, crumbs[bc].bc_slab);
 		csl = csl->sl_sublayer;
-		sp = l[bc]->s_prev;
-		sn = l[bc]->s_next;
-		i = sublayer_slab_ptr_srch((uintptr_t)r, l[bc], 0);
+		sp = crumbs[bc].bc_slab->s_prev;
+		sn = crumbs[bc].bc_slab->s_next;
+		i = sublayer_slab_ptr_srch((uintptr_t)r, crumbs[bc].bc_slab, 0);
 		if (i != -1) {
 			/* clearly r is ref'd in this slab... */
-			remove_elem(i, l[bc]);
-			r = slab_generic_rem(l[bc]);
+			remove_elem(i, crumbs[bc].bc_slab);
+			r = slab_generic_rem(crumbs[bc].bc_slab);
 			goto try_setbc;
 		}
 		i = sublayer_slab_ptr_srch((uintptr_t)r, sn, 0);
@@ -672,17 +671,19 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, slab_t **l)
 		}
 
 try_setbc:;
-		if (r == l[bc]) {
+		/* TODO check if this is consistent with edge-detection */
+		if (r == crumbs[bc].bc_slab) {
 			/*
-			 * If we removed l[bc] we need to update the l[bc] to
-			 * point to an adjacent slab, if possible.
+			 * If we removed crumbs[bc] we need to update the
+			 * crumbs[bc] to point to an adjacent slab, if
+			 * possible.
 			 */
 			if (sn != NULL) {
-				l[bc] = sn;
+				crumbs[bc].bc_slab = sn;
 			} else if (sp != NULL) {
-				l[bc] = sp;
+				crumbs[bc].bc_slab = sp;
 			}
-			SLABLIST_SET_CRUMB(sl, l[bc], bc);
+			SLABLIST_SET_CRUMB(sl, crumbs[bc].bc_slab, bc);
 		}
 		csl->sl_elems--;
 		SLABLIST_SL_DEC_ELEMS(csl);
@@ -693,7 +694,7 @@ try_setbc:;
 	 * Now we update the extrema.
 	 */
 	bc = nu;
-	ripple_update_extrema(l, bc);
+	ripple_update_extrema(crumbs, bc);
 }
 
 
@@ -719,7 +720,7 @@ slablist_reap(slablist_t *sl)
 	 */
 	SLABLIST_REAP_BEGIN(sl);
 	slab_t *s = sl->sl_head;
-	slab_t **bc = mk_bc();
+	bc_t bc_path[MAX_LYRS];
 	slab_t *sn = NULL;
 	slab_t *rmd;
 	uintptr_t min;
@@ -735,7 +736,7 @@ slablist_reap(slablist_t *sl)
 				 * ripple changes down after we 1) deallocate
 				 * the slab and 2) change its extrema.
 				 */
-				find_bubble_up(sl, min, bc);
+				find_bubble_up(sl, min, bc_path);
 			}
 			move_to_prev(sn, s);
 			if (sn->s_elems == 0) {
@@ -754,13 +755,12 @@ slablist_reap(slablist_t *sl)
 				 * down, using the bread crumb path created in
 				 * the previous if-stmt.
 				 */
-				ripple_rem_to_sublayers(sl, rmd, bc);
+				ripple_rem_to_sublayers(sl, rmd, bc_path);
 			}
 		}
 		s = s->s_next;
 		i++;
 	}
-	rm_bc(bc);
 	SLABLIST_REAP_END(sl);
 }
 
@@ -774,7 +774,7 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 {
 	uint64_t off_pos;
 	slab_t *s = NULL;
-	slab_t **bc;
+	bc_t bc_path[MAX_LYRS];
 	int i;
 	int ret;
 
@@ -810,14 +810,13 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 
 		if (sl->sl_sublayers) {
 
-			bc = mk_bc();
-			find_bubble_up(sl, elem, bc);
-			s = bc[sl->sl_sublayers];
+			find_bubble_up(sl, elem, bc_path);
+			s = (bc_path[sl->sl_sublayers]).bc_slab;
 
 			if (SLABLIST_TEST_BREAD_CRUMBS_ENABLED()) {
 				uint64_t bcn = sl->sl_sublayers;
 				int l;
-				int f = test_breadcrumbs(bc, &l, bcn);
+				int f = test_breadcrumbs(bc_path, &l, bcn);
 				SLABLIST_TEST_BREAD_CRUMBS(f, l);
 			}
 
@@ -838,9 +837,6 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 				*rdl = NULL;
 			}
 
-			if (sl->sl_sublayers) {
-				rm_bc(bc);
-			}
 			ret = SL_ENFOUND;
 			goto end;
 		}
@@ -862,8 +858,7 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	slab_t *remd = NULL;
 	remd = slab_generic_rem(s);
 	if (sl->sl_sublayers) {
-		ripple_rem_to_sublayers(sl, remd, bc);
-		rm_bc(bc);
+		ripple_rem_to_sublayers(sl, remd, bc_path);
 		slablist_t *subl = sl->sl_baselayer;
 		slablist_t *supl = subl->sl_superlayer;
 		if (subl != sl && supl->sl_slabs < sl->sl_req_sublayer) {

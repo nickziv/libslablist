@@ -36,8 +36,7 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <thread.h>
-#include <synch.h>
+#include <pthread.h>
 #include <strings.h>
 #include <stdio.h>
 #include "slablist_impl.h"
@@ -546,17 +545,17 @@ slab_gen_insert(int status, uintptr_t elem, slab_t *s, int rep,
 }
 
 void
-ripple_update_extrema(slab_t *l[], int i)
+ripple_update_extrema(bc_t *crumbs, int i)
 {
 	/*
 	 * This loop ripples any changed extrema to the sublayers. We update
-	 * l[bc] and adjacent slabs (if any).
+	 * crumbs[bc] and adjacent slabs (if any).
 	 */
 	slab_t *sub_s;
 	slab_t *sup_s;
 	int bc = i;
 	while (bc > 0) {
-		sub_s = l[(bc - 1)];
+		sub_s = crumbs[(bc - 1)].bc_slab;
 		sup_s = (slab_t *)sub_s->s_arr[(sub_s->s_elems - 1)];
 		if (sub_s->s_max != sup_s->s_max) {
 			sub_s->s_max = sup_s->s_max;
@@ -612,7 +611,7 @@ ripple_update_extrema(slab_t *l[], int i)
  * slab is potentially reachable from the baselayer.
  */
 static void
-ripple_add_to_sublayers(slablist_t *sl, slab_t *new, slab_t *l[])
+ripple_add_to_sublayers(slablist_t *sl, slab_t *new, bc_t *crumbs)
 {
 	int nu = sl->sl_sublayers;
 	slablist_t *csl = sl;
@@ -621,7 +620,7 @@ ripple_add_to_sublayers(slablist_t *sl, slab_t *new, slab_t *l[])
 	int edup;
 
 	bc += (nu);
-	ripple_update_extrema(l, bc);
+	ripple_update_extrema(crumbs, bc);
 
 
 	/*
@@ -631,9 +630,9 @@ ripple_add_to_sublayers(slablist_t *sl, slab_t *new, slab_t *l[])
 	bc += (nu - 1);
 	while (new != NULL && cu < nu) {
 		csl = csl->sl_sublayer;
-		SLABLIST_RIPPLE_ADD_SLAB(csl, new, l[bc]);
-		int fs = is_elem_in_range(new->s_min, l[bc]);
-		new = slab_gen_insert(fs, (uintptr_t)new, l[bc], 0,
+		SLABLIST_RIPPLE_ADD_SLAB(csl, new, crumbs[bc].bc_slab);
+		int fs = is_elem_in_range(new->s_min, crumbs[bc].bc_slab);
+		new = slab_gen_insert(fs, (uintptr_t)new, crumbs[bc].bc_slab, 0,
 			NULL, &edup);
 		csl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(csl);
@@ -690,7 +689,7 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
 
 		int fs;
-		slab_t **bc;
+		bc_t bc_path[MAX_LYRS];
 		if (sl->sl_sublayers) {
 			/*
 			 * If this slablist has sublayers, we create a buffer
@@ -701,14 +700,13 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 			 * the overlier. If we don't have sublayers, then we
 			 * do a linear srch to find the appropriate slab.
 			 */
-			bc = mk_bc();
-			fs = find_bubble_up(sl, elem, bc);
-			s = bc[(sl->sl_sublayers)];
+			fs = find_bubble_up(sl, elem, bc_path);
+			s = bc_path[(sl->sl_sublayers)].bc_slab;
 
 			if (SLABLIST_TEST_BREAD_CRUMBS_ENABLED()) {
 				uint64_t bcn = sl->sl_sublayers;
 				int l;
-				int f = test_breadcrumbs(bc, &l, bcn);
+				int f = test_breadcrumbs(bc_path, &l, bcn);
 				SLABLIST_TEST_BREAD_CRUMBS(f, l);
 			}
 
@@ -726,8 +724,7 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 			 * reference. Then we remove the buffer containing the
 			 * bread crumbs.
 			 */
-			ripple_add_to_sublayers(sl, new, bc);
-			rm_bc(bc);
+			ripple_add_to_sublayers(sl, new, bc_path);
 		}
 
 		slablist_t *usl = NULL;

@@ -29,7 +29,6 @@
 umem_cache_t *cache_slablist;
 umem_cache_t *cache_slab;
 umem_cache_t *cache_small_list;
-umem_cache_t *cache_bc;
 
 int
 slablist_ctor(void *buf, void *ignored, int flags)
@@ -61,7 +60,14 @@ small_list_ctor(void *buf, void *ignored, int flags)
 int
 bc_ctor(void *buf, void *ignored, int flags)
 {
-	bzero(buf, MAX_LYRS * sizeof (slab_t *));
+	bzero(buf, sizeof (bc_t));
+	return (0);
+}
+
+int
+bc_path_ctor(void *buf, void *ignored, int flags)
+{
+	bzero(buf, MAX_LYRS * sizeof (bc_t));
 	return (0);
 }
 
@@ -92,16 +98,6 @@ slablist_umem_init()
 		sizeof (small_list_t),
 		0,
 		small_list_ctor,
-		NULL,
-		NULL,
-		NULL,
-		NULL,
-		0);
-
-	cache_bc = umem_cache_create("bc",
-		MAX_LYRS * sizeof (slab_t *),
-		0,
-		bc_ctor,
 		NULL,
 		NULL,
 		NULL,
@@ -152,19 +148,6 @@ rm_sml_node(small_list_t *s)
 {
 	bzero(s, sizeof (small_list_t));
 	umem_cache_free(cache_small_list, s);
-}
-
-void *
-mk_bc()
-{
-	return (umem_cache_alloc(cache_bc, UMEM_NOFAIL));
-}
-
-void
-rm_bc(void *f)
-{
-	bzero(f, MAX_LYRS * sizeof (slab_t *));
-	umem_cache_free(cache_bc, f);
 }
 
 void *

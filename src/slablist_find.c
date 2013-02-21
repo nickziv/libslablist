@@ -423,12 +423,12 @@ slab_srch(uintptr_t elem, slab_t *s, int is_slab)
 }
 
 /*
- *  This function tries to find the slab that contains elem in slab s.  `l`
- *  points to the ptr, that will hold either the slab with `elem`, or the
- *  slab nearest to it.
+ *  This function tries to find the slab that contains elem in slab s.
+ *  `crumbs` points to the ptr, that will hold either the bread crumb with the
+ *  slab with `elem`, or the slab nearest to it.
  */
-static int
-find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l)
+int
+find_slab_in_slab(slab_t *s, uintptr_t elem, bc_t *crumbs)
 {
 	int x = 0;
 	x = slab_srch(elem, s, 0);
@@ -450,8 +450,15 @@ find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l)
 		 */
 		x = s->s_elems - 1;
 	}
+
+	if (!x) {
+		(*crumbs).bc_on_edge = ON_LEFT_EDGE;
+	} else if (x == s->s_elems - 1) {
+		(*crumbs).bc_on_edge = ON_RIGHT_EDGE;
+	}
+
 	int r = is_elem_in_range(elem, (slab_t *)(s->s_arr[x]));
-	*l = (slab_t *)s->s_arr[x];
+	(*crumbs).bc_slab = (slab_t *)s->s_arr[x];
 
 	return (r);
 }
@@ -466,7 +473,7 @@ find_slab_in_slab(slab_t *s, uintptr_t elem, slab_t **l)
  * If we are at end and > min, we append.
  */
 int
-find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
+find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **sbptr)
 {
 
 	SLABLIST_LINEAR_SCAN_BEGIN(sl);
@@ -480,7 +487,7 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 	 * empirically faster.
 	 */
 	if (r != FS_OVER_RANGE) {
-		*l = s;
+		*sbptr = s;
 		SLABLIST_LINEAR_SCAN_END(r);
 		return (r);
 	}
@@ -489,14 +496,14 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 		SLABLIST_LINEAR_SCAN(sl, s);
 		int r = is_elem_in_range(elem, s);
 		if (r != FS_OVER_RANGE) {
-			*l = s;
+			*sbptr = s;
 			SLABLIST_LINEAR_SCAN_END(r);
 			return (r);
 		} else {
 			if (s->s_next != NULL) {
 				s = s->s_next;
 			} else {
-				*l = s;
+				*sbptr = s;
 				SLABLIST_LINEAR_SCAN_END(r);
 				return (r);
 			}
@@ -507,22 +514,26 @@ find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **l)
 
 /*
  * Finds the slab into which `elem` could fit, by using the base-layer as a
- * starting point. Records all subslabs that were walked over into the `l`.
+ * starting point. Records all subslabs that were walked over into the `crumbs`.
  */
 int
-find_bubble_up(slablist_t *sl, uintptr_t elem, slab_t *l[])
+find_bubble_up(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
-	/* `l` is used as the bread crumb array */
+	/* `crumbs` is used as the bread crumb array */
 	slablist_t *u = sl->sl_baselayer;
 	int nu = sl->sl_sublayers;
 	int cu = 0;
-	int fs = find_linear_scan(u, elem, l);
+	slab_t *s = (crumbs[0].bc_slab);
+	int fs = find_linear_scan(u, elem, &s);
+	crumbs[0].bc_slab = s;
+	int r = is_elem_in_range(elem, s) ;
 	int bc = 0;
 	bc++;
 	while (cu < nu) {
-		fs = find_slab_in_slab(l[(bc-1)], elem, &(l[bc]));
-		SLABLIST_BUBBLE_UP(sl, l[bc]);
+		fs = find_slab_in_slab(crumbs[(bc-1)].bc_slab, elem,
+			&(crumbs[bc]));
+		SLABLIST_BUBBLE_UP(sl, crumbs[bc].bc_slab);
 		bc++;
 		cu++;
 	}
@@ -538,7 +549,7 @@ int
 slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 {
 	SLABLIST_FIND_BEGIN(sl, key);
-	slab_t **bc;
+	bc_t bc_path[MAX_LYRS];
 	slab_t *s;
 	int i = 0;
 	uintptr_t ret;
@@ -557,9 +568,8 @@ slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 	if (SLIST_SORTED(sl->sl_flags)) {
 
 		if (sl->sl_sublayers) {
-			bc = mk_buf(8 * 256);
-			find_bubble_up(sl, key, bc);
-			s = bc[(sl->sl_sublayers)];
+			find_bubble_up(sl, key, bc_path);
+			s = bc_path[(sl->sl_sublayers)].bc_slab;
 		} else {
 			find_linear_scan(sl, key, &s);
 		}
@@ -567,9 +577,6 @@ slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 		i = slab_srch(key, s, 0);
 		ret = s->s_arr[i];
 
-		if (sl->sl_sublayers) {
-			rm_buf(bc, 8 * 256);
-		}
 		*found  = ret;
 		if (sl->sl_cmp_elem(key, ret) == 0) {
 			SLABLIST_FIND_END(SL_SUCCESS, *found);
