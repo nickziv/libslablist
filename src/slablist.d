@@ -1,5 +1,7 @@
 typedef struct slab slab_t;
 typedef struct slablist slablist_t;
+typedef struct bc bc_t;
+
 
 /*
  * These are the structs that the DTrace consumers see. In slablinfo, we only
@@ -33,6 +35,13 @@ typedef struct slinfo {
 	uint8_t			sli_is_circular;
 	uint8_t			sli_is_sublayer;
 } slinfo_t;
+
+typedef struct bcinfo {
+	slab_t			*bci_slab;
+	uint8_t			bci_on_edge;
+} bcinfo_t;
+
+
 
 /*
  * These are the structs that are used by libslablist, internally. Because they
@@ -77,6 +86,13 @@ struct slablist {
         void                    (*sl_ser_list)(int, uintptr_t);
 };
 
+struct bc {
+	slab_t			*bc_slab;
+	uint8_t			bc_on_edge;
+};
+
+
+
 /*
  * Here we translate the libslablist structures into the DTrace consumer
  * structures. In slinfo, we use copyin and `&` to get the sl_is_* members.
@@ -103,6 +119,8 @@ translator slabinfo_t < slab_t *s >
 	si_prev = *(uintptr_t *)copyin((uintptr_t)&s->s_prev,
 			sizeof (uintptr_t));
 };
+
+inline slabinfo_t slabinfo[slab_t *s] = xlate <slabinfo_t *>(s);
 
 #pragma D binding "1.6.1" translator
 translator slinfo_t < slablist_t *sl >
@@ -140,4 +158,13 @@ translator slinfo_t < slablist_t *sl >
 				sizeof (sl->sl_flags))) & 0x10;
 	sli_is_sublayer = (*(uint8_t *)copyin((uintptr_t)&sl->sl_flags,
 				sizeof (sl->sl_flags))) & 0x04;
+};
+
+#pragma D binding "1.6.1" translator
+translator bcinfo_t < bc_t *bc >
+{
+	bci_slab = *(slab_t **)copyin((uintptr_t)&bc->bc_slab,
+				sizeof (slab_t *));
+	bci_on_edge = *(uint8_t *)copyin((uintptr_t)&bc->bc_on_edge,
+			sizeof (bc->bc_on_edge));
 };

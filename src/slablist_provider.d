@@ -26,6 +26,8 @@ typedef struct { int dummy; } slabinfo_t;
 typedef struct { int dummy; } slinfo_t;
 typedef struct { int dummy; } slab_t;
 typedef struct { int dummy; } slablist_t;
+typedef struct { int dummy; } bc_t;
+typedef struct { int dummy; } bcinfo_t;
 
 provider slablist {
 	probe create(slablist_t *sl) : (slinfo_t *sl);
@@ -152,6 +154,10 @@ provider slablist {
 	 */
 	probe bubble_up(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);
+	/*
+	 * Fire right before we try to move elems from one slab to an adjacent
+	 * slab in slab_generic_rem().
+	 */
 	probe move_mid_to_next(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
 	probe move_mid_to_prev(slablist_t *sl, slab_t *s1, slab_t *s2) :
@@ -165,14 +171,9 @@ provider slablist {
 	probe move_prev_to_next(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
 	/*
-	 * The first argument of every test probe is a boolean that indicates
-	 * whether a test was failed (1) or passed (0).
+	 * The first argument of every test probe is an error code that
+	 * indicates if a test failed, and why.
 	 */
-	/*
-	 * This probe has to be enabled, in order to run any of the below
-	 * tests. Just enabling the below probes won't test anything.
-	 */
-	probe test();
 	/*
 	 * Verifies that the slab is properly converted to an sml.
 	 */
@@ -183,104 +184,164 @@ provider slablist {
 	 */
 	probe test_smlist_elems_sorted(int);
 	/*
-	 * Same as previous but for slab-backed slablists.
-	 */
-	probe test_slab_elems_sorted(int);
-	/*
-	 * Verifies that the slabs themselves are sorted.
-	 */
-	probe test_slabs_sorted(int r, slab_t *s1, slab_t *s2) : 
-				(int r, slabinfo_t *s1, slabinfo_t *s2);
-	/*
-	 * Verifies that the max and min of the slab correspont to the first
-	 * and last elements. arg1 indicates if min (1) max (2) or both (3) are
-	 * inconsistent. arg2 is 1 if the max is smaller than the min.
-	 */
-	probe test_slab_extrema(int a, int b, int c, slab_t *s) :
-		(int a, int b, int c, slabinfo_t *s);
-	/*
-	 * Same as above, but for subslabs. arg1 is layer, arg2 is the same as
-	 * arg1 above.  arg3 is the same as arg2 above.
-	 */
-	probe test_sublayer_extrema(int a, int b, int c, int d, slab_t *s) :
-		(int a, int b, int c, int d, slabinfo_t *s);
-	/*
-	 * Verifies that the slab points back to its slablist_t, instead of
-	 * something else.
-	 */
-	probe test_slab_bkptr(int);
-	/*
-	 * Verifies that the results given by bubble_up are same as those given
-	 * by linear_scan. arg1 indicates if the return values don't match (1),
-	 * the slabs (2), or both (3).
-	 */
-	probe test_bubble_up(int, int);
-	/*
-	 * Verifies that the number of elems that are nominally in a slablist,
-	 * matches the sum of the number of elems in the individual slabs of
-	 * the slablist. arg1 shows how many elems slablist_t counts, and arg2
-	 * shows the sum of elems in each individual slab.
-	 */
-	probe test_nelems(int, uint64_t, uint64_t);
-	/*
 	 * Verifies that the sml list does not end (reach NULL next ptr) before
 	 * we count the number of elems indicated by the slablist_t anchor.
 	 */
 	probe test_smlist_nelems(int);
 	/*
-	 * Verified that the number of slabs that are nominally in a slablist
-	 * matches number of reachable slabs.
-	 */
-	probe test_nslabs(int, uint64_t, uint64_t);
-	/*
-	 * Same as above, but for sublayers. Arg2 is the layer...
-	 */
-	probe test_sublayer_nelems(int, uint64_t, uint64_t, int);
-	/*
-	 * Makes sure that no slab has >max elems in it.
-	 */
-	probe test_slab_elems_max(int, uint64_t);
-	/*
-	 * Verifies that the slab is part of an sublayer, if passed to a
-	 * function that works on sublayers' slabs.
-	 */
-	probe test_slab_sublayer(int);
-	/*
-	 * Verifies that all the data stored in an sublayer is properly
-	 * sorted. arg0 is a bool, arg1 is the layer (from 1 to N).
-	 */
-	probe test_sublayer_elems_sorted(int, int);
-	/*
-	 * Verifies that the underlying slabs are sorted.
-	 */
-	probe test_sublayers_sorted(int, int);
-	/*
-	 * Verifies that the sublayers have references to all of the
-	 * slablist's slabs.
-	 */
-	probe test_sublayers_have_all_slabs(int, int);
-	/*
-	 * Verifies that the slablist implementation maintains some minimum
-	 * usage ratio for slabs.
-	 */
-	probe test_slist_usage_ratio(int);
-	/*
-	 * Verifies that each element of the breadcrumb trail corresponds to a
-	 * distinct layer within a slablist, and is in the right order. arg1 is
-	 * the layer. Arg4 is from where in s0 we are copying the elem, and
-	 * arg5 is where in s2 there is a problem.
+	 * This probe tests breadcrumb paths.
+	 *	Error codes:
+	 *		0 Success
+	 *		1 The elems in bcpath are not ascending layer-wise.
 	 */
 	probe test_bread_crumbs(int, int);
-	probe test_move_next(int i, slab_t *s0, slab_t *s1, slab_t *s2, int f, int j) :
-		(int i, slabinfo_t *s0, slabinfo_t *s1, slabinfo_t *s2, int f, int j);
-	probe test_move_prev(int i, slab_t *s0, slab_t *s1, slab_t *s2, int f, int j) :
-		(int i, slabinfo_t *s0, slabinfo_t *s1, slabinfo_t *s2, int f, int j);
 	/*
-	 * Verifies that functions don't recieve a NULL argument, if it is
-	 * invalid. arg0 is a bool, arg1 is the argument number (0 to N) that
-	 * is NULL.
+	 * This probe fires whenever we walk over an extreme slab, while
+	 * executing get_first|last_slab(). This probe should be used to store
+	 * the breadcrumbs in an associative array, that can be accessed from a
+	 * D script if test_insert_elem(), test_find_bubble_up(), or
+	 * test_ripple_add() probes return an error code of 3, 4, or 5.
 	 */
-	probe test_nullarg(int, int);
+	probe get_extreme_path(bc_t *b, int l) : (bcinfo_t *b, int l);
+	/*
+	 * This probe tests the conistency of the slab right before and right
+	 * after insert_elem() inserts an elem into a slab. Error codes 3, 4,
+	 * and 5 can only happen _after_ an insertion.
+	 *    Error codes:
+	 *		0 Success
+	 *		1 Null slab `s`
+	 *		2 Null `s->s_list` bptr
+	 *		3 after Actual extrema don't match with cached extrema
+	 *		4 First topslab of `s` has different min than `s`.
+	 *		5 Last topslab of `s` has different max than `s`.
+	 *		6 Elems are not sorted in the slab
+	 *		7 Trying to insert into non-zero index of empty slab
+	 *		8 Elem is not getting inserted into the right index
+	 *
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the slab we are inserting into
+	 *		arg2 is the elem we are trying to insert.
+	 *		arg3 is the index we are trying to insert at in `s`
+	 */
+	probe test_insert_elem(int e, slab_t *s, uintptr_t elem, int i) :
+		(int e, slabinfo_t *s, uintptr_t elem, int i);
+	/*
+	 * This probe tests the conistency of the slab right before and right
+	 * after remove_elem() removes an elem from a slab. Error codes 3, 4,
+	 * and 5 can only happen _after_ a removal.
+	 *    Error codes:
+	 *		0 Success
+	 *		1 Null slab `s`
+	 *		2 Null `s->s_list` bptr
+	 *		3 after Actual extrema don't match with cached extrema
+	 *		4 First topslab of `s` has different min than `s`.
+	 *		5 Last topslab of `s` has different max than `s`.
+	 *		6 Elems are not sorted in the slab
+	 *		7 Trying to remove from an empty slab.
+	 *
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the slab we are inserting into
+	 *		arg2 is the index we are trying to insert at in `s`
+	 */
+	probe test_remove_elem(int e, slab_t *s, int i) :
+		(int e, slabinfo_t *s, int i);
+	/*
+	 * This probe tests that the search functions used on a slab will all
+	 * return the same result. Fires whenever we search a slab.
+	 *    Error codes:
+	 *		0..2,6 Same as above
+	 *		7 binsrch & linsrch of `s` don't give same index.
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the slab we are about to search
+	 *		arg2 is the element we want to insert or find
+	 *		arg3 indicates if arg3 is a value (0) or slab-ptr (1)
+	 *		
+	 */
+	probe test_slab_srch(int e, slab_t *s, uintptr_t a, int i) :
+		(int e, slabinfo_t *s, uintptr_t a, int i);
+	/*
+	 * This probe tests find_bubble_up() as it is jumping from layer to
+	 * layer. It is similar to the previous test, but the crucial
+	 * distinction is that this test doesn't test the correctness of search
+	 * at the topslab.
+	 *	Error codes:
+	 *		0..6 Same as above
+	 *		7 binsrch & linsrch of `s` don't give same ptr.
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the slab we are about to search 
+	 *		arg2 is the element we want to insert or find
+	 *		arg3 is the layer or the slab we are currently looking
+	 *		     for.
+	 */
+	probe test_find_bubble_up(int e, slab_t *s, uintptr_t d, int l) :
+		(int e, slabinfo_t *s, uintptr_t d, int l);
+	/*
+	 * This probe tests ripple_add() as it is rippling the new slab to the
+	 * sublayers using the bc_path.
+	 *	Error codes:
+	 *		0..5 Same as above
+	 *		6 `sb` is not a subslab of `s` / doesn't refer to `s`
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the new slab
+	 *		arg2 is the immediate subslab
+	 *		arg3 is the bread crumb path
+	 *		arg4 is the current layer we are on
+	 */
+	probe test_ripple_add(int e, slab_t *s, slab_t *sb, void *bc, int b) :
+		(int e, slabinfo_t *s, slabinfo_t *sb, void *bc, int b);
+	/*
+	 * Arg4 is from where in scp we are copying the elem, and arg5 is where
+	 * in s2 there is a problem.
+	 */
+	/*
+	 * This probe tests slab_generic_rem(). Specifically, the part of the
+	 * function that moves from `s` to `s->next` during the  merge two or
+	 * three partially full slabs. 
+	 *	Error codes:
+	 *		0 Success
+	 *		1 There is an inconsistency between `scp` and `sn`
+	 *		2 There is an inconsistency between `sncp` and `sn`
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the copy of the original slab
+	 *		arg2 is the copy of next slab in its current state
+	 *		     (after move)
+	 *		arg3 is the copy of next slab in its previous state
+	 *		     (before move)
+	 *		arg4 is the index from which we started copying
+	 *		     elements from `scp` to `sn`.
+	 *		arg5 is the index at which we have an inconsistency
+	 *		     (unequal elems) between `scp`+`sncp` and `sn`.
+	 */
+	probe test_move_next(int e, slab_t *scp, slab_t *sn, slab_t *sncp, int f, int j) :
+		(int e, slabinfo_t *scp, slabinfo_t *sn, slabinfo_t *sncp, int f, int j);
+	/*
+	 * This probe tests gen_rem_elem(). Specifically, the part of the
+	 * function that moves from `s` to `s->prev` during the  merge two or
+	 * three partially full slabs. 
+	 *	Error codes:
+	 *		0 Success
+	 *		1 There is an inconsistency between `scp` and `sn`
+	 *		2 There is an inconsistency between `sncp` and `sn`
+	 *	Args:
+	 *		arg0 is the error code
+	 *		arg1 is the copy of the original slab
+	 *		arg2 is the copy of prev slab in its current state
+	 *		     (after move)
+	 *		arg3 is the copy of prev slab in its previous state
+	 *		     (before move)
+	 *		arg4 is the index from which we started copying
+	 *		     elements from `scp` to `sp`.
+	 *		arg5 is the index at which we have an inconsistency
+	 *		     (unequal elems) between `scp`+`spcp` and `sp`.
+	 */
+	probe test_move_prev(int e, slab_t *scp, slab_t *sp, slab_t *spcp, int f, int j) :
+		(int e, slabinfo_t *scp, slabinfo_t *sp, slabinfo_t *spcp, int f, int j);
 	/*
 	 * Verifies that the functions that add and remove to an sml_list, get
 	 * an sml list as an argument, and not something else.

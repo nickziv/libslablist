@@ -480,7 +480,7 @@ slab_to_small_list(slablist_t *sl)
 	}
 
 	sl->sl_slabs = 0;
-	if (SLABLIST_TEST_ENABLED() && SLABLIST_TEST_SLAB_TO_SML_ENABLED()) {
+	if (SLABLIST_TEST_SLAB_TO_SML_ENABLED()) {
 		int f = test_slab_to_sml(sl, h);
 		SLABLIST_TEST_SLAB_TO_SML(f);
 	}

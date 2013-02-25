@@ -25,8 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <strings.h>
 #include "slablist_impl.h"
 #include "slablist_provider.h"
+#include "slablist_test.h"
 
 
 /*
@@ -260,10 +262,6 @@ sublayer_slab_linear_srch(uintptr_t elem, slab_t *s, int start)
 	slab_t *ei = (slab_t *)elem;
 	slablist_t *sl = s->s_list;
 
-	if (SLABLIST_TEST_SLAB_SUBLAYER_ENABLED()) {
-		SLABLIST_TEST_SLAB_SUBLAYER(!(SLIST_SUBLAYER(sl->sl_flags)));
-	}
-
 	while (i < s->s_elems && sl->sl_cmp_elem(ei->s_min, s->s_arr[i]) > 0) {
 		i++;
 	}
@@ -275,7 +273,7 @@ sublayer_slab_linear_srch(uintptr_t elem, slab_t *s, int start)
  * or not `elem` is just an element or if it is a pointer to a slab. Recall
  * that elems in subslabs are pointers to superslabs.
  */
-static int
+int
 gen_lin_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
 	int i = 0;
@@ -384,7 +382,7 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
  * `elem` is a pointer to a slab (all elems in subslabs are pointers to
  * superslabs).
  */
-static int
+int
 gen_bin_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
 	int i = 0;
@@ -411,6 +409,11 @@ gen_bin_srch(uintptr_t elem, slab_t *s, int is_slab)
 int
 slab_srch(uintptr_t elem, slab_t *s, int is_slab)
 {
+        if (SLABLIST_TEST_SLAB_SRCH_ENABLED()) {
+                int f = test_slab_srch(elem, s, is_slab);
+                SLABLIST_TEST_SLAB_SRCH(f, s, elem, is_slab);
+        }
+
 	slablist_t *sl = s->s_list;
 	int i;
 
@@ -521,21 +524,25 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
 	/* `crumbs` is used as the bread crumb array */
-	slablist_t *u = sl->sl_baselayer;
-	int nu = sl->sl_sublayers;
-	int cu = 0;
+	slablist_t *b = sl->sl_baselayer;
+	int layers = b->sl_layer;
 	slab_t *s = (crumbs[0].bc_slab);
-	int fs = find_linear_scan(u, elem, &s);
+	int fs = find_linear_scan(b, elem, &s);
 	crumbs[0].bc_slab = s;
 	int r = is_elem_in_range(elem, s) ;
-	int bc = 0;
-	bc++;
-	while (cu < nu) {
+	int bc = 1;
+	while (bc < layers + 1) {
+		if (SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED()) {
+			int f = test_find_bubble_up(layers, crumbs, bc, elem);
+			SLABLIST_TEST_FIND_BUBBLE_UP(f,
+			    crumbs[(bc - 1)].bc_slab, elem, layers);
+		}
+
 		fs = find_slab_in_slab(crumbs[(bc-1)].bc_slab, elem,
 			&(crumbs[bc]));
+
 		SLABLIST_BUBBLE_UP(sl, crumbs[bc].bc_slab);
 		bc++;
-		cu++;
 	}
 	SLABLIST_BUBBLE_UP_END(fs);
 	return (fs);

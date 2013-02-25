@@ -57,19 +57,6 @@ small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 {
 
 	int ret;
-	/*
-	 * Here are some of the dtrace-driven tests for this function.
-	 */
-	if (SLABLIST_TEST_NULLARG_ENABLED()) {
-		if (sl == NULL) {
-			SLABLIST_TEST_NULLARG(1, 1);
-		} else {
-			if (sl->sl_obj_sz > 8 && (void *)elem == NULL) {
-				SLABLIST_TEST_NULLARG(1, 2);
-			}
-		}
-	}
-
 	if (sl->sl_head == NULL) {
 		/*
 		 * If the ptr to the head of this slablist is null, we have
@@ -196,6 +183,16 @@ end:;
 static void
 insert_elem(uintptr_t elem, slab_t *s, int i)
 {
+	/*
+	 * Test the consistency of the slab before insertion.
+	 */
+	if (SLABLIST_TEST_INSERT_ELEM_ENABLED()) {
+		int f = test_insert_elem(elem, s, i);
+		if (f) {
+			SLABLIST_TEST_INSERT_ELEM(f, s, elem, i);
+		}
+	}
+
 	int ip = 0;		/* insert-point */
 	slablist_t *sl;
 	sl = s->s_list;
@@ -268,6 +265,14 @@ end:;
 		SLABLIST_SLAB_SET_MAX(s);
 		SLABLIST_SLAB_SET_MIN(s);
 	}
+
+	if (SLABLIST_TEST_INSERT_ELEM_ENABLED()) {
+		int f = test_slab_extrema(s);
+		if (f) {
+			SLABLIST_TEST_INSERT_ELEM(f, s, elem, i);
+		}
+	}
+
 }
 
 /*
@@ -613,30 +618,81 @@ ripple_update_extrema(bc_t *crumbs, int i)
 static void
 ripple_add_to_sublayers(slablist_t *sl, slab_t *new, bc_t *crumbs)
 {
-	int nu = sl->sl_sublayers;
+	slab_t *baseslab = crumbs[0].bc_slab;
+	slablist_t *baselayer = baseslab->s_list;
+	uint8_t superlayers = baselayer->sl_layer;
 	slablist_t *csl = sl;
-	int cu = 0;
+	slablist_t *psl;
+	int layer = 0;
 	int bc = 0;
 	int edup;
+	int maxupdate = 0;
+	int minupdate = 0;
 
-	bc += (nu);
+	bc += (superlayers);
 	ripple_update_extrema(crumbs, bc);
 
 
 	/*
 	 * This loop ripples the new slab to the sublayers.
 	 */
-	bc = 0;
-	bc += (nu - 1);
-	while (new != NULL && cu < nu) {
+	bc = (superlayers - 1);
+	while ((new != NULL || maxupdate || minupdate) && layer < superlayers) {
+		if (new != NULL  && SLABLIST_TEST_RIPPLE_ADD_ENABLED()) {
+			int f = test_ripple_add(new, crumbs, bc);
+
+
+
+			SLABLIST_TEST_RIPPLE_ADD(f, new, crumbs[bc].bc_slab,
+				crumbs, bc);
+		}
+
+		psl = csl;
 		csl = csl->sl_sublayer;
+		int fs;
 		SLABLIST_RIPPLE_ADD_SLAB(csl, new, crumbs[bc].bc_slab);
-		int fs = is_elem_in_range(new->s_min, crumbs[bc].bc_slab);
-		new = slab_gen_insert(fs, (uintptr_t)new, crumbs[bc].bc_slab, 0,
-			NULL, &edup);
+		if (new != NULL) {
+			fs = is_elem_in_range(new->s_min, crumbs[bc].bc_slab);
+		}
+
+		uintptr_t old_max = crumbs[bc].bc_slab->s_max;
+		uintptr_t old_min = crumbs[bc].bc_slab->s_min;
+
+		if (new != NULL) {
+			new = slab_gen_insert(fs, (uintptr_t)new, crumbs[bc].bc_slab, 0,
+				NULL, &edup);
+		}
+
+		uintptr_t max = crumbs[bc].bc_slab->s_max;
+		uintptr_t min = crumbs[bc].bc_slab->s_min;
+		slab_t *subslab = crumbs[(bc - 1)].bc_slab;
+
+#define	LAST_ELEM(s) s->s_arr[(s->s_elems - 1)]
+
+		if (bc == 0) {
+			goto skip_extrema_ripple;
+		}
+		if (crumbs[bc].bc_slab == (slab_t *)LAST_ELEM(subslab) &&
+		    sl->sl_cmp_elem(old_max, max) != 0) {
+			subslab->s_max = max;
+			maxupdate = 1;
+		} else {
+			maxupdate = 0;
+		}
+
+		if (crumbs[bc].bc_slab == (slab_t *)subslab->s_arr[0] &&
+		    sl->sl_cmp_elem(old_min, min) != 0) {
+			subslab->s_min = min;
+			minupdate = 1;
+		} else {
+			minupdate = 0;
+		}
+
+skip_extrema_ripple:;
+
 		csl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(csl);
-		cu++;
+		layer++;
 		bc--;
 	}
 }
@@ -783,17 +839,6 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		ret = SL_SUCCESS;
 	}
 
-	/*
-	 * Now that we've modified the slab list, we run tests on in (if DTrace
-	 * enables them).
-	 */
-	test_slab_consistency(sl);
-	if (SLIST_SORTED(sl->sl_flags)) {
-		test_slab_sorting(sl);
-		if (sl->sl_sublayers) {
-			test_sublayers(sl, elem);
-		}
-	}
 	return (ret);
 
 }

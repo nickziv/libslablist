@@ -28,11 +28,7 @@
 #include "slablist_find.h"
 #include "slablist_provider.h"
 
-/*
- * The num of elems a slab list needs before we start running tests. This set
- * at build-time and is non-dynamic.
- */
-static uint64_t testfrom = 0; 
+#define TEST_SLAB_ERR_MAX	6
 
 int
 test_slab_to_sml(slablist_t *sl, slab_t *s)
@@ -105,567 +101,251 @@ test_smlist_elems_sorted(slablist_t *sl)
 	return (0);
 }
 
-int
-test_slab_bkptr(slablist_t *sl)
+slab_t *
+get_first_slab(slab_t *baseslab)
 {
-	int i = 0;
-	slab_t *s = NULL;
-	while (i < sl->sl_slabs) {
-		if (s == NULL) {
-			s = sl->sl_head;
-		} else {
-			s = s->s_next;
+        slab_t *s = baseslab;
+        int layers = baseslab->s_list->sl_layer;
+        int layer = 0;
+	bc_t bc;
+	bc.bc_slab = s;
+	bc.bc_on_edge = ON_LEFT_EDGE;
+	SLABLIST_GET_EXTREME_PATH(&bc, layer);
+        while (layer < layers) {
+		s = (slab_t *)s->s_arr[0];
+		bc.bc_slab = s;
+		layer++;
+		SLABLIST_GET_EXTREME_PATH(&bc, layer);
+        }
+        return (s);
+}
+
+slab_t *
+get_last_slab(slab_t *baseslab)
+{
+        slab_t *s = baseslab;
+        int layers = baseslab->s_list->sl_layer;
+        int layer = 0;
+	bc_t bc;
+	bc.bc_slab = s;
+	bc.bc_on_edge = ON_RIGHT_EDGE;
+	SLABLIST_GET_EXTREME_PATH(&bc, layer);
+        while (layer < layers) {
+                uint32_t lelems = s->s_elems;
+                s = (slab_t *)s->s_arr[(lelems - 1)];
+		bc.bc_slab = s;
+                layer++;
+		SLABLIST_GET_EXTREME_PATH(&bc, layer);
+        }
+        return (s);
+}
+
+int
+test_slab_extrema(slab_t *s)
+{
+	slablist_t *sl = s->s_list;
+
+	uint32_t elems = s->s_elems;
+
+	/* test that extrema match the actual elems in the array */
+	if (sl->sl_layer == 0) {
+		if ((s->s_min != s->s_arr[0] ||
+		    s->s_max != s->s_arr[(elems - 1)])) {
+			return (3);
 		}
-		if (s->s_list != sl) {
-			return (1);
+
+	} else {
+
+		slab_t *f = get_first_slab(s);
+		slablist_t *top_lyr = f->s_list;
+
+		if (top_lyr->sl_cmp_elem(s->s_min, f->s_arr[0]) != 0 ){ 
+			return (4);
 		}
-		i++;
+
+		slab_t *l = get_last_slab(s);
+		uint32_t lelems = l->s_elems;
+		if (top_lyr->sl_cmp_elem(s->s_max, l->s_arr[(lelems - 1)]) != 0) {
+			return (5);
+		}
 	}
 
 	return (0);
 }
 
 int
-test_slab_elems_sorted(slablist_t *sl)
+test_slab(slab_t *s)
 {
-	int i = 0;
-	int j = 0;
-	slab_t *s = NULL;
-	while (i < sl->sl_slabs) {
+	/* test that the slab is not NULL */
+	if (s == NULL) {
+		return (1);
+	}
 
-		j = 0;
-		if (s == NULL) {
-			s = sl->sl_head;
-		} else {
-			s = s->s_next;
-		}
+	/* test that the list back-ptr is not NULL */
+	if (s->s_list == NULL) {
+		return (2);
+	}
 
-		if (s->s_elems == 1) {
-			return (0);
-		}
+	slablist_t *sl = s->s_list;
 
-		while (j < (s->s_elems - 1)) {
+	uint32_t elems = s->s_elems;
+
+	if (elems == 0) {
+		return (0);
+	}
+
+
+	/* test that elems are sorted within a slab */
+	if (sl->sl_layer == 0 && elems > 1) {
+		int j = 0;
+		elems = s->s_elems;
+		while (j < (elems - 1)) {
 			uintptr_t e1 = s->s_arr[j];
 			uintptr_t e2 = s->s_arr[(j+1)];
 			int c = sl->sl_cmp_elem(e1, e2);
 			if (c > 0) {
-				return (1);
+				return (6);
 			}
 			j++;
 		}
-		i++;
+	}
+
+
+	return (0);
+}
+
+extern int gen_bin_srch(uintptr_t, slab_t *, int);
+extern int gen_lin_srch(uintptr_t, slab_t *, int);
+
+int
+test_slab_srch(uintptr_t elem, slab_t *s, int is_slab)
+{
+	int f = test_slab(s);
+	if (f != 0) {
+		return (f);
+	}
+
+	/* test that binary search and linear search return the same index */
+	int i1 = gen_bin_srch(elem, s, is_slab);
+	int i2 = gen_lin_srch(elem, s, is_slab);
+	if (i1 != i2) {
+		return (TEST_SLAB_ERR_MAX + 1);
 	}
 
 	return (0);
 }
 
+/*
+ * This function tests that a slab is consistent within the context of the
+ * insert_elem() function.
+ */
 int
-test_slabs_sorted(slablist_t *sl, slab_t **sp1, slab_t **sp2)
+test_insert_elem(uintptr_t elem, slab_t *s, int i)
 {
-	if (sl->sl_slabs < 2) {
+	int f = test_slab(s);
+	if (f != 0) {
+		return (f);
+	}
+
+	slablist_t *sl = s->s_list;
+
+	if (s->s_elems == 0 && i > 0) {
+		return (TEST_SLAB_ERR_MAX + 1);
+	}
+
+	/* test that the elem is being inserted into the right place */
+	uint64_t elems = s->s_elems;
+
+	if (elems == 0 || sl->sl_layer != 0) {
 		return (0);
 	}
 
-	slab_t *s1 = NULL;
-	slab_t *s2 = NULL;
-	int i = 0;
-	while (i < (sl->sl_slabs - 1)) {
-		if (s1 == NULL) {
-			s1 = sl->sl_head;
-		} else {
-			s1 = s1->s_next;
+	if (i > 0 && i <= (elems - 1)) {
+		if (sl->sl_cmp_elem(elem, s->s_arr[i]) > 0 ||
+		    sl->sl_cmp_elem(elem, s->s_arr[(i - 1)]) < 0) {
+			return (TEST_SLAB_ERR_MAX + 2);
 		}
-		s2 = s1->s_next;
-		if (sl->sl_cmp_elem(s1->s_max, s2->s_max) > 0 ||
-		    sl->sl_cmp_elem(s1->s_min, s2->s_min) > 0 ||
-		    sl->sl_cmp_elem(s1->s_max, s2->s_min) > 0 ||
-		    sl->sl_cmp_elem(s1->s_min, s2->s_max) > 0) {
-			*sp1 = s1;
-			*sp2 = s2;
-			return (1);
+	}
+
+	if (i == elems) {
+		if (sl->sl_cmp_elem(elem, s->s_arr[(i - 1)]) < 0) {
+			return (TEST_SLAB_ERR_MAX + 2);
 		}
-		i++;
+	}
+
+	if (i == 0) {
+		if (sl->sl_cmp_elem(elem, s->s_arr[i]) > 0) {
+			return (TEST_SLAB_ERR_MAX + 2);
+		}
 	}
 
 	return (0);
 }
 
+/*
+ * This function tests that a slab is consistent within the context of the
+ * remove_elem() function.
+ */
 int
-test_slab_extrema(slablist_t *sl, int *l, int *k, slab_t **sptr)
+test_remove_elem(int i, slab_t *s)
 {
-	int i = 0;
-	slab_t *s = NULL;
-	uint64_t e;
-	int r = 0;
-	int p = 0;
-	if (SLIST_ORDERED(sl->sl_flags)) {
-		return (0);
+	int f = test_slab(s);
+	if (f != 0) {
+		return (f);
 	}
-	while (i < sl->sl_slabs) {
-		if (s  == NULL) {
-			s  = sl->sl_head;
-		} else {
-			s  = s->s_next;
-		}
-		e = s->s_elems;
-		if (s->s_min != s->s_arr[0]) {
-			r |= 1;
-		}
-		if (s->s_max != s->s_arr[(e - 1)]) {
-			r |= 2;
-		}
-
-		if (sl->sl_cmp_elem(s->s_min, s->s_max) > 0) {
-			p = 1;
-		}
-		if (r || p) {
-			*l = r;
-			*k = p;
-			*sptr = s;
-			return (1);
-		}
-		i++;
-	}
-	*l = 0;
-	return (0);
-}
-
-int
-test_nelems(slablist_t *sl, uint64_t *l, uint64_t *ll)
-{
-	if (sl->sl_is_small_list) {
-		return (0);
-	}
-	int i = 0;
-	slab_t *s = sl->sl_head;
-
-	uint64_t sum = 0;
-	while (i < sl->sl_slabs) {
-		sum += s->s_elems;
-		s = s->s_next;
-		i++;
-	}
-
-	*l = sl->sl_elems;
-	*ll = sum;
-
-	if (sl->sl_elems == sum) {
-		return (0);
-	} else {
-		return (1);
-	}
-}
-
-int
-test_nslabs(slablist_t *sl, uint64_t *l, uint64_t *ll)
-{
-	if (sl->sl_is_small_list) {
-		return (0);
-	}
-	uint64_t i = 0;
-	slab_t *s = sl->sl_head;
-
-	while (i < sl->sl_slabs) {
-		s = s->s_next;
-		i++;
-	}
-
-	*l = sl->sl_slabs;
-	*ll = i;
-
-	if (sl->sl_slabs == i) {
-		return (0);
-	} else {
-		return (1);
-	}
-
-}
-
-int
-test_slab_elems_max(slablist_t *sl, uint64_t *l)
-{
-	if (sl->sl_is_small_list) {
-		return (0);
-	}
-
-	int i = 0;
-	slab_t *s = sl->sl_head;
-
-	while (i < sl->sl_slabs) {
-		if (s->s_elems > SELEM_MAX) {
-			*l = s->s_elems;
-			return (1);
-		}
-		s = s->s_next;
-		i++;
-	}
-
-	*l = 0;
-	return (0);
-}
-
-void
-test_slab_consistency(slablist_t *sl)
-{
-	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
-		return;
-	}
-
-	if (SLABLIST_TEST_SLAB_BKPTR_ENABLED()) {
-		int f = test_slab_bkptr(sl);
-		SLABLIST_TEST_SLAB_BKPTR(f);
-	}
-
-	if (SLABLIST_TEST_SLAB_EXTREMA_ENABLED()) {
-		int l;
-		int k;
-		slab_t *s;
-		int f = test_slab_extrema(sl, &l, &k, &s);
-		SLABLIST_TEST_SLAB_EXTREMA(f, l, k, s);
-	}
-
-
-	if (SLABLIST_TEST_NELEMS_ENABLED()) {
-		uint64_t l;
-		uint64_t ll;
-		int f = test_nelems(sl, &l, &ll);
-		SLABLIST_TEST_NELEMS(f, l, ll);
-	}
-
-	if (SLABLIST_TEST_NSLABS_ENABLED()) {
-		uint64_t l;
-		uint64_t ll;
-		int f = test_nslabs(sl, &l, &ll);
-		SLABLIST_TEST_NSLABS(f, l, ll);
-	}
-
-	if (SLABLIST_TEST_SLAB_ELEMS_MAX_ENABLED()) {
-		uint64_t l;
-		int f = test_slab_elems_max(sl, &l);
-		SLABLIST_TEST_SLAB_ELEMS_MAX(f, l);
-	}
-}
-
-void
-test_slab_sorting(slablist_t *sl)
-{
-	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
-		return;
-	}
-
-	if (SLABLIST_TEST_SLAB_ELEMS_SORTED_ENABLED()) {
-		int f = test_slab_elems_sorted(sl);
-		SLABLIST_TEST_SLAB_ELEMS_SORTED(f);
-	}
-
-	if (SLABLIST_TEST_SLABS_SORTED_ENABLED()) {
-		slab_t *s1;
-		slab_t *s2;
-		int f = test_slabs_sorted(sl, &s1, &s2);
-		SLABLIST_TEST_SLABS_SORTED(f, s1, s2);
-	}
-}
-
-
-int
-test_bubble_up(slablist_t *sl, uintptr_t elem, int *l)
-{
-	slab_t *sls = NULL;
-	bc_t bc_path[MAX_LYRS];
-	int fs = find_linear_scan(sl, elem, &sls);
-	int bs = find_bubble_up(sl, elem, bc_path);
-	if (fs == bs && bc_path[(sl->sl_sublayers)].bc_slab == sls) {
-		return (0);
-	}
-	int ret = 0;
-	if (fs != bs) {
-		ret = 1;
-	}
-
-	if (sls != bc_path[(sl->sl_sublayers)].bc_slab) {
-		if (ret == 1) {
-			ret = 3;
-		} else {
-			ret = 2;
-		}
-	}
-
-	*l = ret;
-	return (1);
-}
-
-
-int
-test_sublayer_nelems(slablist_t *sl, uint64_t *l, uint64_t *ll, int *k)
-{
-	if (!(sl->sl_sublayers)) {
-		return (0);
-	}
-	int i = 0;
-	slablist_t *u = sl;
-	int r = 0;
-	while (i < sl->sl_sublayers) {
-		u = u->sl_sublayer;
-		r = test_nelems(u, l, ll);
-		*k = u->sl_layer;
-		if (r) {
-			return (r);
-		}
-		i++;
+	if (s->s_elems == 0) {
+		return (TEST_SLAB_ERR_MAX + 1);
 	}
 	return (0);
 }
 
 int
-test_sublayers_sorted(slablist_t *sl, int *l)
+test_ripple_add(slab_t *new, bc_t *crumbs, int bc)
 {
-	if (sl->sl_sublayers == 0) {
-		return (0);
+	int f = test_slab(new);
+	if (f != 0) {
+		return (f);
 	}
 
-	int i = 0;
-	int j = 0;
-	slab_t *s1 = NULL;
-	slab_t *s2 = NULL;
-	slablist_t *u = sl;
-	while (i < sl->sl_sublayers) {
-		u = u->sl_sublayer;
-		j = 0;
-		while (j < (u->sl_slabs - 1)) {
-			if (s1 == NULL) {
-				s1 = sl->sl_head;
-			} else {
-				s1 = s1->s_next;
+	if (bc != 0) {
+		slab_t *sub = crumbs[(bc - 1)].bc_slab;
+		slab_t *s = crumbs[bc].bc_slab;
+		int i = 0;
+		int has = 0;
+		while (i < sub->s_elems) {
+			if ((slab_t *)sub->s_arr[i] == s) {
+				has = 1;
 			}
-			s2 = s1->s_next;
-			if (sl->sl_cmp_elem(s1->s_max, s2->s_max) > 0) {
-				*l = u->sl_layer;
-				return (1);
-			}
-			j++;
+			i++;
 		}
-		i++;
-	}
-	*l = sl->sl_sublayers;
-	return (0);
-}
 
-uintptr_t
-get_slab_max(slab_t *s)
-{
-	int clayer = s->s_list->sl_layer;
-	slab_t *sm = s;
-	while (clayer > 0) {
-		sm = (slab_t *)sm->s_arr[(s->s_elems - 1)];
-		clayer--;
-	}
-	return (sm->s_max);
-}
-
-uintptr_t
-get_slab_min(slab_t *s)
-{
-	int clayer = s->s_list->sl_layer;
-	slab_t *sm = s;
-	while (clayer > 0) {
-		sm = (slab_t *)sm->s_arr[0];
-		clayer--;
-	}
-	return (sm->s_min);
-}
-
-int
-test_sublayer_extrema(slablist_t *sl, int *l, int *k, int *m, slab_t **sptr)
-{
-	if (sl->sl_sublayers == 0 || SLIST_ORDERED(sl->sl_flags)) {
-		return (0);
-	}
-
-	int layer = 0;
-	uint64_t slab;
-	slablist_t *csl = sl;
-	slab_t *s;
-	uintptr_t max;
-	uintptr_t min;
-	int r = 0;
-	int p = 0;
-	while (layer < sl->sl_sublayers) {
-		csl = sl->sl_sublayer;
-		s = csl->sl_head;
-		slab = 0;
-		while (slab < csl->sl_slabs) {
-			max = get_slab_max(s);
-			min = get_slab_min(s);
-			if (sl->sl_cmp_super(min, s->s_min) != 0) {
-				r ^= 1;
-			}
-			if (sl->sl_cmp_super(max, s->s_max) != 0) {
-				r ^= 2;
-			}
-			if (sl->sl_cmp_super(s->s_min, s->s_max) > 0) {
-				p = 1;
-			}
-			if (r || p) {
-				/* layer is off by 1 */
-				*l = (layer + 1);
-				*k = r;
-				*m = p;
-				*sptr = s;
-				return (1);
-			}
-			s = s->s_next;
-			slab++;
+		if (!has) {
+			return (TEST_SLAB_ERR_MAX + 1);
 		}
-		layer++;
 	}
-
 	return (0);
 }
 
 int
-test_sublayer_elems_sorted(slablist_t *sl, int *l)
+test_find_bubble_up(int layers, bc_t *crumbs, int bc, uintptr_t elem)
 {
-	if (sl->sl_sublayers == 0) {
-		return (0);
+	int f = test_slab(crumbs[(bc - 1)].bc_slab);
+	if (f != 0) {
+		return (f);
+	}
+	f = test_slab_extrema(crumbs[(bc - 1)].bc_slab);
+	if (f != 0) {
+		return (f);
 	}
 
-	int i = 0;
-	int j = 0;
-	int k = 0;
-	slab_t *s = NULL;
-	slablist_t *u = sl;
-	while (i < sl->sl_sublayers) {
-		u = u->sl_sublayer;
-		s = NULL;
-		j = 0;
-		while (j < (u->sl_slabs)) {
-			k = 0;
-			if (s == NULL) {
-				s = u->sl_head;
-			} else {
-				s = s->s_next;
-			}
-
-			while (k < (s->s_elems - 1)) {
-				slab_t *s1 = (slab_t *)(s->s_arr[k]);
-				slab_t *s2 = (slab_t *)(s->s_arr[(k + 1)]);
-				uintptr_t e1 = s1->s_min;
-				uintptr_t e2 = s2->s_min;
-				if (sl->sl_cmp_super(e1, e2) == 1) {
-					*l = u->sl_layer;
-					return (1);
-				}
-				k++;
-			}
-			j++;
-		}
-		i++;
+	int b = gen_bin_srch(elem, crumbs[(bc - 1)].bc_slab, 0);
+	int l = gen_lin_srch(elem, crumbs[(bc - 1)].bc_slab, 0);
+	if (b != l) {
+		return (TEST_SLAB_ERR_MAX + 1);
 	}
-	*l = sl->sl_sublayers;
 	return (0);
 }
 
-
-int
-test_sublayers_have_all_slabs(slablist_t *sl, int *l)
-{
-	if (sl->sl_sublayers == 0) {
-		return (0);
-	}
-
-	int i = 0;
-	int j = 0;
-	int k = 0;
-	slablist_t *c = sl;
-	slablist_t *u;
-	slab_t *s = NULL;
-	slab_t *s2 = NULL;
-	while (i < sl->sl_sublayers) {
-		u = c->sl_sublayer;
-		s = NULL;
-		s2 = NULL;
-		while (j < u->sl_slabs) {
-			if (s == NULL) {
-				s = u->sl_head;
-			} else {
-				s = s->s_next;
-			}
-			while (k < s->s_elems) {
-				slab_t *s1 = (slab_t *)s->s_arr[k];
-
-				if (s2 == NULL) {
-					s2 = c->sl_head;
-				} else {
-					s2 = s2->s_next;
-				}
-
-				if (s1 != s2) {
-					*l = u->sl_layer;
-					return (1);
-				}
-				k++;
-
-			}
-			k = 0;
-			j++;
-		}
-		j = 0;
-		c = u;
-		i++;
-	}
-	*l = sl->sl_sublayers;
-	return (0);
-}
-
-
-void
-test_sublayers(slablist_t *sl, uintptr_t elem)
-{
-	if (!SLABLIST_TEST_ENABLED() && sl->sl_elems >= testfrom) {
-		return;
-	}
-
-	if (SLABLIST_TEST_SUBLAYER_EXTREMA_ENABLED()) {
-		int l;
-		int k;
-		int m;
-		slab_t *s;
-		int f = test_sublayer_extrema(sl, &l, &k, &m, &s);
-		SLABLIST_TEST_SUBLAYER_EXTREMA(f, l, k, m, s);
-	}
-
-	if (SLABLIST_TEST_SUBLAYERS_SORTED_ENABLED()) {
-		int l;
-		int f = test_sublayers_sorted(sl, &l);
-		SLABLIST_TEST_SUBLAYERS_SORTED(f, l);
-	}
-
-	if (SLABLIST_TEST_SUBLAYER_ELEMS_SORTED_ENABLED()) {
-		int l;
-		int f = test_sublayer_elems_sorted(sl, &l);
-		SLABLIST_TEST_SUBLAYER_ELEMS_SORTED(f, l);
-	}
-
-	if (SLABLIST_TEST_SUBLAYER_NELEMS_ENABLED()) {
-		uint64_t l;
-		uint64_t ll;
-		int k;
-		int f = test_sublayer_nelems(sl, &l, &ll, &k);
-		SLABLIST_TEST_SUBLAYER_NELEMS(f, l, ll, k);
-	}
-
-	if (SLABLIST_TEST_BUBBLE_UP_ENABLED()) {
-		int l;
-		int f = test_bubble_up(sl, elem, &l);
-		SLABLIST_TEST_BUBBLE_UP(f, l);
-	}
-
-	if (SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS_ENABLED()) {
-		int l;
-		int f = test_sublayers_have_all_slabs(sl, &l);
-		SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS(f, l);
-	}
-}
 
 int
 test_breadcrumbs(bc_t *bc, int *l, uint64_t bcn)
@@ -732,7 +412,7 @@ test_move_next(slab_t *s, slab_t *scp, slab_t *sn, slab_t *sncp, int *i)
 		 */
 		if (sncp->s_arr[k] != sn->s_arr[j]) {
 			*i = j;
-			return (1);
+			return (2);
 		}
 		j++;
 		k++;
@@ -785,7 +465,7 @@ test_move_prev(slab_t *s, slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 		 */
 		if (spcp->s_arr[k] != sp->s_arr[j]) {
 			*i = j;
-			return (1);
+			return (2);
 		}
 		j--;
 		k--;

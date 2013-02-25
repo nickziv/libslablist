@@ -126,26 +126,23 @@ end:;
 	/*
 	 * We run tests, if DTrace test-probes are enabled.
  	 */
-	if (SLABLIST_TEST_ENABLED()) {
+	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
+		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
+	}
 
-		if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
-			SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
-		}
+	if (SLABLIST_TEST_SMLIST_NELEMS_ENABLED()) {
+		int f = test_smlist_nelems(sl);
+		SLABLIST_TEST_SMLIST_NELEMS(f);
+	}
 
-		if (SLABLIST_TEST_SMLIST_NELEMS_ENABLED()) {
-			int f = test_smlist_nelems(sl);
-			SLABLIST_TEST_SMLIST_NELEMS(f);
-		}
-
-		if (SLIST_SORTED(sl->sl_flags) &&
-		    SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
-				/*
-				 * If test probe is enabled, we verify that the elems
-				 * are sorted.
-				 */
-				int f = test_smlist_elems_sorted(sl);
-				SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
-		}
+	if (SLIST_SORTED(sl->sl_flags) &&
+	    SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
+			/*
+			 * If test probe is enabled, we verify that the elems
+			 * are sorted.
+			 */
+			int f = test_smlist_elems_sorted(sl);
+			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
 	return (ret);
 }
@@ -183,7 +180,7 @@ move_to_next(slab_t *s, slab_t *sn)
 
 	slab_t *scp = NULL;
 	slab_t *sncp = NULL;
-	if (SLABLIST_TEST_ENABLED() && SLABLIST_TEST_MOVE_NEXT_ENABLED()) {
+	if (SLABLIST_TEST_MOVE_NEXT_ENABLED()) {
 		/*
 		 * To test that the next slab has of the elements that are to
 		 * be copied, we make copies of the slabs before they get
@@ -210,7 +207,7 @@ move_to_next(slab_t *s, slab_t *sn)
 	sn->s_elems = sn->s_elems + cpelems;
 	s->s_elems = s->s_elems - cpelems;
 
-	if (SLABLIST_TEST_ENABLED() && SLABLIST_TEST_MOVE_NEXT_ENABLED()) {
+	if (SLABLIST_TEST_MOVE_NEXT_ENABLED()) {
 		/*
 		 * Here we ccompare the modified slabs with their pre-mod
 		 * copies. And we remove the copies when done.
@@ -274,7 +271,7 @@ move_to_prev(slab_t *s, slab_t *sp)
 
 	slab_t *scp = NULL;
 	slab_t *spcp = NULL;
-	if (SLABLIST_TEST_ENABLED() && SLABLIST_TEST_MOVE_PREV_ENABLED()) {
+	if (SLABLIST_TEST_MOVE_PREV_ENABLED()) {
 		/*
 		 * To test that the next slab has of the elements that are to
 		 * be copied, we make copies of the slabs before they get
@@ -295,7 +292,7 @@ move_to_prev(slab_t *s, slab_t *sp)
 	/* bwd shift */
 	bcopy((s->s_arr + cpelems), (s->s_arr), (melems-cpelems)*sz);
 
-	if (SLABLIST_TEST_ENABLED() && SLABLIST_TEST_MOVE_PREV_ENABLED()) {
+	if (SLABLIST_TEST_MOVE_PREV_ENABLED()) {
 		/*
 		 * Here we ccompare the modified slabs with their pre-mod
 		 * copies. And we remove the copies when done.
@@ -585,6 +582,10 @@ end:;
 static void
 remove_elem(int i, slab_t *s)
 {
+	if (SLABLIST_TEST_REMOVE_ELEM_ENABLED()) {
+		int f = test_remove_elem(i, s);
+		SLABLIST_TEST_REMOVE_ELEM(f, s, i);
+	}
 	slablist_t *sl = s->s_list;
 
 
@@ -620,6 +621,11 @@ remove_elem(int i, slab_t *s)
 			s->s_max = s->s_arr[(i - 1)];
 		}
 		SLABLIST_SLAB_SET_MAX(s);
+	}
+
+	if (SLABLIST_TEST_REMOVE_ELEM_ENABLED() && s->s_elems) {
+		int f = test_slab_extrema(s);
+		SLABLIST_TEST_REMOVE_ELEM(f, s, i);
 	}
 }
 
@@ -671,7 +677,6 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, bc_t *crumbs)
 		}
 
 try_setbc:;
-		/* TODO check if this is consistent with edge-detection */
 		if (r == crumbs[bc].bc_slab) {
 			/*
 			 * If we removed crumbs[bc] we need to update the
@@ -877,17 +882,6 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	SLABLIST_SL_DEC_ELEMS(sl);
 end:;
 	SLABLIST_REM_END(ret);
-
-	/*
-	 * If we have test probes enabled, via DTrace, we run the tests.
-	 */
-	test_slab_consistency(sl);
-	if (SLIST_SORTED(sl->sl_flags)) {
-		test_slab_sorting(sl);
-		if (sl->sl_sublayers) {
-			test_sublayers(sl, elem);
-		}
-	}
 
 	return (ret);
 }

@@ -283,6 +283,15 @@ extern "C" {
 #define	SLABLIST_FWDSHIFT_END_ENABLED() \
 	__dtraceenabled_slablist___fwdshift_end(0)
 #endif
+#define	SLABLIST_GET_EXTREME_PATH(arg0, arg1) \
+	__dtrace_slablist___get_extreme_path(arg0, arg1)
+#ifndef	__sparc
+#define	SLABLIST_GET_EXTREME_PATH_ENABLED() \
+	__dtraceenabled_slablist___get_extreme_path()
+#else
+#define	SLABLIST_GET_EXTREME_PATH_ENABLED() \
+	__dtraceenabled_slablist___get_extreme_path(0)
+#endif
 #define	SLABLIST_GET_RAND(arg0, arg1) \
 	__dtrace_slablist___get_rand(arg0, arg1)
 #ifndef	__sparc
@@ -607,15 +616,6 @@ extern "C" {
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() \
 	__dtraceenabled_slablist___subslab_bin_srch(0)
 #endif
-#define	SLABLIST_TEST() \
-	__dtrace_slablist___test()
-#ifndef	__sparc
-#define	SLABLIST_TEST_ENABLED() \
-	__dtraceenabled_slablist___test()
-#else
-#define	SLABLIST_TEST_ENABLED() \
-	__dtraceenabled_slablist___test(0)
-#endif
 #define	SLABLIST_TEST_BREAD_CRUMBS(arg0, arg1) \
 	__dtrace_slablist___test_bread_crumbs(arg0, arg1)
 #ifndef	__sparc
@@ -625,14 +625,23 @@ extern "C" {
 #define	SLABLIST_TEST_BREAD_CRUMBS_ENABLED() \
 	__dtraceenabled_slablist___test_bread_crumbs(0)
 #endif
-#define	SLABLIST_TEST_BUBBLE_UP(arg0, arg1) \
-	__dtrace_slablist___test_bubble_up(arg0, arg1)
+#define	SLABLIST_TEST_FIND_BUBBLE_UP(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___test_find_bubble_up(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_TEST_BUBBLE_UP_ENABLED() \
-	__dtraceenabled_slablist___test_bubble_up()
+#define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() \
+	__dtraceenabled_slablist___test_find_bubble_up()
 #else
-#define	SLABLIST_TEST_BUBBLE_UP_ENABLED() \
-	__dtraceenabled_slablist___test_bubble_up(0)
+#define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() \
+	__dtraceenabled_slablist___test_find_bubble_up(0)
+#endif
+#define	SLABLIST_TEST_INSERT_ELEM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___test_insert_elem(arg0, arg1, arg2, arg3)
+#ifndef	__sparc
+#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_insert_elem()
+#else
+#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_insert_elem(0)
 #endif
 #define	SLABLIST_TEST_IS_SLAB_LIST(arg0) \
 	__dtrace_slablist___test_is_slab_list(arg0)
@@ -670,77 +679,32 @@ extern "C" {
 #define	SLABLIST_TEST_MOVE_PREV_ENABLED() \
 	__dtraceenabled_slablist___test_move_prev(0)
 #endif
-#define	SLABLIST_TEST_NELEMS(arg0, arg1, arg2) \
-	__dtrace_slablist___test_nelems(arg0, arg1, arg2)
+#define	SLABLIST_TEST_REMOVE_ELEM(arg0, arg1, arg2) \
+	__dtrace_slablist___test_remove_elem(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_TEST_NELEMS_ENABLED() \
-	__dtraceenabled_slablist___test_nelems()
+#define	SLABLIST_TEST_REMOVE_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_remove_elem()
 #else
-#define	SLABLIST_TEST_NELEMS_ENABLED() \
-	__dtraceenabled_slablist___test_nelems(0)
+#define	SLABLIST_TEST_REMOVE_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_remove_elem(0)
 #endif
-#define	SLABLIST_TEST_NSLABS(arg0, arg1, arg2) \
-	__dtrace_slablist___test_nslabs(arg0, arg1, arg2)
+#define	SLABLIST_TEST_RIPPLE_ADD(arg0, arg1, arg2, arg3, arg4) \
+	__dtrace_slablist___test_ripple_add(arg0, arg1, arg2, arg3, arg4)
 #ifndef	__sparc
-#define	SLABLIST_TEST_NSLABS_ENABLED() \
-	__dtraceenabled_slablist___test_nslabs()
+#define	SLABLIST_TEST_RIPPLE_ADD_ENABLED() \
+	__dtraceenabled_slablist___test_ripple_add()
 #else
-#define	SLABLIST_TEST_NSLABS_ENABLED() \
-	__dtraceenabled_slablist___test_nslabs(0)
+#define	SLABLIST_TEST_RIPPLE_ADD_ENABLED() \
+	__dtraceenabled_slablist___test_ripple_add(0)
 #endif
-#define	SLABLIST_TEST_NULLARG(arg0, arg1) \
-	__dtrace_slablist___test_nullarg(arg0, arg1)
+#define	SLABLIST_TEST_SLAB_SRCH(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___test_slab_srch(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_TEST_NULLARG_ENABLED() \
-	__dtraceenabled_slablist___test_nullarg()
+#define	SLABLIST_TEST_SLAB_SRCH_ENABLED() \
+	__dtraceenabled_slablist___test_slab_srch()
 #else
-#define	SLABLIST_TEST_NULLARG_ENABLED() \
-	__dtraceenabled_slablist___test_nullarg(0)
-#endif
-#define	SLABLIST_TEST_SLAB_BKPTR(arg0) \
-	__dtrace_slablist___test_slab_bkptr(arg0)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLAB_BKPTR_ENABLED() \
-	__dtraceenabled_slablist___test_slab_bkptr()
-#else
-#define	SLABLIST_TEST_SLAB_BKPTR_ENABLED() \
-	__dtraceenabled_slablist___test_slab_bkptr(0)
-#endif
-#define	SLABLIST_TEST_SLAB_ELEMS_MAX(arg0, arg1) \
-	__dtrace_slablist___test_slab_elems_max(arg0, arg1)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLAB_ELEMS_MAX_ENABLED() \
-	__dtraceenabled_slablist___test_slab_elems_max()
-#else
-#define	SLABLIST_TEST_SLAB_ELEMS_MAX_ENABLED() \
-	__dtraceenabled_slablist___test_slab_elems_max(0)
-#endif
-#define	SLABLIST_TEST_SLAB_ELEMS_SORTED(arg0) \
-	__dtrace_slablist___test_slab_elems_sorted(arg0)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLAB_ELEMS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_slab_elems_sorted()
-#else
-#define	SLABLIST_TEST_SLAB_ELEMS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_slab_elems_sorted(0)
-#endif
-#define	SLABLIST_TEST_SLAB_EXTREMA(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___test_slab_extrema(arg0, arg1, arg2, arg3)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLAB_EXTREMA_ENABLED() \
-	__dtraceenabled_slablist___test_slab_extrema()
-#else
-#define	SLABLIST_TEST_SLAB_EXTREMA_ENABLED() \
-	__dtraceenabled_slablist___test_slab_extrema(0)
-#endif
-#define	SLABLIST_TEST_SLAB_SUBLAYER(arg0) \
-	__dtrace_slablist___test_slab_sublayer(arg0)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLAB_SUBLAYER_ENABLED() \
-	__dtraceenabled_slablist___test_slab_sublayer()
-#else
-#define	SLABLIST_TEST_SLAB_SUBLAYER_ENABLED() \
-	__dtraceenabled_slablist___test_slab_sublayer(0)
+#define	SLABLIST_TEST_SLAB_SRCH_ENABLED() \
+	__dtraceenabled_slablist___test_slab_srch(0)
 #endif
 #define	SLABLIST_TEST_SLAB_TO_SML(arg0) \
 	__dtrace_slablist___test_slab_to_sml(arg0)
@@ -750,24 +714,6 @@ extern "C" {
 #else
 #define	SLABLIST_TEST_SLAB_TO_SML_ENABLED() \
 	__dtraceenabled_slablist___test_slab_to_sml(0)
-#endif
-#define	SLABLIST_TEST_SLABS_SORTED(arg0, arg1, arg2) \
-	__dtrace_slablist___test_slabs_sorted(arg0, arg1, arg2)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLABS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_slabs_sorted()
-#else
-#define	SLABLIST_TEST_SLABS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_slabs_sorted(0)
-#endif
-#define	SLABLIST_TEST_SLIST_USAGE_RATIO(arg0) \
-	__dtrace_slablist___test_slist_usage_ratio(arg0)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SLIST_USAGE_RATIO_ENABLED() \
-	__dtraceenabled_slablist___test_slist_usage_ratio()
-#else
-#define	SLABLIST_TEST_SLIST_USAGE_RATIO_ENABLED() \
-	__dtraceenabled_slablist___test_slist_usage_ratio(0)
 #endif
 #define	SLABLIST_TEST_SMLIST_ELEMS_SORTED(arg0) \
 	__dtrace_slablist___test_smlist_elems_sorted(arg0)
@@ -786,51 +732,6 @@ extern "C" {
 #else
 #define	SLABLIST_TEST_SMLIST_NELEMS_ENABLED() \
 	__dtraceenabled_slablist___test_smlist_nelems(0)
-#endif
-#define	SLABLIST_TEST_SUBLAYER_ELEMS_SORTED(arg0, arg1) \
-	__dtrace_slablist___test_sublayer_elems_sorted(arg0, arg1)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SUBLAYER_ELEMS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_elems_sorted()
-#else
-#define	SLABLIST_TEST_SUBLAYER_ELEMS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_elems_sorted(0)
-#endif
-#define	SLABLIST_TEST_SUBLAYER_EXTREMA(arg0, arg1, arg2, arg3, arg4) \
-	__dtrace_slablist___test_sublayer_extrema(arg0, arg1, arg2, arg3, arg4)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SUBLAYER_EXTREMA_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_extrema()
-#else
-#define	SLABLIST_TEST_SUBLAYER_EXTREMA_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_extrema(0)
-#endif
-#define	SLABLIST_TEST_SUBLAYER_NELEMS(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___test_sublayer_nelems(arg0, arg1, arg2, arg3)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SUBLAYER_NELEMS_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_nelems()
-#else
-#define	SLABLIST_TEST_SUBLAYER_NELEMS_ENABLED() \
-	__dtraceenabled_slablist___test_sublayer_nelems(0)
-#endif
-#define	SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS(arg0, arg1) \
-	__dtrace_slablist___test_sublayers_have_all_slabs(arg0, arg1)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS_ENABLED() \
-	__dtraceenabled_slablist___test_sublayers_have_all_slabs()
-#else
-#define	SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS_ENABLED() \
-	__dtraceenabled_slablist___test_sublayers_have_all_slabs(0)
-#endif
-#define	SLABLIST_TEST_SUBLAYERS_SORTED(arg0, arg1) \
-	__dtrace_slablist___test_sublayers_sorted(arg0, arg1)
-#ifndef	__sparc
-#define	SLABLIST_TEST_SUBLAYERS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_sublayers_sorted()
-#else
-#define	SLABLIST_TEST_SUBLAYERS_SORTED_ENABLED() \
-	__dtraceenabled_slablist___test_sublayers_sorted(0)
 #endif
 #define	SLABLIST_TO_SLAB(arg0) \
 	__dtrace_slablist___to_slab(arg0)
@@ -1050,6 +951,12 @@ extern int __dtraceenabled_slablist___fwdshift_end(void);
 #else
 extern int __dtraceenabled_slablist___fwdshift_end(long);
 #endif
+extern void __dtrace_slablist___get_extreme_path(bc_t *, int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_extreme_path(void);
+#else
+extern int __dtraceenabled_slablist___get_extreme_path(long);
+#endif
 extern void __dtrace_slablist___get_rand(slablist_t *, uintptr_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___get_rand(void);
@@ -1266,23 +1173,23 @@ extern int __dtraceenabled_slablist___subslab_bin_srch(void);
 #else
 extern int __dtraceenabled_slablist___subslab_bin_srch(long);
 #endif
-extern void __dtrace_slablist___test(void);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test(void);
-#else
-extern int __dtraceenabled_slablist___test(long);
-#endif
 extern void __dtrace_slablist___test_bread_crumbs(int, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_bread_crumbs(void);
 #else
 extern int __dtraceenabled_slablist___test_bread_crumbs(long);
 #endif
-extern void __dtrace_slablist___test_bubble_up(int, int);
+extern void __dtrace_slablist___test_find_bubble_up(int, slab_t *, uintptr_t, int);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___test_bubble_up(void);
+extern int __dtraceenabled_slablist___test_find_bubble_up(void);
 #else
-extern int __dtraceenabled_slablist___test_bubble_up(long);
+extern int __dtraceenabled_slablist___test_find_bubble_up(long);
+#endif
+extern void __dtrace_slablist___test_insert_elem(int, slab_t *, uintptr_t, int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_insert_elem(void);
+#else
+extern int __dtraceenabled_slablist___test_insert_elem(long);
 #endif
 extern void __dtrace_slablist___test_is_slab_list(int);
 #ifndef	__sparc
@@ -1308,71 +1215,29 @@ extern int __dtraceenabled_slablist___test_move_prev(void);
 #else
 extern int __dtraceenabled_slablist___test_move_prev(long);
 #endif
-extern void __dtrace_slablist___test_nelems(int, uint64_t, uint64_t);
+extern void __dtrace_slablist___test_remove_elem(int, slab_t *, int);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___test_nelems(void);
+extern int __dtraceenabled_slablist___test_remove_elem(void);
 #else
-extern int __dtraceenabled_slablist___test_nelems(long);
+extern int __dtraceenabled_slablist___test_remove_elem(long);
 #endif
-extern void __dtrace_slablist___test_nslabs(int, uint64_t, uint64_t);
+extern void __dtrace_slablist___test_ripple_add(int, slab_t *, slab_t *, void *, int);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___test_nslabs(void);
+extern int __dtraceenabled_slablist___test_ripple_add(void);
 #else
-extern int __dtraceenabled_slablist___test_nslabs(long);
+extern int __dtraceenabled_slablist___test_ripple_add(long);
 #endif
-extern void __dtrace_slablist___test_nullarg(int, int);
+extern void __dtrace_slablist___test_slab_srch(int, slab_t *, uintptr_t, int);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___test_nullarg(void);
+extern int __dtraceenabled_slablist___test_slab_srch(void);
 #else
-extern int __dtraceenabled_slablist___test_nullarg(long);
-#endif
-extern void __dtrace_slablist___test_slab_bkptr(int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slab_bkptr(void);
-#else
-extern int __dtraceenabled_slablist___test_slab_bkptr(long);
-#endif
-extern void __dtrace_slablist___test_slab_elems_max(int, uint64_t);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slab_elems_max(void);
-#else
-extern int __dtraceenabled_slablist___test_slab_elems_max(long);
-#endif
-extern void __dtrace_slablist___test_slab_elems_sorted(int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slab_elems_sorted(void);
-#else
-extern int __dtraceenabled_slablist___test_slab_elems_sorted(long);
-#endif
-extern void __dtrace_slablist___test_slab_extrema(int, int, int, slab_t *);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slab_extrema(void);
-#else
-extern int __dtraceenabled_slablist___test_slab_extrema(long);
-#endif
-extern void __dtrace_slablist___test_slab_sublayer(int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slab_sublayer(void);
-#else
-extern int __dtraceenabled_slablist___test_slab_sublayer(long);
+extern int __dtraceenabled_slablist___test_slab_srch(long);
 #endif
 extern void __dtrace_slablist___test_slab_to_sml(int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_slab_to_sml(void);
 #else
 extern int __dtraceenabled_slablist___test_slab_to_sml(long);
-#endif
-extern void __dtrace_slablist___test_slabs_sorted(int, slab_t *, slab_t *);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slabs_sorted(void);
-#else
-extern int __dtraceenabled_slablist___test_slabs_sorted(long);
-#endif
-extern void __dtrace_slablist___test_slist_usage_ratio(int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_slist_usage_ratio(void);
-#else
-extern int __dtraceenabled_slablist___test_slist_usage_ratio(long);
 #endif
 extern void __dtrace_slablist___test_smlist_elems_sorted(int);
 #ifndef	__sparc
@@ -1385,36 +1250,6 @@ extern void __dtrace_slablist___test_smlist_nelems(int);
 extern int __dtraceenabled_slablist___test_smlist_nelems(void);
 #else
 extern int __dtraceenabled_slablist___test_smlist_nelems(long);
-#endif
-extern void __dtrace_slablist___test_sublayer_elems_sorted(int, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_sublayer_elems_sorted(void);
-#else
-extern int __dtraceenabled_slablist___test_sublayer_elems_sorted(long);
-#endif
-extern void __dtrace_slablist___test_sublayer_extrema(int, int, int, int, slab_t *);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_sublayer_extrema(void);
-#else
-extern int __dtraceenabled_slablist___test_sublayer_extrema(long);
-#endif
-extern void __dtrace_slablist___test_sublayer_nelems(int, uint64_t, uint64_t, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_sublayer_nelems(void);
-#else
-extern int __dtraceenabled_slablist___test_sublayer_nelems(long);
-#endif
-extern void __dtrace_slablist___test_sublayers_have_all_slabs(int, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_sublayers_have_all_slabs(void);
-#else
-extern int __dtraceenabled_slablist___test_sublayers_have_all_slabs(long);
-#endif
-extern void __dtrace_slablist___test_sublayers_sorted(int, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_sublayers_sorted(void);
-#else
-extern int __dtraceenabled_slablist___test_sublayers_sorted(long);
 #endif
 extern void __dtrace_slablist___to_slab(slablist_t *);
 #ifndef	__sparc
@@ -1503,6 +1338,8 @@ extern int __dtraceenabled_slablist___unlink_sml_node(long);
 #define	SLABLIST_FWDSHIFT_BEGIN_ENABLED() (0)
 #define	SLABLIST_FWDSHIFT_END()
 #define	SLABLIST_FWDSHIFT_END_ENABLED() (0)
+#define	SLABLIST_GET_EXTREME_PATH(arg0, arg1)
+#define	SLABLIST_GET_EXTREME_PATH_ENABLED() (0)
 #define	SLABLIST_GET_RAND(arg0, arg1)
 #define	SLABLIST_GET_RAND_ENABLED() (0)
 #define	SLABLIST_GOT_HERE(arg0)
@@ -1575,12 +1412,12 @@ extern int __dtraceenabled_slablist___unlink_sml_node(long);
 #define	SLABLIST_SLAB_SET_MIN_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1)
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() (0)
-#define	SLABLIST_TEST()
-#define	SLABLIST_TEST_ENABLED() (0)
 #define	SLABLIST_TEST_BREAD_CRUMBS(arg0, arg1)
 #define	SLABLIST_TEST_BREAD_CRUMBS_ENABLED() (0)
-#define	SLABLIST_TEST_BUBBLE_UP(arg0, arg1)
-#define	SLABLIST_TEST_BUBBLE_UP_ENABLED() (0)
+#define	SLABLIST_TEST_FIND_BUBBLE_UP(arg0, arg1, arg2, arg3)
+#define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() (0)
+#define	SLABLIST_TEST_INSERT_ELEM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SLAB_LIST(arg0)
 #define	SLABLIST_TEST_IS_SLAB_LIST_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SML_LIST(arg0)
@@ -1589,42 +1426,18 @@ extern int __dtraceenabled_slablist___unlink_sml_node(long);
 #define	SLABLIST_TEST_MOVE_NEXT_ENABLED() (0)
 #define	SLABLIST_TEST_MOVE_PREV(arg0, arg1, arg2, arg3, arg4, arg5)
 #define	SLABLIST_TEST_MOVE_PREV_ENABLED() (0)
-#define	SLABLIST_TEST_NELEMS(arg0, arg1, arg2)
-#define	SLABLIST_TEST_NELEMS_ENABLED() (0)
-#define	SLABLIST_TEST_NSLABS(arg0, arg1, arg2)
-#define	SLABLIST_TEST_NSLABS_ENABLED() (0)
-#define	SLABLIST_TEST_NULLARG(arg0, arg1)
-#define	SLABLIST_TEST_NULLARG_ENABLED() (0)
-#define	SLABLIST_TEST_SLAB_BKPTR(arg0)
-#define	SLABLIST_TEST_SLAB_BKPTR_ENABLED() (0)
-#define	SLABLIST_TEST_SLAB_ELEMS_MAX(arg0, arg1)
-#define	SLABLIST_TEST_SLAB_ELEMS_MAX_ENABLED() (0)
-#define	SLABLIST_TEST_SLAB_ELEMS_SORTED(arg0)
-#define	SLABLIST_TEST_SLAB_ELEMS_SORTED_ENABLED() (0)
-#define	SLABLIST_TEST_SLAB_EXTREMA(arg0, arg1, arg2, arg3)
-#define	SLABLIST_TEST_SLAB_EXTREMA_ENABLED() (0)
-#define	SLABLIST_TEST_SLAB_SUBLAYER(arg0)
-#define	SLABLIST_TEST_SLAB_SUBLAYER_ENABLED() (0)
+#define	SLABLIST_TEST_REMOVE_ELEM(arg0, arg1, arg2)
+#define	SLABLIST_TEST_REMOVE_ELEM_ENABLED() (0)
+#define	SLABLIST_TEST_RIPPLE_ADD(arg0, arg1, arg2, arg3, arg4)
+#define	SLABLIST_TEST_RIPPLE_ADD_ENABLED() (0)
+#define	SLABLIST_TEST_SLAB_SRCH(arg0, arg1, arg2, arg3)
+#define	SLABLIST_TEST_SLAB_SRCH_ENABLED() (0)
 #define	SLABLIST_TEST_SLAB_TO_SML(arg0)
 #define	SLABLIST_TEST_SLAB_TO_SML_ENABLED() (0)
-#define	SLABLIST_TEST_SLABS_SORTED(arg0, arg1, arg2)
-#define	SLABLIST_TEST_SLABS_SORTED_ENABLED() (0)
-#define	SLABLIST_TEST_SLIST_USAGE_RATIO(arg0)
-#define	SLABLIST_TEST_SLIST_USAGE_RATIO_ENABLED() (0)
 #define	SLABLIST_TEST_SMLIST_ELEMS_SORTED(arg0)
 #define	SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED() (0)
 #define	SLABLIST_TEST_SMLIST_NELEMS(arg0)
 #define	SLABLIST_TEST_SMLIST_NELEMS_ENABLED() (0)
-#define	SLABLIST_TEST_SUBLAYER_ELEMS_SORTED(arg0, arg1)
-#define	SLABLIST_TEST_SUBLAYER_ELEMS_SORTED_ENABLED() (0)
-#define	SLABLIST_TEST_SUBLAYER_EXTREMA(arg0, arg1, arg2, arg3, arg4)
-#define	SLABLIST_TEST_SUBLAYER_EXTREMA_ENABLED() (0)
-#define	SLABLIST_TEST_SUBLAYER_NELEMS(arg0, arg1, arg2, arg3)
-#define	SLABLIST_TEST_SUBLAYER_NELEMS_ENABLED() (0)
-#define	SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS(arg0, arg1)
-#define	SLABLIST_TEST_SUBLAYERS_HAVE_ALL_SLABS_ENABLED() (0)
-#define	SLABLIST_TEST_SUBLAYERS_SORTED(arg0, arg1)
-#define	SLABLIST_TEST_SUBLAYERS_SORTED_ENABLED() (0)
 #define	SLABLIST_TO_SLAB(arg0)
 #define	SLABLIST_TO_SLAB_ENABLED() (0)
 #define	SLABLIST_TO_SMALL_LIST(arg0)
