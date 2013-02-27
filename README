@@ -5,3 +5,11 @@ sorted in logarithmic time.
 
 See the block comment at the top of src/slablist_impl.h for implementation
 overview.
+
+The `libslablist` API is not yet stable. It is volatile and may change.
+
+All of the code in the library follows the Illumos kernel coding style,
+sometimes referred to as BJNF (Bill Joy Normal Form).
+
+To install go to /build, and run ./build_install_all. This only works for
+Illumos and only if you have cc (Sun Studio). An upgrade to gcc is planned.
