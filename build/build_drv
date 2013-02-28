@@ -2,7 +2,7 @@
 
 # This script assumes that build_lib and install_lib have been run already.
 
-cmplr=cc
+cmplr=gcc
 c_flags="-m64"
 libs="-lslablist -lc -lumem"
 src_dir="../src"
@@ -23,7 +23,7 @@ cout_file[3]=drv_rand_ops
 print "Compiling All Files"
 for i in 0 1 3
 do
-	$cmplr -c $c_flags ${csrc_file[$i]} $libs
+	$cmplr -c $c_flags ${csrc_file[$i]} #$libs
 done
 
 # Probably useless

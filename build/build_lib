@@ -14,8 +14,12 @@
 # portable.
 
 #Yeah, this violates the CAPS convention, but is easier to read.
-cmplr=cc
-c_flags="-m64 -Kpic"
+#cmplr=cc
+#c_flags="-m64 -Kpic"
+#ld_flags="-G -z text -z defs"
+cmplr=gcc
+c_flags="-m64 -fPIC"
+ld_flags="-shared"
 
 libs="-ldtrace -lumem -lc"
 
@@ -97,4 +101,4 @@ done
 #Here we generate the shared object
 echo "$obj_line"
 echo "$libs"
-$cmplr $c_flags -G -z text -z defs -o $output $obj_line $libs
+$cmplr $c_flags $ld_flags -o $output $obj_line $libs
