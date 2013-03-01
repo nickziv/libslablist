@@ -12,4 +12,4 @@ All of the code in the library follows the Illumos kernel coding style,
 sometimes referred to as BJNF (Bill Joy Normal Form).
 
 To install go to /build, and run ./build_install_all. This only works for
-Illumos and only if you have cc (Sun Studio). An upgrade to gcc is planned.
+Illumos and only if you have gcc. Sun Studio is no longer supported.
