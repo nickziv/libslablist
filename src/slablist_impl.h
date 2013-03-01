@@ -267,8 +267,8 @@
  * within libslablist.
  *
  * Testing probes are DTrace probes that, when enabled, trigger tests that
- * verify the correctness of the slab list data structure after each
- * modification, and report failure or success via dtrace. All testing probes
+ * verify the correctness of the slab list data structure at various points in
+ * the code path and report failure or success via dtrace. All testing probes
  * have a test_* prefix.
  *
  * Tests are driven by driver programs that barrage slab lists with random data
@@ -328,7 +328,6 @@
  * See tests/ for various test D scripts.
  *
  * See tools/ for various tool D scripts.
- *
  */
 
 #include <stdint.h>
