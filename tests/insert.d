@@ -3,17 +3,26 @@
 dtrace:::BEGIN
 {
 	fail = 0;
+	/*
+	 * Change this to 1 to enable heap-testing. Heap testing is great for
+	 * small volumes of data, relative to the amount of RAM you have
+	 * available. Once you get to large volumes, these tests will start
+	 * dropping variables, and will no longer be reliable. The only way to
+	 * prevent this from happening is to get more RAM.
+	 */
+	heap_test = 0;
 }
 
 bcinfo_t bblup_bcs[int];
 
 pid$target::mk_slab:return
+/heap_test/
 {
 	slabs[arg1] = 1;
 }
 
 pid$target::rm_slab:entry
-/slabs[arg0] == 2/
+/heap_test && slabs[arg0] == 2/
 {
 	fail = 1;
 	printf("Trying to free freed slab.\n");
@@ -24,7 +33,7 @@ pid$target::rm_slab:entry
 }
 
 pid$target::rm_slab:entry
-/slabs[arg0] == 1/
+/heap_test && slabs[arg0] == 1/
 {
 	slabs[arg0] = 2;
 }
@@ -37,7 +46,7 @@ slablist$target:::get_extreme_path
 }
 
 slablist$target:::test_insert_elem
-/slabs[arg1] == 0/
+/heap_test && slabs[arg1] == 0/
 {
 	fail = 1;
 	printf("Trying to insert into unallocated memory (%p) as a slab.\n",
@@ -49,7 +58,7 @@ slablist$target:::test_insert_elem
 }
 
 slablist$target:::test_insert_elem
-/slabs[arg1] == 2/
+/heap_test && slabs[arg1] == 2/
 {
 	fail = 1;
 	printf("Trying to insert into a freed slab.\n");

@@ -3,15 +3,18 @@
 dtrace:::BEGIN
 {
 	fail = 0;
+	/* see comment in insert.d */
+	heap_test = 0;
 }
 
 pid$target::mk_slab:return
+/heap_test/
 {
 	slabs[arg1] = 1;
 }
 
 pid$target::rm_slab:entry
-/slabs[arg0] == 2/
+/heap_test && slabs[arg0] == 2/
 {
 	fail = 1;
 	printf("Trying to free freed slab.\n");
@@ -22,13 +25,13 @@ pid$target::rm_slab:entry
 }
 
 pid$target::rm_slab:entry
-/slabs[arg0] == 1/
+/heap_test && slabs[arg0] == 1/
 {
 	slabs[arg0] = 2;
 }
 
 slablist$target:::test_ripple_add
-/slabs[arg1] == 0/
+/heap_test && slabs[arg1] == 0/
 {
 	fail = 1;
 	printf("Trying to walk over unallocated memory (%p) as a slab.\n", arg1);
@@ -39,7 +42,7 @@ slablist$target:::test_ripple_add
 }
 
 slablist$target:::test_ripple_add
-/slabs[arg1] == 2/
+/heap_test && slabs[arg1] == 2/
 {
 	fail = 1;
 	printf("Trying to walk over a freed slab.\n");
