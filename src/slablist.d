@@ -13,7 +13,7 @@ typedef struct slabinfo {
 	uint16_t		si_elems;
 	uintptr_t		si_max;
 	uintptr_t		si_min;
-	uintptr_t		si_arr[119];
+	uintptr_t		si_arr[122];
 	uintptr_t		si_next;
 	uintptr_t		si_prev;
 } slabinfo_t;

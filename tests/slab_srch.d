@@ -4,6 +4,7 @@ dtrace:::BEGIN
 {
 	fail = 0;
 	/* see comment in insert.d */
+	heap_test = 0;
 }
 
 bcinfo_t bblup_bcs[int];
