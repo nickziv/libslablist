@@ -49,14 +49,13 @@ typedef struct bcinfo {
  * file from the latest release. Otherwise the translators won't work.
  */
 struct slab {
-        pthread_mutex_t         s_mutex;
         slab_t                  *s_next;
         slab_t                  *s_prev;
         slablist_t              *s_list;
         uint8_t                 s_elems;
         uintptr_t               s_max;
         uintptr_t               s_min;
-        uintptr_t               s_arr[119];
+        uintptr_t               s_arr[122];
 };
 
 

@@ -34,15 +34,15 @@
  * both doubly linked lists and arrays.
  *
  * The main structure of the slab list, is the slab. It is a structure that can
- * hold 952 bytes  of data plus some metadata. The metadata is 66 bytes in size
+ * hold 976 bytes  of data plus some metadata. The metadata is 41 bytes in size
  * (80 bytes with compiler-inserted padding). This makes the slab exactly 1K in
- * size, meaning that we can fit 4 slabs on one page. The 952 bytes of data is
- * carved into 8-byte elements, meaning that each slab can hold 119 elements.
+ * size, meaning that we can fit 4 slabs on one page. The 976 bytes of data is
+ * carved into 8-byte elements, meaning that each slab can hold 122 elements.
  *
  * Elements can be any 8-byte sequence (64-bit integers, 64-bit double
  * precision floating point numbers, 64-bit pointers, and so on).
  *
- * The data to total-data ratio per slab is 952/1024 which is 93% efficiency.
+ * The data to total-data ratio per slab is 976/1024 which is 95% efficiency.
  * Increasing the number of elements per-slab increases the efficiency, but
  * decreases performace. Empiracally, the 1K slab offers the best performace
  * improvement per percentage of memory efficiency sacrificed.
@@ -53,7 +53,7 @@
  * In the slab list ASCII diagram below, the stars and arrows are pointers.
  * "MD" is meta data, that are not next and prev pointers.
  *
- * [*|MD|////952b////|*] -><- [*|MD|////952b////|*]-><-[*|MD|////952b////|*]
+ * [*|MD|////976b////|*] -><- [*|MD|////976b////|*]-><-[*|MD|////976b////|*]
  *
  * If we zoom into one of the slabs:
  *
@@ -65,15 +65,15 @@
  *				^ the compiler may pad this to be 8 bytes
  *			maxvalue: largest element in the slab (8 bytes)
  *			minvalue: smallest element in the slab (8 bytes)
- *			rest: user-given data (952 bytes)
+ *			rest: user-given data (976 bytes)
  *
- *   base of slab structure --->  +--------------------------+----------+
- *                                | mutex structure 24 bytes | nextslab |
- *                                +----------+----------+----+----------+
- *                                | prevslab | slistptr | NE | maxvalue |
- *                                +----------+----------+----+----------+
- *                                | minvalue | 952 bytes of user data   |
- *                                +----------+--------------------------+
+ *   base of slab structure --->  +----------+----------+----------+----+
+ *                                | nextslab | prevslab | slistptr | NE |
+ *                                +----------+----------+----------+----+
+ *                                | maxvalue | minvalue | 976 bytes...  |
+ *                                +----------+----------+---------------+
+ *                                |         ...of user data...          |
+ *                                +-------------------------------------+
  *                                |                ||                   |
  *                                |                ||                   |
  *                                |                \/                   |
@@ -84,10 +84,6 @@
  *                                :                                     :
  *                                |                                     |
  *     end of slab structure--->  +-------------------------------------+
- *
- * Every slab has a mutex structure. This structure is needed to support locking
- * concurrency. Currently, slab lists are single-threaded, but support for
- * multiple threads is in the pipeline.
  *
  * As can be seen by the diagram above, user data is an overwhelming portion of
  * the entire slab.
@@ -158,7 +154,7 @@
  * To summarize the memory-efficiency of each data strucure's node, from best
  * to worst:
  *
- *		Slab list: 		93%
+ *		Slab list: 		95%
  *		Doubly linked list: 	33%
  *		AVL Tree: 		25%
  *
@@ -183,7 +179,7 @@
  * ordered slab list merely inserts each new element to the end of the list.
  *
  * Ranges on slabs are useful for sorted slab lists, as we can use it to
- * traverse the list 119 times more quickly than a linked list, when searching
+ * traverse the list 122 times more quickly than a linked list, when searching
  * for an element. When we get to a slab that _may_ contain an element, we try
  * to find the index of the element via binary search.
  *
@@ -222,9 +218,9 @@
  *        baselayer -------------->    \_/
  *
  * If the maximum number of slabs the baselayer can have is N, then it
- * can have at most N*119 elems. If we have only 1 sublayer attached to the
- * slab list, then we have N*119 elems. If we have two we have N*(119^2)
- * user-inserted elems. If we have 3, N*(119^3) elems. And so on.
+ * can have at most N*122 elems. If we have only 1 sublayer attached to the
+ * slab list, then we have N*122 elems. If we have two we have N*(122^2)
+ * user-inserted elems. If we have 3, N*(122^3) elems. And so on.
  *
  * Slablists are limited to a maximum of 8 sublayers. With a completely full
  * slab list, of 8-byte integers, we would consume 0.365 _zettabytes_ of RAM.
@@ -249,7 +245,7 @@
  * struct.
  *
  * The user can specify the minimum capacity ratio (number of elems in entire
- * slab list, to number of possible elems [119*nslabs]), name, slabs for
+ * slab list, to number of possible elems [122*nslabs]), name, slabs for
  * sublayer, object size, and comparison function.
  *
  * If a slab is added to or removed from the superlayer, we have to ripple the
@@ -391,7 +387,7 @@
 #define	FS_UNDER_RANGE	-1
 #define	FS_OVER_RANGE	1
 
-#define	SELEM_MAX	(119)
+#define	SELEM_MAX	(122)
 #define	SMELEM_MAX	(60)
 
 typedef struct slab slab_t;
@@ -402,7 +398,6 @@ typedef struct small_list {
 } small_list_t;
 
 struct slab {
-	pthread_mutex_t		s_mutex;
 	slab_t			*s_next;
 	slab_t 			*s_prev;
 	slablist_t		*s_list;
