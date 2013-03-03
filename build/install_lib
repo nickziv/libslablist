@@ -2,12 +2,21 @@
 
 libfname=libslablist.so.1
 libfnamebase=libslablist.so
-libdir=/usr/lib/64/
+# this is the destination of the lib. If your sys is configured differently,
+# change this.
+libdir=/opt/libslablist/lib/64/
 libxlator=slablist.d
+
+mkdir /opt/libslablist 2> /dev/null
+mkdir /opt/libslablist/bin 2> /dev/null
+mkdir /opt/libslablist/bin/amd64 2> /dev/null
+mkdir /opt/libslablist/lib 2> /dev/null
+mkdir /opt/libslablist/lib/64 2> /dev/null
+mkdir /opt/libslablist/include 2> /dev/null
 
 cp $libfname $libdir$libfname
 ln -s $libdir$libfname $libdir$libfnamebase
 
-cp ../src/slablist.h /usr/include/slablist.h
+cp ../src/slablist.h /opt/libslablist/include/slablist.h
 
 cp ../src/$libxlator /usr/lib/dtrace/$libxlator
