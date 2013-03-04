@@ -830,15 +830,14 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 	try_reap_all(sl);
 
 	if (edup != SL_SUCCESS) {
-		SLABLIST_ADD_END(SL_EDUP);
 		ret = SL_EDUP;
 	} else {
 		sl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(sl);
-		SLABLIST_ADD_END(SL_SUCCESS);
 		ret = SL_SUCCESS;
 	}
 
+	SLABLIST_ADD_END(ret);
 	return (ret);
 
 }
