@@ -4,6 +4,7 @@
 
 cmplr=gcc
 c_flags="-m64"
+ld_flags="-R /opt/libslablist/lib/64:/opt/libslablist/lib"
 libs="-lslablist -lc -lumem"
 src_dir="../src"
 
@@ -38,5 +39,5 @@ done
 print "Generating Executable"
 for i in 0 1 3
 do
-	$cmplr $c_flags -o ${cout_file[$i]} ${cobj_file[$i]} $libs
+	$cmplr $c_flags -o ${cout_file[$i]} ${cobj_file[$i]} $libs $ld_flags
 done
