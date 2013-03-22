@@ -174,6 +174,7 @@ sml_node_get(slablist_t *sl, uint64_t pos)
 uintptr_t
 slablist_get(slablist_t *sl, uint64_t pos)
 {
+	lock_list(sl);
 	uintptr_t ret;
 	int i;
 	uint64_t off_pos;
@@ -188,6 +189,7 @@ slablist_get(slablist_t *sl, uint64_t pos)
 		ret = s->s_arr[i];
 	}
 
+	unlock_list(sl);
 	return (ret);
 }
 
@@ -555,6 +557,8 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
 int
 slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 {
+	lock_list(sl);
+
 	SLABLIST_FIND_BEGIN(sl, key);
 	bc_t bc_path[MAX_LYRS];
 	slab_t *s;
@@ -569,6 +573,7 @@ slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 		}
 		*found = sml->sml_data;
 		SLABLIST_FIND_END(SL_SUCCESS, *found);
+		unlock_list(sl);
 		return (SL_SUCCESS);
 	}
 
@@ -587,13 +592,16 @@ slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 		*found  = ret;
 		if (sl->sl_cmp_elem(key, ret) == 0) {
 			SLABLIST_FIND_END(SL_SUCCESS, *found);
+			unlock_list(sl);
 			return (SL_SUCCESS);
 		} else {
 			SLABLIST_FIND_END(SL_ENFOUND, *found);
+			unlock_list(sl);
 			return (SL_ENFOUND);
 		}
 	} else {
 		SLABLIST_FIND_END(SL_ARGORD, *found);
+		unlock_list(sl);
 		return (SL_ARGORD);
 	}
 }
@@ -625,6 +633,7 @@ get_rand_num(int rfd)
 uintptr_t
 slablist_get_rand(slablist_t *sl)
 {
+	lock_list(sl);
 	char *rfn = "/dev/urandom";
 	int rfd = open(rfn, O_RDONLY);
 	uint64_t r = get_rand_num(rfd);
@@ -653,6 +662,7 @@ slablist_get_rand(slablist_t *sl)
 
 	close(rfd);
 	SLABLIST_GET_RAND(sl, ret);
+	unlock_list(sl);
 	return (ret);
 }
 

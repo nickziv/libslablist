@@ -50,8 +50,11 @@
 static int
 small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 {
+	lock_list(sl);
+
 	int ret;
 	if (sl->sl_head == NULL || sl->sl_elems == 0) {
+		unlock_list(sl);
 		return (SL_EMPTY);
 	}
 
@@ -144,6 +147,7 @@ end:;
 			int f = test_smlist_elems_sorted(sl);
 			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
+	unlock_list(sl);
 	return (ret);
 }
 
@@ -777,6 +781,8 @@ slablist_reap(slablist_t *sl)
 int
 slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 {
+	lock_list(sl);
+
 	uint64_t off_pos;
 	slab_t *s = NULL;
 	bc_t bc_path[MAX_LYRS];
@@ -881,6 +887,8 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
 end:;
+	unlock_list(sl);
+
 	SLABLIST_REM_END(ret);
 
 	return (ret);

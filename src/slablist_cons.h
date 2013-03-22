@@ -32,3 +32,6 @@ extern void attach_sublayer(slablist_t *);
 extern void detach_sublayer(slablist_t *);
 extern void try_reap(slablist_t *);
 extern void try_reap_all(slablist_t *);
+extern int lock_list(slablist_t *);
+extern int unlock_list(slablist_t *);
+extern int trylock_list(slablist_t *);

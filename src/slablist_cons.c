@@ -38,6 +38,27 @@ static slablist_t *lst_sl = NULL;
 /* static pthread_mutex_t lst_sl_lk; */
 extern int slablist_umem_init();
 
+int
+lock_list(slablist_t *sl)
+{
+	int e = pthread_mutex_lock(&sl->sl_mutex);
+	return (e);
+}
+
+int
+trylock_list(slablist_t *sl)
+{
+	int e = pthread_mutex_trylock(&sl->sl_mutex);
+	return (e);
+}
+
+int
+unlock_list(slablist_t *sl)
+{
+	int e = pthread_mutex_unlock(&sl->sl_mutex);
+	return (e);
+}
+
 slablist_t *
 slablist_create(
 	char *name,		/* descriptive name */
@@ -120,17 +141,21 @@ slablist_create(
 void
 slablist_setmpslabs(slablist_t *sl, uint8_t new)
 {
+	lock_list(sl);
 	if (new <= 99) {
 		sl->sl_mpslabs = new;
 	} else {
 		sl->sl_mpslabs = 99;
 	}
+	unlock_list(sl);
 }
 
 void
 slablist_setmslabs(slablist_t *sl, uint64_t new)
 {
+	lock_list(sl);
 	sl->sl_mslabs = new;
+	unlock_list(sl);
 }
 
 char *
@@ -307,6 +332,7 @@ remove_slabs(slablist_t *sl)
 void
 slablist_destroy(slablist_t *sl)
 {
+	lock_list(sl);
 	SLABLIST_DESTROY(sl);
 	size_t namesz = strlen(sl->sl_name);
 	rm_buf(sl->sl_name, namesz);
@@ -342,6 +368,7 @@ slablist_destroy(slablist_t *sl)
 
 	nlists--;
 	rm_slablist(sl);
+	unlock_list(sl);
 }
 
 

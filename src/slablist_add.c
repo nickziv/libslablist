@@ -55,6 +55,7 @@
 int
 small_list_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 {
+	lock_list(sl);
 
 	int ret;
 	if (sl->sl_head == NULL) {
@@ -173,6 +174,8 @@ end:;
 		int f = test_smlist_elems_sorted(sl);
 		SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
+
+	unlock_list(sl);
 
 	return (ret);
 }
@@ -705,6 +708,7 @@ skip_extrema_ripple:;
 int
 slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 {
+	lock_list(sl);
 
 
 	int ret;
@@ -836,6 +840,8 @@ slablist_add(slablist_t *sl, uintptr_t elem, int rep, uintptr_t *repd_elem)
 		SLABLIST_SL_INC_ELEMS(sl);
 		ret = SL_SUCCESS;
 	}
+
+	unlock_list(sl);
 
 	SLABLIST_ADD_END(ret);
 	return (ret);
