@@ -190,21 +190,31 @@
  * a sublayer for that slab list. A sublayer is an internal slab list that
  * contains pointers to slabs as elements. All of the slab-pointers are sorted,
  * and the sublayer's slabs are also ranged. A sublayer is only created for
- * sorted slab lists. Slabs in a sublayer are called sub-slabs. Superslabs are
- * subslabs that are refered to from a lower subslab. Slabs at the highest
- * superlayer (slabs that contain the user's data) are simply known as slabs,
- * or superslabs from the perspective of the highest sublayer. The lowest
- * sublayer is called the baselayer.
+ * sorted slab lists. Slabs in a sublayer are called subslabs, and are backed
+ * by their of subslab_t structure. The subslab_t structure is functionally
+ * equivalent to the slab_t structure, however it contains 4K of data, instead
+ * of 1K, and the data is pointed to, instead of being part of the subslab_t
+ * struct. By not overloading the slab_t struct (for both user data and private
+ * metadata), we are decreasing the depth of the call-stack and are removing
+ * branches from the code (that call different comparison functions or search
+ * functions). Additionally, it is easier to measure (via mdb or dtrace) how
+ * much total memory the subslabs consume compared to how much memory is
+ * consumed by slabs. Subslabs point to _either_ subslab_t's _or_ slab_t's.
+ *
+ * Now for some terminology. Superslabs are subslabs that are refered to from a
+ * lower subslab. Slabs at the highest superlayer (slabs that contain the
+ * user's data) are known as topslabs or userslabs. The lowest sublayer is
+ * called the baselayer. Subslabs from the baselayer are called baseslabs.
  *
  *
- *    slabs from superlayer -------->  [ ][ ][ ][ ][ ][ ][ ][ ] .....
- *                                      ^  ^  ^  ^  ^  ^  ^  ^
- *                                      |  |  |  |  |  |  |  |
- *                                      |  |  |  |  |  |  |  |
- *                               +.....+--+--+--+--+--+--+--+--+......+
- *    a slab from sublayer ----> |.....|* |* |* |* |* |* |* |* |......|
- *                               +.....+--+--+--+--+--+--+--+--+......+
- *                           metadata   slab elems (slab ptrs)
+ *    (sub)slabs from superlayer --------->   [ ][ ][ ][ ][ ][ ][ ][ ] .....
+ *                                             ^  ^  ^  ^  ^  ^  ^  ^
+ *                                             |  |  |  |  |  |  |  |
+ *                                             |  |  |  |  |  |  |  |
+ *                               +.....+     +--+--+--+--+--+--+--+--+......+
+ *    a slab from sublayer ----> |.....|---> | * |* |* |* |* |* |* |*|......|
+ *                               +.....+     +--+--+--+--+--+--+--+--+......+
+ *                           metadata   	   slab ptrs
  *
  *
  * This sublayering of slabs gives us a structure that looks like an inverted
@@ -217,10 +227,12 @@
  *				      \   /
  *        baselayer -------------->    \_/
  *
- * If the maximum number of slabs the baselayer can have is N, then it
- * can have at most N*122 elems. If we have only 1 sublayer attached to the
- * slab list, then we have N*122 elems. If we have two we have N*(122^2)
- * user-inserted elems. If we have 3, N*(122^3) elems. And so on.
+ * If the maximum number of subslabs the baselayer can have is N, then it can
+ * have at most N*512 elems. If we have only 1 sublayer attached to the slab
+ * list, then we have at most N*512*122 elems. If we have two sublayers we have
+ * N*(512^2)*122 user-inserted elems. If we have three, N*(512^3)*122 elems.
+ * And so on. In general, of all the memory allocated to a slab list, subslabs
+ * only take up 1% or less.
  *
  * Slablists are limited to a maximum of 8 sublayers. With a completely full
  * slab list, of 8-byte integers, we would consume 0.365 _zettabytes_ of RAM.
@@ -232,11 +244,12 @@
  * sublayer, until we find a slab with the range into which `E` could belong
  * to.
  *
- * The slab that has been found at the baselayer, contains pointers to slabs in
- * the superlayer. We use binary search find the slab in the superlayer into
+ * The subslab that has been found at the baselayer, contains pointers to slabs
+ * in the superlayer. We use binary search find the subslab in the superlayer into
  * which `E` could belong to. We keep doing this repeatedly until we get to the
- * highest superlayer. The highest superlayer is the layer that contains data
- * that the _user_ gave it.
+ * toplayer. We then do binary search on the slab, to find the index at which
+ * `E` would be located. The toplayer is the layer that contains data that the
+ * _user_ gave it.
  *
  * The use of sublayers of slab lists, and binary search gives a search time
  * comparable to balanced binary trees (that is, logarithmic time).
@@ -244,9 +257,19 @@
  * Information specific to individual slab lists is encoded in the slabist_t
  * struct.
  *
- * The user can specify the minimum capacity ratio (number of elems in entire
- * slab list, to number of possible elems [122*nslabs]), name, slabs for
- * sublayer, object size, and comparison function.
+ * Because of the way elements are inserted into slabs and because of the
+ * possibility of the removal of elems from the list, over time the slab list
+ * will have many partially full slabs. If enough empty space accumulates, the
+ * user will have at least a slab's worth of empty space. A reap, which can be
+ * initiated through `slablist_reap()` or automatically after a
+ * `slablist_add()` or `slablist_rem()`, is the process of moving all of the
+ * slab list's elements to the left so as to create empty slabs on the right
+ * end of the list. These empty slabs are then freed from memory.
+ *
+ * The user can specify the minimum number _and_ minimum percentage of slabs
+ * that can be collected from the slab list automatically. The user can also
+ * specify the slab list's name, maximum number of subslabs in the baselayer,
+ * object size, and comparison function.
  *
  * If a slab is added to or removed from the superlayer, we have to ripple the
  * changes down to the sublayer by removeing or adding a reference to the slab.
@@ -267,8 +290,9 @@
  * the code path and report failure or success via dtrace. All testing probes
  * have a test_* prefix.
  *
- * Tests are driven by driver programs that barrage slab lists with random data
- * (integers and variable length strings).
+ * Tests can be executed in production. In general they are executed while a
+ * driver program is inserting and removing random data from a slablist in
+ * development.
  *
  * Memory Allocation
  * -----------------
@@ -331,6 +355,7 @@
 #include "slablist.h"
 
 
+#define NOT_ON_EDGE		0
 #define ON_RIGHT_EDGE		1
 #define ON_LEFT_EDGE		2
 #define ALMOST_ON_RIGHT_EDGE	3
@@ -387,10 +412,20 @@
 #define	FS_UNDER_RANGE	-1
 #define	FS_OVER_RANGE	1
 
-#define	SELEM_MAX	(122)
-#define	SMELEM_MAX	(60)
+#define	SUBELEM_MAX	((uint32_t)512)
+#define	SELEM_MAX	((uint16_t)122)
+#define	SMELEM_MAX	((uint64_t)60)
+
+#define	SLAB_FREE_SPACE(s)	((uint64_t)(SELEM_MAX - s->s_elems))
+#define	SUBSLAB_FREE_SPACE(s)	((uint64_t)(SUBELEM_MAX - s->ss_elems))
+
+#define GET_SUBSLAB_ELEM(s, e)		(s->ss_arr->sa_data[e])
+#define SET_SUBSLAB_ELEM(s, e, i)	(s->ss_arr->sa_data[i] = e)
+
+#define BC_HAS_TOPSLAB(c)	(c->bc_sbc.sbc_slab != NULL)
 
 typedef struct slab slab_t;
+typedef struct subslab subslab_t;
 
 typedef struct small_list {
 	struct small_list	*sml_next;
@@ -407,9 +442,35 @@ struct slab {
 	uintptr_t		s_arr[SELEM_MAX];
 };
 
+typedef struct subarr {
+	void			*sa_data[SUBELEM_MAX];
+} subarr_t;
+
+struct subslab {
+	pthread_mutex_t		ss_mutex;
+	subslab_t		*ss_next;
+	subslab_t		*ss_prev;
+	slablist_t		*ss_list;
+	uint16_t		ss_elems;
+	uintptr_t		ss_max;
+	uintptr_t		ss_min;
+	subarr_t		*ss_arr;
+};
+
+typedef struct ssbc {
+	subslab_t		*ssbc_subslab;
+	uint8_t			ssbc_on_edge;
+} ssbc_t;
+
+typedef struct sbc {
+	slab_t			*sbc_slab;
+	uint8_t			sbc_on_edge;
+} sbc_t;
+
 typedef struct bc {
-	slab_t			*bc_slab;
-	uint8_t			bc_on_edge;
+	uint8_t			bc_sscount;
+	ssbc_t			bc_ssarr[(MAX_LYRS - 1)];
+	sbc_t			bc_top;
 } bc_t;
 
 struct slablist {
@@ -434,7 +495,6 @@ struct slablist {
 	uint64_t		sl_elems;
 	uint8_t			sl_flags;
 	int			(*sl_cmp_elem)(uintptr_t, uintptr_t);
-	int			(*sl_cmp_super)(uintptr_t, uintptr_t);
 };
 
 
@@ -444,7 +504,11 @@ struct slablist {
 slablist_t *mk_slablist(void);
 void rm_slablist(slablist_t *);
 slab_t *mk_slab(void);
+subslab_t *mk_subslab(void);
+subarr_t *mk_subarr(void);
 void rm_slab(slab_t *);
+void rm_subslab(subslab_t *);
+void rm_subarr(subarr_t *);
 void *mk_buf(size_t);
 void *mk_zbuf(size_t);
 void rm_buf(void*, size_t);

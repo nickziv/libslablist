@@ -13,7 +13,8 @@ dtrace:::BEGIN
 	heap_test = 0;
 }
 
-bcinfo_t bblup_bcs[int];
+ssbcinfo_t bblup_ssbcs[int];
+sbcinfo_t bblup_sbc;
 
 pid$target::mk_slab:return
 /heap_test/
@@ -39,10 +40,18 @@ pid$target::rm_slab:entry
 }
 
 slablist$target:::get_extreme_path
+/arg0 != NULL/
 {
-	bblup_bcs[arg1].bci_slab = args[0]->bci_slab;
-	bblup_bcs[arg1].bci_on_edge = args[0]->bci_on_edge;
+	bblup_ssbcs[arg1].ssbci_subslab = args[0]->ssbci_subslab;
+	bblup_ssbcs[arg1].ssbci_on_edge = args[0]->ssbci_on_edge;
 	self->layers = arg1;
+}
+
+slablist$target:::get_extreme_path
+/arg1 != NULL/
+{
+	bblup_sbc.sbci_slab = args[1]->sbci_slab;
+	bblup_sbc.sbci_on_edge = args[1]->sbci_on_edge;
 }
 
 slablist$target:::test_insert_elem
@@ -68,128 +77,120 @@ slablist$target:::test_insert_elem
 	exit(0);
 }
 
+slablist$target:::test_insert_elem,
+slablist$target:::test_insert_slab
+/arg0 != 0/
+{
+	printf("ERROR: %d  %s\n", arg0, e_test_descr[arg0]);
+}
+
 slablist$target:::test_insert_elem
-/arg0 == 1/
+/arg0 == E_TEST_SLAB_NULL || arg0 == E_TEST_SUBSLAB_NULL/
 {
 	fail = arg0;
-	printf("Slab provided to insert_elem() is NULL.\n");
 	exit(0);
 }
 
-slablist$target:::test_insert_elem
-/arg0 == 2/
-{
-	printf("Slablist backpointer for %p is NULL.\n", arg1);
-}
-
-slablist$target:::test_insert_elem
-/arg0 == 3/
-{
-	printf("The nominal extrema of the slab %p don't match what's", arg1); 
-	printf("in the array\n");
-}
-
-slablist$target:::test_insert_elem
-/arg0 == 4/
-{
-	printf("The nominal min of the subslab %p doesn't match", arg1);
-	printf(" what's in a first superslab's array\n\n");
-}
-
-slablist$target:::test_insert_elem
-/arg0 == 5/
-{
-	printf("The nominal max of the subslab %p doesn't match", arg1);
-	printf(" what's in a last superslab's array\n\n");
-}
-
-slablist$target:::test_insert_elem
-/arg0 == 4 || arg0 == 5/
+slablist$target:::test_insert_slab
+/arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX/
 {
 	printf("Breadcrumb Path Details:\n");
 	printf("------------------------\n");
 	printf("baselayer is at the bottom.\n");
-	printf("'slab: 0' means that we have no slab at that level.\n\n");
+	self->s = bblup_sbc.sbci_slab;
+	printf("\tslab: %p\n", self->s);
+	printf("\t\tmax: %u\n", slabinfo[self->s]->si_max);
+	printf("\t\tmin: %u\n", slabinfo[self->s]->si_min);
 }
 
-slablist$target:::test_insert_elem
-/arg0 == 4 || arg0 == 5 && self->layers >= 5/
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 7/
 {
-	self->s = bblup_bcs[8].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[7].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[6].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[5].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
 }
 
-slablist$target:::test_insert_elem
-/arg0 == 4 || arg0 == 5 && self->layers <= 4/
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 6/
 {
-	self->s = bblup_bcs[4].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[3].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[2].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[1].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-	self->s = bblup_bcs[0].bci_slab;
-	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", self->s != NULL ? slabinfo[self->s]->si_max : 0);
-	printf("\t\tmin: %u\n", self->s != NULL ? slabinfo[self->s]->si_min : 0);
-
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
 }
 
-
-slablist$target:::test_insert_elem
-/arg0 == 6/
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 5/
 {
-	printf("The elems of the slab %p are not sorted\n", arg1);
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
 }
 
-slablist$target:::test_insert_elem
-/arg0 == 7/
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 4/
 {
-	printf("Slab %p is empty, and we are trying to", arg1);
-	printf("insert into a non-zero\ index\n");
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
 }
 
-slablist$target:::test_insert_elem
-/arg0 == 8/
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 3/
 {
-	printf("The elem, %x, to be inserted at index %d, is", arg2, arg3);
-	printf(" not greater than\ the elem at");
-	printf(" index %d and less than the elem at index %d\n", arg2 - 1,
-	    arg3 + 2);
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
+}
+
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 2/
+{
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
+}
+
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 1/
+{
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
+}
+
+slablist$target:::test_insert_slab
+/(arg0 == E_TEST_SUBSLAB_MIN || arg0 == E_TEST_SUBSLAB_MAX) && self->layers == 0/
+{
+        self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
+        printf("\tsubslab: %p\n", self->ss);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        self->layers--;
 }
 
 slablist$target:::test_insert_elem
-/arg0 >= 2/
+/arg0 != 0 && arg0 != E_TEST_SLAB_NULL/
 {
 	fail = arg0;
 	printf("\nSlab details:\n");
 	printf("-------------\n");
-	printf("\tmin: %u\n", args[1]->si_min);
 	printf("\tmax: %u\n", args[1]->si_max);
+	printf("\tmin: %u\n", args[1]->si_min);
 	printf("\telems: %u\n", args[1]->si_elems);
 	printf("\tnext: %p\n", args[1]->si_next);
 	printf("\tprev: %p\n\n", args[1]->si_prev);
@@ -199,11 +200,40 @@ slablist$target:::test_insert_elem
 	printf("\nStack trace:\n");
 	printf("------------\n");
 	ustack();
+	printf("\nFunction Arguments:\n");
+	printf("-------------------\n");
+	printf("\tinsert_elem(%p, %lu, %lu)\n", arg1, (uintptr_t)arg2,
+			(uint64_t)arg3);
+	exit(0);
+}
+
+slablist$target:::test_insert_slab
+/arg0 != 0 && arg0 != E_TEST_SUBSLAB_NULL &&
+ arg0 != E_TEST_SUBSLAB_SUBARR_NULL/
+{
+	fail = arg0;
+	printf("\nSubslab details:\n");
+	printf("-------------\n");
+	printf("\tmax: %u\n", args[1]->ssi_max);
+	printf("\tmin: %u\n", args[1]->ssi_min);
+	printf("\telems: %u\n", args[1]->ssi_elems);
+	printf("\tnext: %p\n", args[1]->ssi_next);
+	printf("\tprev: %p\n\n", args[1]->ssi_prev);
+	printf("Subslab array:\n");
+	printf("--------------\n");
+	self->sa = args[1]->ssi_arr;
+	trace(subarrinfo[self->sa]->sai_data);
+	printf("\nStack trace:\n");
+	printf("------------\n");
+	ustack();
+	printf("\nFunction Arguments:\n");
+	printf("-------------------\n");
+	printf("\tinsert_slab(%p, %p, %p, %lu)\n", arg1, arg2, arg3,
+			(uint64_t)arg4);
 	exit(0);
 }
 
 dtrace:::END
 /fail == 0/
 {
-	printf("All tests passed.");
 }

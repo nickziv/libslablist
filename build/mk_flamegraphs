@@ -1,0 +1,14 @@
+#!/bin/ksh
+
+# change this path if flamegraphs are in a diff path on your box
+fg_loc="/rpool/projects/flamegraph/FlameGraph"
+
+#we remove any lingering output, from a previous run, and ignore errors
+rm stacks 2> /dev/null
+rm stacks.folded 2> /dev/null
+rm stacks.svg 2> /dev/null
+
+dtrace -x ustackframes=100 -c "./drv_rand_ops $1 $2" -n 'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o stacks
+
+$fg_loc/stackcollapse.pl stacks > stacks.folded
+$fg_loc/flamegraph.pl stacks.folded > stacks.svg

@@ -1,0 +1,3 @@
+#!/bin/ksh
+
+grep '#define' | awk -f define2inline.awk

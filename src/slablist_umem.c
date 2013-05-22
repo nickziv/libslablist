@@ -28,6 +28,8 @@
 
 umem_cache_t *cache_slablist;
 umem_cache_t *cache_slab;
+umem_cache_t *cache_subslab;
+umem_cache_t *cache_subarr;
 umem_cache_t *cache_small_list;
 
 int
@@ -44,6 +46,22 @@ slab_ctor(void *buf, void *ignored, int flags)
 {
 	slab_t *s = buf;
 	bzero(s, (sizeof (slab_t)));
+	return (0);
+}
+
+int
+subslab_ctor(void *buf, void *ignored, int flags)
+{
+	subslab_t *ss = buf;
+	bzero(ss, (sizeof (subslab_t)));
+	return (0);
+}
+
+int
+subarr_ctor(void *buf, void *ignored, int flags)
+{
+	subarr_t *sa = buf;
+	bzero(sa, (sizeof (subarr_t)));
 	return (0);
 }
 
@@ -94,6 +112,26 @@ slablist_umem_init()
 		NULL,
 		0);
 
+	cache_subslab = umem_cache_create("subslab",
+		sizeof (subslab_t),
+		0,
+		subslab_ctor,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0);
+
+	cache_subarr = umem_cache_create("subarr",
+		sizeof (subarr_t),
+		0,
+		subarr_ctor,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0);
+
 	cache_small_list = umem_cache_create("small_list",
 		sizeof (small_list_t),
 		0,
@@ -134,6 +172,35 @@ rm_slab(slab_t *s)
 {
 	bzero(s, sizeof (slab_t));
 	umem_cache_free(cache_slab, s);
+}
+
+
+subslab_t *
+mk_subslab()
+{
+	subslab_t *ss = umem_cache_alloc(cache_subslab, UMEM_NOFAIL);
+	return (ss);
+}
+
+void
+rm_subslab(subslab_t *s)
+{
+	bzero(s, sizeof (subslab_t));
+	umem_cache_free(cache_subslab, s);
+}
+
+subarr_t *
+mk_subarr()
+{
+	subarr_t *sa = umem_cache_alloc(cache_subarr, UMEM_NOFAIL);
+	return (sa);
+}
+
+void
+rm_subarr(subarr_t *s)
+{
+	bzero(s, sizeof (subarr_t));
+	umem_cache_free(cache_subarr, s);
 }
 
 small_list_t *

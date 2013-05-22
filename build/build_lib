@@ -18,7 +18,8 @@
 #c_flags="-m64 -Kpic"
 #ld_flags="-G -z text -z defs"
 cmplr=gcc
-c_flags="-m64 -fPIC"
+c_flags="-m64 -fPIC -W -Wall"
+umem_c_flags=$c_flags" -Wno-unused-parameter"
 ld_flags="-shared"
 
 libs="-ldtrace -lumem -lc"
@@ -72,7 +73,11 @@ done
 #Here we compile all the files
 for i in 0 1 2 3 4 5
 do
-	$cmplr -c $c_flags ${csrc_file[$i]}
+	if [[ $i == "3" ]]; then
+		$cmplr -c $umem_c_flags ${csrc_file[$i]}
+	else 
+		$cmplr -c $c_flags ${csrc_file[$i]}
+	fi
 done
 
 #Here we concat all the obj-file names for the cli...

@@ -25,7 +25,9 @@
 extern void unlink_sml_node(slablist_t *, small_list_t *);
 extern void link_sml_node(slablist_t *, small_list_t *, small_list_t *);
 extern void link_slab(slab_t *, slab_t *, int);
+extern void link_subslab(subslab_t *, subslab_t *, int);
 extern void unlink_slab(slab_t *);
+extern void unlink_subslab(subslab_t *);
 extern void small_list_to_slab(slablist_t *);
 extern void slab_to_small_list(slablist_t *);
 extern void attach_sublayer(slablist_t *);
@@ -35,3 +37,7 @@ extern void try_reap_all(slablist_t *);
 extern int lock_list(slablist_t *);
 extern int unlock_list(slablist_t *);
 extern int trylock_list(slablist_t *);
+extern void record_subslab(bc_t *, subslab_t *, int);
+extern void record_slab(bc_t *, slab_t *, int);
+extern subslab_t *retrieve_subslab(bc_t *, uint8_t);
+extern slab_t *retrieve_slab(bc_t *, uint8_t);

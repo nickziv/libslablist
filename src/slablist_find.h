@@ -24,11 +24,14 @@
 
 extern uintptr_t slablist_get(slablist_t *, uint64_t);
 extern slab_t *slab_get(slablist_t *, uint64_t, uint64_t *, int);
-extern int sublayer_slab_bin_srch(uintptr_t, slab_t *);
-extern int sublayer_slab_ptr_srch(uintptr_t, slab_t *, int);
+extern int sublayer_slab_ptr_srch(void *, subslab_t *);
 extern int slab_bin_srch(uintptr_t, slab_t *);
-extern int gen_bin_srch(uintptr_t, slab_t *, int);
-extern int slab_srch(uintptr_t, slab_t *, int);
+extern int subslab_bin_srch(uintptr_t, subslab_t *);
+extern int subslab_bin_srch_top(uintptr_t, subslab_t *);
+extern int slab_lin_srch(uintptr_t, slab_t *);
+extern int subslab_lin_srch(uintptr_t, subslab_t *);
+extern int subslab_lin_srch_top(uintptr_t, subslab_t *);
 extern int find_bubble_up(slablist_t *, uintptr_t, bc_t *);
 extern int find_linear_scan(slablist_t *, uintptr_t, slab_t **);
 extern int is_elem_in_range(uintptr_t, slab_t *);
+extern int sub_is_elem_in_range(uintptr_t, subslab_t *);

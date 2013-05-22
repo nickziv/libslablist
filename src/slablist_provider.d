@@ -23,11 +23,15 @@
  */
 
 typedef struct { int dummy; } slabinfo_t;
+typedef struct { int dummy; } subslabinfo_t;
 typedef struct { int dummy; } slinfo_t;
 typedef struct { int dummy; } slab_t;
+typedef struct { int dummy; } subslab_t;
 typedef struct { int dummy; } slablist_t;
-typedef struct { int dummy; } bc_t;
-typedef struct { int dummy; } bcinfo_t;
+typedef struct { int dummy; } sbc_t;
+typedef struct { int dummy; } sbcinfo_t;
+typedef struct { int dummy; } ssbc_t;
+typedef struct { int dummy; } ssbcinfo_t;
 
 provider slablist {
 	probe create(slablist_t *sl) : (slinfo_t *sl);
@@ -38,26 +42,107 @@ provider slablist {
 		(slinfo_t *sl, uintptr_t e, uint64_t r);
 	probe add_end(int);
 	probe add_head(slablist_t *sl) : (slinfo_t *sl);
-	probe add_into(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_into(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_into_spill_next(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_into_spill_next(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_into_spill_prev(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_into_spill_prev(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_into_spill_next_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_into_spill_next_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_into_spill_prev_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_into_spill_prev_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_before(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_before(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_after(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_after(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_before_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_before_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_after_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
+	probe slab_add_after_mk(slablist_t *sl, slab_t *s, uintptr_t e) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e);
-	probe add_replace(slablist_t *sl, slab_t *s, uintptr_t e, int b) :
+	probe slab_add_replace(slablist_t *sl, slab_t *s, uintptr_t e, int b) :
 		(slinfo_t *sl, slabinfo_t *s, uintptr_t e, int b);
+	probe subslab_add_into(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_into_spill_next(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_into_spill_prev(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_into_spill_next_mk(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_into_spill_prev_mk(
+		slablist_t *sl,
+		subslab_t *s, 
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_before(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_after(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_before_mk(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
+	probe subslab_add_after_mk(
+		slablist_t *sl,
+		subslab_t *s,
+		slab_t *s1,
+		subslab_t *s2) :
+		(slinfo_t *sl,
+		subslabinfo_t *s,
+		slabinfo_t *s1,
+		subslabinfo_t *s2);
 	probe rem_begin(slablist_t *sl, uintptr_t e, uint64_t p) :
 		(slinfo_t *sl, uintptr_t e, uint64_t p);
 	probe rem_head(slablist_t *sl) : (slinfo_t *sl);
@@ -67,12 +152,18 @@ provider slablist {
 	probe find_end(int, uintptr_t);
 	probe get_rand(slablist_t *sl, uintptr_t f) :
 		(slinfo_t *sl, uintptr_t f);
-	probe ripple_rem_slab(slablist_t *sl, slab_t *s, slab_t *b) :
-		(slinfo_t *sl, slabinfo_t *s, slabinfo_t *b);
-	probe ripple_add_slab(slablist_t *sl, slab_t *s, slab_t *b) :
-		(slinfo_t *sl, slabinfo_t *s, slabinfo_t *b);
+	probe ripple_rem_slab(slablist_t *sl, slab_t *s, subslab_t *b) :
+		(slinfo_t *sl, slabinfo_t *s, subslabinfo_t *b);
+	probe ripple_rem_subslab(slablist_t *sl, subslab_t *s, subslab_t *b) :
+		(slinfo_t *sl, subslabinfo_t *s, subslabinfo_t *b);
+	probe ripple_add_slab(slablist_t *sl, slab_t *s, subslab_t *b) :
+		(slinfo_t *sl, slabinfo_t *s, subslabinfo_t *b);
+	probe ripple_add_subslab(slablist_t *sl, subslab_t *s, subslab_t *b) :
+		(slinfo_t *sl, subslabinfo_t *s, subslabinfo_t *b);
 	probe slab_mk(slablist_t *sl) : (slinfo_t *sl);
 	probe slab_rm(slablist_t *sl) : (slinfo_t *sl);
+	probe subslab_mk(slablist_t *sl) : (slinfo_t *sl);
+	probe subslab_rm(slablist_t *sl) : (slinfo_t *sl);
 	probe to_small_list(slablist_t *sl) : (slinfo_t *sl);
 	probe to_slab(slablist_t *sl) : (slinfo_t *sl);
 	probe attach_sublayer(slablist_t *sl1, slablist_t *sl2) :
@@ -87,40 +178,64 @@ provider slablist {
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
 	probe unlink_slab(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);
+	probe link_subslab_after(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
+	probe link_subslab_before(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, slabinfo_t *s1, subslabinfo_t *s2);
+	probe unlink_subslab(slablist_t *sl, subslab_t *s) :
+		(slinfo_t *sl, subslabinfo_t *s);
 	probe find_slab_pos_begin(int);
 	probe find_slab_pos_end(int);
 	probe fwdshift_begin(slablist_t *sl, slab_t *s, int i) :
 		(slinfo_t *sl, slabinfo_t *s, int i);
 	probe fwdshift_end();
+	probe subfwdshift_begin(slablist_t *sl, subslab_t *s, int i) :
+		(slinfo_t *sl, subslabinfo_t *s, int i);
+	probe subfwdshift_end();
 	probe bwdshift_begin(slablist_t *sl, slab_t *s, int i) :
 		(slinfo_t *sl, slabinfo_t *s, int i);
 	probe bwdshift_end();
+	probe subbwdshift_begin(slablist_t *sl, subslab_t *s, int i) :
+		(slinfo_t *sl, subslabinfo_t *s, int i);
+	probe subbwdshift_end();
 	probe got_here(uint64_t);
-	probe set_crumb(slablist_t *s, slab_t *c, int bc) :
-		(slinfo_t *s, slabinfo_t *c, int bc);
+	probe set_crumb(slablist_t *s, subslab_t *c, int bc) :
+		(slinfo_t *s, subslabinfo_t *c, int bc);
 	/*
 	 * Fire whenever a slab's max or min changes.
 	 */
 	probe slab_set_min(slab_t *s) : (slabinfo_t *s);
 	probe slab_set_max(slab_t *s) : (slabinfo_t *s);
+	probe subslab_set_min(subslab_t *s) : (subslabinfo_t *s);
+	probe subslab_set_max(subslab_t *s) : (subslabinfo_t *s);
 	/*
 	 * Inc probes increase elem count in slabs or lists. Dec probes
 	 * decrease elem count in slabs or lists.
 	 */
 	probe slab_inc_elems(slab_t *s) : (slabinfo_t *s);
 	probe slab_dec_elems(slab_t *s) : (slabinfo_t *s);
+	probe subslab_inc_elems(subslab_t *s) : (subslabinfo_t *s);
+	probe subslab_dec_elems(subslab_t *s) : (subslabinfo_t *s);
 	probe sl_inc_elems(slablist_t *sl) : (slinfo_t *sl);
 	probe sl_dec_elems(slablist_t *sl) : (slinfo_t *sl);
 	probe sl_inc_slabs(slablist_t *sl) : (slinfo_t *sl);
 	probe sl_dec_slabs(slablist_t *sl) : (slinfo_t *sl);
+	probe sl_inc_subslabs(slablist_t *sl) : (slinfo_t *sl);
+	probe sl_dec_subslabs(slablist_t *sl) : (slinfo_t *sl);
 	probe sl_inc_layer(slablist_t *sl) : (slinfo_t *sl);
 	probe sl_inc_sublayers(slablist_t *sl) : (slinfo_t *sl);
 	/*
 	 * When bin searching a subslab. Arg0 is the subslab being searched.
+	 * Arg1 is the subslab we are about to compare.
+	 */
+	probe subslab_bin_srch(subslab_t *s, subslab_t *e) :
+		(subslabinfo_t *s, subslabinfo_t *e);
+	/*
+	 * When bin searching a subslab. Arg0 is the subslab being searched.
 	 * Arg1 is the slab we are about to compare.
 	 */
-	probe subslab_bin_srch(slab_t *s, slab_t *e) :
-		(slabinfo_t *s, slabinfo_t *e);
+	probe subslab_bin_srch_top(subslab_t *s, slab_t *e) :
+		(subslabinfo_t *s, slabinfo_t *e);
 	/*
 	 * When bin searching a slab. Arg0 is the subslab being searched.  Arg1
 	 * is the elem we are about to compare.
@@ -135,6 +250,9 @@ provider slablist {
 	probe linear_scan_begin(slablist_t *sl) :
 		(slinfo_t *sl);
 	probe linear_scan_end(int);
+	probe sub_linear_scan_begin(slablist_t *sl) :
+		(slinfo_t *sl);
+	probe sub_linear_scan_end(int);
 	/*
 	 * Fires every time we move to a slab (in the baselayer) until we find
 	 * a slab that is of appropriate range, or until we run out of slabs.
@@ -142,6 +260,8 @@ provider slablist {
 	 */
 	probe linear_scan(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);
+	probe sub_linear_scan(slablist_t *sl, subslab_t *s) :
+		(slinfo_t *sl, subslabinfo_t *s);
 	/*
 	 * The following two probes fire when a bubble up begins and ends.
 	 */
@@ -152,24 +272,31 @@ provider slablist {
 	 * Fires every time we bubble up to a superslab. `s` is the superslab
 	 * that we just bubbled up to. `sl` is the list.
 	 */
-	probe bubble_up(slablist_t *sl, slab_t *s) :
+	probe bubble_up(slablist_t *sl, subslab_t *s) :
+		(slinfo_t *sl, subslabinfo_t *s);
+	probe bubble_up_top(slablist_t *sl, slab_t *s) :
 		(slinfo_t *sl, slabinfo_t *s);
 	/*
 	 * Fire right before we try to move elems from one slab to an adjacent
 	 * slab in slab_generic_rem().
 	 */
-	probe move_mid_to_next(slablist_t *sl, slab_t *s1, slab_t *s2) :
+	probe slab_move_mid_to_next(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
-	probe move_mid_to_prev(slablist_t *sl, slab_t *s1, slab_t *s2) :
+	probe slab_move_mid_to_prev(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
-	probe move_next_to_mid(slablist_t *sl, slab_t *s1, slab_t *s2) :
+	probe slab_move_next_to_mid(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
-	probe move_next_to_prev(slablist_t *sl, slab_t *s1, slab_t *s2) :
+	probe slab_move_prev_to_mid(slablist_t *sl, slab_t *s1, slab_t *s2) :
 		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
-	probe move_prev_to_mid(slablist_t *sl, slab_t *s1, slab_t *s2) :
-		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
-	probe move_prev_to_next(slablist_t *sl, slab_t *s1, slab_t *s2) :
-		(slinfo_t *sl, slabinfo_t *s1, slabinfo_t *s2);
+	/* same as above but for subslabs */
+	probe subslab_move_mid_to_next(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
+	probe subslab_move_mid_to_prev(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
+	probe subslab_move_next_to_mid(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
+	probe subslab_move_prev_to_mid(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
 	/*
 	 * The first argument of every test probe is an error code that
 	 * indicates if a test failed, and why.
@@ -201,8 +328,12 @@ provider slablist {
 	 * the breadcrumbs in an associative array, that can be accessed from a
 	 * D script if test_insert_elem(), test_find_bubble_up(), or
 	 * test_ripple_add() probes return an error code of 3, 4, or 5.
+	 *
+	 * Arg0 is the subslab, arg1 is the top-most slab, and l is the layer.
+	 * Either arg1 or arg0 MUST be NULL anytime the probe fires.
 	 */
-	probe get_extreme_path(bc_t *b, int l) : (bcinfo_t *b, int l);
+	probe get_extreme_path(ssbc_t *b0, sbc_t *b1,  int l) :
+		(ssbcinfo_t *b0, sbcinfo_t *b1, int l);
 	/*
 	 * This probe tests the conistency of the slab right before and right
 	 * after insert_elem() inserts an elem into a slab. Error codes 3, 4,
@@ -226,6 +357,8 @@ provider slablist {
 	 */
 	probe test_insert_elem(int e, slab_t *s, uintptr_t elem, int i) :
 		(int e, slabinfo_t *s, uintptr_t elem, int i);
+	probe test_insert_slab(int e, subslab_t *s, slab_t *s1, subslab_t *s2, int i) :
+		(int e, subslabinfo_t *s, slabinfo_t *s1, subslabinfo_t *s2, int i);
 	/*
 	 * This probe tests the conistency of the slab right before and right
 	 * after remove_elem() removes an elem from a slab. Error codes 3, 4,
@@ -247,6 +380,8 @@ provider slablist {
 	 */
 	probe test_remove_elem(int e, slab_t *s, int i) :
 		(int e, slabinfo_t *s, int i);
+	probe test_remove_slab(int e, subslab_t *s, int i) :
+		(int e, subslabinfo_t *s, int i);
 	/*
 	 * This probe tests that the search functions used on a slab will all
 	 * return the same result. Fires whenever we search a slab.
@@ -260,8 +395,12 @@ provider slablist {
 	 *		arg3 indicates if arg3 is a value (0) or slab-ptr (1)
 	 *		
 	 */
-	probe test_slab_srch(int e, slab_t *s, uintptr_t a, int i) :
-		(int e, slabinfo_t *s, uintptr_t a, int i);
+	probe test_slab_bin_srch(int e, slab_t *s, uintptr_t a) :
+		(int e, slabinfo_t *s, uintptr_t a);
+	probe test_subslab_bin_srch(int e, subslab_t *s, uintptr_t a) :
+		(int e, subslabinfo_t *s, uintptr_t a);
+	probe test_subslab_bin_srch_top(int e, slab_t *s, uintptr_t a) :
+		(int e, slabinfo_t *s, uintptr_t a);
 	/*
 	 * This probe tests find_bubble_up() as it is jumping from layer to
 	 * layer. It is similar to the previous test, but the crucial
@@ -273,12 +412,14 @@ provider slablist {
 	 *	Args:
 	 *		arg0 is the error code
 	 *		arg1 is the slab we are about to search 
-	 *		arg2 is the element we want to insert or find
-	 *		arg3 is the layer or the slab we are currently looking
+	 *		arg2 is the subslab we are about to search 
+	 *		arg3 is the element we want to insert or find
+	 *		arg4 is the layer of the slab we are currently looking
 	 *		     for.
 	 */
-	probe test_find_bubble_up(int e, slab_t *s, uintptr_t d, int l) :
-		(int e, slabinfo_t *s, uintptr_t d, int l);
+	probe test_find_bubble_up(int e, slab_t *s, subslab_t *ss, uintptr_t d,
+		int l) :
+		(int e, slabinfo_t *s, subslabinfo_t *ss, uintptr_t d, int l);
 	/*
 	 * This probe tests ripple_add() as it is rippling the new slab to the
 	 * sublayers using the bc_path.
@@ -292,8 +433,14 @@ provider slablist {
 	 *		arg3 is the bread crumb path
 	 *		arg4 is the current layer we are on
 	 */
-	probe test_ripple_add(int e, slab_t *s, slab_t *sb, void *bc, int b) :
-		(int e, slabinfo_t *s, slabinfo_t *sb, void *bc, int b);
+	probe test_ripple_add_slab(int e, slab_t *s, subslab_t *sb,
+		     void *bc, int b) :
+		(int e, slabinfo_t *s, subslabinfo_t *sb, void *bc, int b);
+	probe test_ripple_add_subslab(int e, subslab_t *s, subslab_t *sb,
+		     void *bc, int b) :
+		(int e, subslabinfo_t *s, subslabinfo_t *sb, void *bc, int b);
+	probe test_ripple_update_extrema(int e, subslab_t *s) :
+		(int e, subslabinfo_t *s);
 	/*
 	 * Arg4 is from where in scp we are copying the elem, and arg5 is where
 	 * in s2 there is a problem.
@@ -318,7 +465,7 @@ provider slablist {
 	 *		arg5 is the index at which we have an inconsistency
 	 *		     (unequal elems) between `scp`+`sncp` and `sn`.
 	 */
-	probe test_move_next(int e, slab_t *scp, slab_t *sn, slab_t *sncp, int f, int j) :
+	probe test_slab_move_next(int e, slab_t *scp, slab_t *sn, slab_t *sncp, int f, int j) :
 		(int e, slabinfo_t *scp, slabinfo_t *sn, slabinfo_t *sncp, int f, int j);
 	/*
 	 * This probe tests gen_rem_elem(). Specifically, the part of the
@@ -340,8 +487,13 @@ provider slablist {
 	 *		arg5 is the index at which we have an inconsistency
 	 *		     (unequal elems) between `scp`+`spcp` and `sp`.
 	 */
-	probe test_move_prev(int e, slab_t *scp, slab_t *sp, slab_t *spcp, int f, int j) :
+	probe test_slab_move_prev(int e, slab_t *scp, slab_t *sp, slab_t *spcp, int f, int j) :
 		(int e, slabinfo_t *scp, slabinfo_t *sp, slabinfo_t *spcp, int f, int j);
+
+	probe test_subslab_move_next(int e, subslab_t *scp, subslab_t *sn, subslab_t *sncp, int f, int j) :
+		(int e, subslabinfo_t *scp, subslabinfo_t *sn, subslabinfo_t *sncp, int f, int j);
+	probe test_subslab_move_prev(int e, subslab_t *scp, subslab_t *sp, subslab_t *spcp, int f, int j) :
+		(int e, subslabinfo_t *scp, subslabinfo_t *sp, subslabinfo_t *spcp, int f, int j);
 	/*
 	 * Verifies that the functions that add and remove to an sml_list, get
 	 * an sml list as an argument, and not something else.

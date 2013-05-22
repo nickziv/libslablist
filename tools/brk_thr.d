@@ -4,6 +4,12 @@
 
 self int endds;
 
+dtrace:::BEGIN
+{
+	allocated = 0;
+	sec = 0;
+}
+
 syscall::brk:entry
 /pid == $target && !self->endds/
 {
@@ -13,6 +19,13 @@ syscall::brk:entry
 syscall::brk:entry
 /pid == $target && self->endds != arg0/
 {
-	printf("%d\n", arg0 - self->endds);
+	allocated += arg0 - self->endds;
+	/* printf("%d\n", self->allocated); */
 	self->endds = arg0;
+}
+
+tick-1s
+{
+	sec++;
+	printf("%d\t%d\n", sec, allocated);
 }
