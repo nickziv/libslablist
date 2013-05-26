@@ -429,7 +429,7 @@ typedef struct subslab subslab_t;
 
 typedef struct small_list {
 	struct small_list	*sml_next;
-	uintptr_t		sml_data;
+	slablist_elem_t		sml_data;
 } small_list_t;
 
 struct slab {
@@ -437,9 +437,9 @@ struct slab {
 	slab_t 			*s_prev;
 	slablist_t		*s_list;
 	uint8_t			s_elems;
-	uintptr_t		s_max;
-	uintptr_t		s_min;
-	uintptr_t		s_arr[SELEM_MAX];
+	slablist_elem_t		s_max;
+	slablist_elem_t		s_min;
+	slablist_elem_t		s_arr[SELEM_MAX];
 };
 
 typedef struct subarr {
@@ -452,8 +452,8 @@ struct subslab {
 	subslab_t		*ss_prev;
 	slablist_t		*ss_list;
 	uint16_t		ss_elems;
-	uintptr_t		ss_max;
-	uintptr_t		ss_min;
+	slablist_elem_t		ss_max;
+	slablist_elem_t		ss_min;
 	subarr_t		*ss_arr;
 };
 
@@ -494,7 +494,7 @@ struct slablist {
 	uint64_t		sl_slabs;
 	uint64_t		sl_elems;
 	uint8_t			sl_flags;
-	int			(*sl_cmp_elem)(uintptr_t, uintptr_t);
+	int			(*sl_cmp_elem)(slablist_elem_t, slablist_elem_t);
 };
 
 
@@ -525,4 +525,4 @@ void ripple_update_extrema(bc_t *, int);
 /*
  * Search functions
  */
-int find_slab_in_slab(slab_t *s, uintptr_t elem, bc_t *l);
+int find_slab_in_slab(slab_t *s, slablist_elem_t elem, bc_t *l);

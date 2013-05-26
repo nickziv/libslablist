@@ -48,7 +48,7 @@
  * key or position, if the slablist is sorted or ordered, respectively.
  */
 static int
-small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
+small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t *rdl)
 {
 	lock_list(sl);
 
@@ -99,7 +99,7 @@ small_list_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 		 * nothing was removed, and we return an indication that the
 		 * node was not found.
 		 */
-		*rdl = NULL;
+		rdl->sle_u = 0;
 		ret = SL_ENFOUND;
 
 	} else {
@@ -276,7 +276,7 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	uint64_t melems = s->ss_elems;		/* elems in middle slab */
 	uint64_t cpelems = 0;			/* elems to cp */
 	uint64_t from = s->ss_elems - 1;	/* we copy from the end to front */
-	size_t sz = sizeof (uintptr_t);
+	size_t sz = sizeof (slablist_elem_t);
 	slablist_t *sl = s->ss_list;
 
 	if (!melems) {
@@ -390,7 +390,7 @@ move_to_next(slab_t *s, slab_t *sn)
 	uint64_t melems = s->s_elems;		/* elems in mid slab */
 	uint64_t cpelems;			/* elems to copy */
 	uint64_t from = 0;			/* ix to start cping from */
-	size_t sz = sizeof (uintptr_t);
+	size_t sz = sizeof (slablist_elem_t);
 
 	if (!melems) {
 		return;
@@ -474,7 +474,7 @@ move_to_prev(slab_t *s, slab_t *sp)
 	uint64_t melems = s->s_elems;		/* elems in middle slab */
 	uint64_t cpelems = 0;			/* elems to cp */
 	uint64_t from = s->s_elems - 1;		/* we copy from the end to front */
-	size_t sz = sizeof (uintptr_t);
+	size_t sz = sizeof (slablist_elem_t);
 
 	if (!melems) {
 		return;
@@ -958,7 +958,7 @@ slablist_reap(slablist_t *sl)
 	bc_t bc_path;
 	slab_t *sn = NULL;
 	slab_t *rmd;
-	uintptr_t min;
+	slablist_elem_t min;
 	uint64_t i = 0;
 	while (i < (sl->sl_slabs - 1)) {
 		/* we need a blank bc_t for each iteration */
@@ -1007,7 +1007,7 @@ slablist_reap(slablist_t *sl)
  * backs large objects.
  */
 int
-slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
+slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t *rdl)
 {
 	lock_list(sl);
 
@@ -1073,7 +1073,7 @@ slablist_rem(slablist_t *sl, uintptr_t elem, uint64_t pos, uintptr_t *rdl)
 			 * remove, and return.
 			 */
 			if (rdl != NULL) {
-				*rdl = NULL;
+				rdl->sle_u = NULL;
 			}
 
 			ret = SL_ENFOUND;

@@ -41,11 +41,25 @@
 
 
 
+typedef union slablist_elem {
+	uint64_t	sle_u;
+	double		sle_d;
+	void		*sle_p;
+	int64_t		sle_i;
+	char		sle_c[8];
+} slablist_elem_t;
+
 struct slablist;
 typedef struct slablist slablist_t;
 
-typedef int slablist_cmp_t(uintptr_t, uintptr_t);
+typedef int slablist_cmp_t(slablist_elem_t, slablist_elem_t);
+typedef slablist_elem_t slablist_fold_t(slablist_elem_t, slablist_elem_t *, uint64_t);
+typedef void slablist_map_t(slablist_elem_t *, uint64_t);
 
+
+extern void slablist_map(slablist_t *, slablist_map_t);
+extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t, slablist_elem_t zero);
+extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t, slablist_elem_t zero);
 
 slablist_t *slablist_create(char *, size_t, slablist_cmp_t, uint16_t, uint64_t,
 		uint8_t, uint8_t, uint8_t);
@@ -57,11 +71,11 @@ extern uint64_t slablist_getmslabs(slablist_t *);
 extern uint64_t slablist_getelems(slablist_t *);
 extern uint64_t slablist_gettype(slablist_t *);
 extern char *slablist_getname(slablist_t *);
-extern int slablist_add(slablist_t *, uintptr_t, int, uintptr_t *);
-extern int slablist_rem(slablist_t *, uintptr_t, uint64_t, uintptr_t *);
+extern int slablist_add(slablist_t *, slablist_elem_t, int, slablist_elem_t *);
+extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_elem_t *);
 extern void slablist_reap(slablist_t *);
-extern uintptr_t slablist_get(slablist_t *, uint64_t);
-extern uintptr_t slablist_get_rand(slablist_t *);
+extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
+extern slablist_elem_t slablist_get_rand(slablist_t *);
 extern uint64_t slablist_get_rand_pos(slablist_t *);
-extern int slablist_find(slablist_t *, uintptr_t, uintptr_t *);
-extern int slablist_rem_eq(slablist_t *, uintptr_t);
+extern int slablist_find(slablist_t *, slablist_elem_t, slablist_elem_t *);
+extern int slablist_rem_eq(slablist_t *, slablist_elem_t);

@@ -1140,7 +1140,7 @@ extern "C" {
 #endif
 
 
-extern void __dtrace_slablist___add_begin(slablist_t *, uintptr_t, uint64_t);
+extern void __dtrace_slablist___add_begin(slablist_t *, slablist_elem_t, uint64_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___add_begin(void);
 #else
@@ -1230,13 +1230,13 @@ extern int __dtraceenabled_slablist___detach_sublayer(void);
 #else
 extern int __dtraceenabled_slablist___detach_sublayer(long);
 #endif
-extern void __dtrace_slablist___find_begin(slablist_t *, uintptr_t);
+extern void __dtrace_slablist___find_begin(slablist_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___find_begin(void);
 #else
 extern int __dtraceenabled_slablist___find_begin(long);
 #endif
-extern void __dtrace_slablist___find_end(int, uintptr_t);
+extern void __dtrace_slablist___find_end(int, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___find_end(void);
 #else
@@ -1272,7 +1272,7 @@ extern int __dtraceenabled_slablist___get_extreme_path(void);
 #else
 extern int __dtraceenabled_slablist___get_extreme_path(long);
 #endif
-extern void __dtrace_slablist___get_rand(slablist_t *, uintptr_t);
+extern void __dtrace_slablist___get_rand(slablist_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___get_rand(void);
 #else
@@ -1344,7 +1344,7 @@ extern int __dtraceenabled_slablist___reap_end(void);
 #else
 extern int __dtraceenabled_slablist___reap_end(long);
 #endif
-extern void __dtrace_slablist___rem_begin(slablist_t *, uintptr_t, uint64_t);
+extern void __dtrace_slablist___rem_begin(slablist_t *, slablist_elem_t, uint64_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___rem_begin(void);
 #else
@@ -1440,67 +1440,67 @@ extern int __dtraceenabled_slablist___sl_inc_subslabs(void);
 #else
 extern int __dtraceenabled_slablist___sl_inc_subslabs(long);
 #endif
-extern void __dtrace_slablist___slab_add_after(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_after(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_after(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_after(long);
 #endif
-extern void __dtrace_slablist___slab_add_after_mk(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_after_mk(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_after_mk(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_after_mk(long);
 #endif
-extern void __dtrace_slablist___slab_add_before(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_before(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_before(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_before(long);
 #endif
-extern void __dtrace_slablist___slab_add_before_mk(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_before_mk(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_before_mk(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_before_mk(long);
 #endif
-extern void __dtrace_slablist___slab_add_into(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_into(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_into(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_into(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_next(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_into_spill_next(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_into_spill_next(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_into_spill_next(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_next_mk(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_into_spill_next_mk(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_into_spill_next_mk(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_into_spill_next_mk(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_prev(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_into_spill_prev(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_into_spill_prev(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_into_spill_prev(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_prev_mk(slablist_t *, slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_add_into_spill_prev_mk(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_into_spill_prev_mk(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_into_spill_prev_mk(long);
 #endif
-extern void __dtrace_slablist___slab_add_replace(slablist_t *, slab_t *, uintptr_t, int);
+extern void __dtrace_slablist___slab_add_replace(slablist_t *, slab_t *, slablist_elem_t, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_add_replace(void);
 #else
 extern int __dtraceenabled_slablist___slab_add_replace(long);
 #endif
-extern void __dtrace_slablist___slab_bin_srch(slab_t *, uintptr_t);
+extern void __dtrace_slablist___slab_bin_srch(slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_bin_srch(void);
 #else
@@ -1740,13 +1740,13 @@ extern int __dtraceenabled_slablist___test_bread_crumbs(void);
 #else
 extern int __dtraceenabled_slablist___test_bread_crumbs(long);
 #endif
-extern void __dtrace_slablist___test_find_bubble_up(int, slab_t *, subslab_t *, uintptr_t, int);
+extern void __dtrace_slablist___test_find_bubble_up(int, slab_t *, subslab_t *, slablist_elem_t, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_find_bubble_up(void);
 #else
 extern int __dtraceenabled_slablist___test_find_bubble_up(long);
 #endif
-extern void __dtrace_slablist___test_insert_elem(int, slab_t *, uintptr_t, int);
+extern void __dtrace_slablist___test_insert_elem(int, slab_t *, slablist_elem_t, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_insert_elem(void);
 #else
@@ -1800,7 +1800,7 @@ extern int __dtraceenabled_slablist___test_ripple_update_extrema(void);
 #else
 extern int __dtraceenabled_slablist___test_ripple_update_extrema(long);
 #endif
-extern void __dtrace_slablist___test_slab_bin_srch(int, slab_t *, uintptr_t);
+extern void __dtrace_slablist___test_slab_bin_srch(int, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_slab_bin_srch(void);
 #else
@@ -1836,13 +1836,13 @@ extern int __dtraceenabled_slablist___test_smlist_nelems(void);
 #else
 extern int __dtraceenabled_slablist___test_smlist_nelems(long);
 #endif
-extern void __dtrace_slablist___test_subslab_bin_srch(int, subslab_t *, uintptr_t);
+extern void __dtrace_slablist___test_subslab_bin_srch(int, subslab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_subslab_bin_srch(void);
 #else
 extern int __dtraceenabled_slablist___test_subslab_bin_srch(long);
 #endif
-extern void __dtrace_slablist___test_subslab_bin_srch_top(int, slab_t *, uintptr_t);
+extern void __dtrace_slablist___test_subslab_bin_srch_top(int, slab_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_subslab_bin_srch_top(void);
 #else

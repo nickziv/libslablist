@@ -555,9 +555,9 @@ attach_sublayer(slablist_t *sl)
 		sfirst = (subslab_t *)(GET_SUBSLAB_ELEM(sh, 0));
 		int last = i - 1;
 		slast = (subslab_t *)(GET_SUBSLAB_ELEM(sh, last));
-		sh->ss_min = (uintptr_t)(sfirst->ss_min);
+		sh->ss_min = (sfirst->ss_min);
 		SLABLIST_SUBSLAB_SET_MIN(sh);
-		sh->ss_max = (uintptr_t)(slast->ss_max);
+		sh->ss_max = (slast->ss_max);
 		SLABLIST_SUBSLAB_SET_MAX(sh);
 	} else {
 		/* Copy pointers of all superslabs into the head subslab */
@@ -571,9 +571,9 @@ attach_sublayer(slablist_t *sl)
 		f = (slab_t *)(GET_SUBSLAB_ELEM(sh, 0));
 		int last = i - 1;
 		l = (slab_t *)(GET_SUBSLAB_ELEM(sh, last));
-		sh->ss_min = (uintptr_t)(f->s_min);
+		sh->ss_min = (f->s_min);
 		SLABLIST_SUBSLAB_SET_MIN(sh);
-		sh->ss_max = (uintptr_t)(l->s_max);
+		sh->ss_max = (l->s_max);
 		SLABLIST_SUBSLAB_SET_MAX(sh);
 	}
 }
@@ -581,7 +581,7 @@ attach_sublayer(slablist_t *sl)
 /*
  * We use this function later, so it needs to be declared.
  */
-int small_list_add(slablist_t *, uintptr_t, int, uintptr_t *);
+int small_list_add(slablist_t *, slablist_elem_t, int, slablist_elem_t *);
 
 
 /*
@@ -740,4 +740,70 @@ retrieve_slab(bc_t *crumbs)
 {
 	slab_t *s = crumbs->bc_top.sbc_slab;
 	return (s);
+}
+
+/*
+ * Map a function to every element in the slab list. If this function is called
+ * on a sorted slab list, and it invalidates the sorting of the elements in any
+ * way, it _will_ have undefined results.
+ */
+void
+slablist_map(slablist_t *sl, slablist_map_t f)
+{
+	uint64_t slabs = sl->sl_slabs;
+	uint64_t slab = 0;
+	slab_t *s = (slab_t *)sl->sl_head;
+	while (slab < slabs) {
+		f(s->s_arr, s->s_elems);
+		s = s->s_next;
+		slab++;
+	}
+}
+
+/*
+ * Folds a function from start to end of a slab list. The function itself folds
+ * from the start to the end of _slab_. This function expects an accumulator,
+ * an array of slablist_elem_ts and the size of the array as arguments.  If the
+ * slablist holds values (not pointers) the accumulator is updated by f's
+ * return value.  If the accumulator is a pointer, then the return value does
+ * nothing, as the accumulation is stored in the accumulator structure that is
+ * pointed to. In this context, the value of `zero` changes. So before it can
+ * be reused in another call to foldr or foldl, it has to be "re-zeroed".
+ */
+slablist_elem_t
+slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
+{
+	uint64_t slabs = sl->sl_slabs;
+	uint64_t slab = 0;
+	slab_t *s = (slab_t *)sl->sl_head;
+	slablist_elem_t accumulator = zero;
+	while (slab < slabs) {
+		accumulator = f(accumulator, s->s_arr, s->s_elems);
+		s = s->s_next;
+		slab++;
+	}
+	return (accumulator);
+}
+
+/*
+ * Folds a function from end to start of a slab list. All the caveates of
+ * pointer vs value that apply to foldr apply here as well. The callback
+ * function expects the same arguments, but has to fold _backward_ from the end
+ * of the array to start of it. The array pointer that is passed, thought,
+ * _still_ points to the start of the array (it is the function's
+ * responsibility to jump to the end of the array, before folding backward). 
+ */
+slablist_elem_t
+slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
+{
+	uint64_t slabs = sl->sl_slabs;
+	uint64_t slab = 0;
+	slab_t *s = (slab_t *)sl->sl_end;
+	slablist_elem_t accumulator = zero;
+	while (slab < slabs) {
+		accumulator = f(accumulator, s->s_arr, s->s_elems);
+		s = s->s_prev;
+		slab++;
+	}
+	return (accumulator);
 }

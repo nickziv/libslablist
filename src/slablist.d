@@ -39,6 +39,8 @@ inline int E_TEST_SLAB_MOVE_NEXT_SCP = 38;
 inline int E_TEST_SLAB_MOVE_NEXT_SNCP = 39;
 inline int E_TEST_SLAB_MOVE_PREV_SCP = 40;
 inline int E_TEST_SLAB_MOVE_PREV_SPCP = 41;
+inline int E_TEST_SUBSLAB_ARR_MIN = 42;
+inline int E_TEST_SUBSLAB_ARR_MAX = 43;
 
 inline string e_test_descr[int err] =
 	err == 0 ? "[ PASS ]" :
@@ -84,6 +86,8 @@ inline string e_test_descr[int err] =
 	err == E_TEST_SLAB_MOVE_NEXT_SNCP ? "[slab move-next-sncp]":
 	err == E_TEST_SLAB_MOVE_PREV_SCP ? "[slab move-prev-scp]":
 	err == E_TEST_SLAB_MOVE_PREV_SPCP ? "[slab move-prev-spcp]":
+	err == E_TEST_SUBSLAB_ARR_MIN ? "[subslab min != top slab arr's min]" :
+	err == E_TEST_SUBSLAB_ARR_MAX ? "[subslab max != top slab arr's max]" :
 	"[[BAD ERROR CODE]]";
 
 
@@ -93,6 +97,13 @@ typedef struct subarr subarr_t;
 typedef struct slablist slablist_t;
 typedef struct sbc sbc_t;
 typedef struct ssbc ssbc_t;
+typedef union slablist_elem {
+	double		sle_d;
+	void		*sle_p;
+	uint64_t	sle_u;
+	int64_t		sle_i;
+	char		sle_c[8];
+} slablist_elem_t;
 
 
 /*
@@ -103,17 +114,17 @@ typedef struct ssbc ssbc_t;
  */
 typedef struct slabinfo {
 	uint16_t		si_elems;
-	uintptr_t		si_max;
-	uintptr_t		si_min;
+	slablist_elem_t		si_max;
+	slablist_elem_t		si_min;
 	uintptr_t		si_next;
 	uintptr_t		si_prev;
-	uintptr_t		si_arr[122];
+	slablist_elem_t		si_arr[122];
 } slabinfo_t;
 
 typedef struct subslabinfo {
 	uint16_t		ssi_elems;
-	uintptr_t		ssi_max;
-	uintptr_t		ssi_min;
+	union slablist_elem	ssi_max;
+	union slablist_elem	ssi_min;
 	uintptr_t		ssi_next;
 	uintptr_t		ssi_prev;
 	subarr_t		*ssi_arr;
@@ -164,9 +175,9 @@ struct slab {
         slab_t                  *s_prev;
         slablist_t              *s_list;
         uint8_t                 s_elems;
-        uintptr_t               s_max;
-        uintptr_t               s_min;
-        uintptr_t               s_arr[122];
+        slablist_elem_t		s_max;
+        slablist_elem_t		s_min;
+        slablist_elem_t		s_arr[122];
 };
 
 struct subarr {
@@ -179,8 +190,8 @@ struct subslab {
         subslab_t               *ss_prev;
         slablist_t              *ss_list;
         uint16_t                ss_elems;
-        uintptr_t               ss_max;
-        uintptr_t               ss_min;
+        slablist_elem_t		ss_max;
+        slablist_elem_t		ss_min;
         subarr_t                *ss_arr;
 };
 
@@ -236,9 +247,9 @@ translator slabinfo_t < slab_t *s >
 {
 	si_elems = *(uint64_t *)copyin((uintptr_t)&s->s_elems,
 			sizeof (s->s_elems));
-	si_max = *(uintptr_t *)copyin((uintptr_t)&s->s_max,
+	si_max = *(slablist_elem_t *)copyin((uintptr_t)&s->s_max,
 			sizeof (s->s_max));
-	si_min = *(uintptr_t *)copyin((uintptr_t)&s->s_min,
+	si_min = *(slablist_elem_t *)copyin((uintptr_t)&s->s_min,
 			sizeof (s->s_min));
 	si_arr = copyin((uintptr_t)&(s->s_arr[0]),
 			sizeof (s->s_arr));
@@ -253,9 +264,9 @@ translator subslabinfo_t < subslab_t *s >
 {
 	ssi_elems = *(uint64_t *)copyin((uintptr_t)&s->ss_elems,
 			sizeof (s->ss_elems));
-	ssi_max = *(uintptr_t *)copyin((uintptr_t)&s->ss_max,
+	ssi_max = *(union slablist_elem *)copyin((uintptr_t)&s->ss_max,
 			sizeof (s->ss_max));
-	ssi_min = *(uintptr_t *)copyin((uintptr_t)&s->ss_min,
+	ssi_min = *(union slablist_elem *)copyin((uintptr_t)&s->ss_min,
 			sizeof (s->ss_min));
 	ssi_next = *(uintptr_t *)copyin((uintptr_t)&s->ss_next,
 			sizeof (uintptr_t));

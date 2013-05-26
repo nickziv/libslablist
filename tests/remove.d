@@ -7,119 +7,6 @@ dtrace:::BEGIN
 	heap_test = 0;
 }
 
-/*
-pid$target::ripple_rem_to_sublayers:entry,
-pid$target::ripple_rem_to_sublayers:return
-{
-	printf("%s:%s\n", probefunc, probename);
-}
-
-slablist$target:::subslab_add_into*
-/arg2 != NULL/
-{
-	added_into_slabs[arg2] = arg1;
-}
-
-slablist$target:::subslab_add_before*
-/arg2 != NULL/
-{
-	added_before_slabs[arg2] = arg1;
-}
-
-slablist$target:::subslab_add_after*
-/arg2 != NULL/
-{
-	added_after_slabs[arg2] = arg1;
-}
-
-slablist$target:::subslab_add_into*
-/arg3 != NULL/
-{
-	added_into_subslabs[arg3] = arg1;
-}
-
-slablist$target:::subslab_add_before*
-/arg3 != NULL/
-{
-	added_before_subslabs[arg3] = arg1;
-}
-
-slablist$target:::subslab_add_after*
-/arg3 != NULL/
-{
-	added_after_subslabs[arg3] = arg1;
-}
-
-pid$target::sublayer_slab_ptr_srch:entry
-{
-	printf("%s(%p, %p, %d)\n", probefunc, arg0, arg1, arg2);
-	printf("slab %p added into to %p\n", arg0, added_into_slabs[arg1]);
-	printf("subslab %p added into to %p\n", arg0, added_into_subslabs[arg1]);
-	printf("slab %p added before to %p\n", arg0, added_before_slabs[arg1]);
-	printf("subslab %p added before to %p\n", arg0, added_before_subslabs[arg1]);
-	printf("slab %p added after to %p\n", arg0, added_after_slabs[arg1]);
-	printf("subslab %p added after to %p\n", arg0, added_after_subslabs[arg1]);
-	ustack();
-}
-
-slablist$target::sublayer_slab_ptr_srch:got_here
-{
-	printf("i = %d\n", arg0);
-}
-
-pid$target::sublayer_slab_ptr_srch:return
-{
-	printf("%s returns %d\n", probefunc, (int)arg1);
-}
-*/
-
-/*
-slablist$target:::rem_begin
-{
-	self->follow = 1;
-	printf("%s %lu %lu\n", probename, (uint64_t)arg1, (uint64_t)arg2);
-}
-
-slablist$target:::slab_set_max,
-slablist$target:::slab_set_min
-/self->follow/
-{
-	printf("%s %x min=%lu max=%lu\n", probename, arg0, args[0]->si_min,
-		args[0]->si_max);
-}
-
-slablist$target:::subslab_set_max,
-slablist$target:::subslab_set_min
-/self->follow/
-{
-	printf("%s %x min=%lu max=%lu\n", probename, arg0, args[0]->ssi_min,
-		args[0]->ssi_max);
-}
-
-
-slablist$target:::slab_move_*,
-slablist$target:::subslab_move_*
-{
-	printf("%s %x %x\n", probename, arg1, arg2);
-}
-
-slablist$target:::ripple_rem_slab
-{
-	printf("%s %x %x\n", probename, arg1, arg2);
-}
-
-slablist$target:::ripple_rem_subslab
-{
-	printf("%s %x %x\n", probename, arg1, arg2);
-}
-
-slablist$target:::rem_end
-{
-	self->follow = 0;
-	printf("%s %lu\n", probename, (uint64_t)arg0);
-}
-*/
-
 
 pid$target::mk_slab:return
 /heap_test/
@@ -182,8 +69,8 @@ slablist$target:::test_slab_move_prev
 	printf("sn[i] = sn[%d]\n", arg5);
 	printf("\nFrom slab %p, pre-move:\n", arg1);
 	printf("-----------------------\n");
-	printf("\tmin: %u\n", args[1]->si_min);
-	printf("\tmax: %u\n", args[1]->si_max);
+	printf("\tmin: %u\n", args[1]->si_min.sle_u);
+	printf("\tmax: %u\n", args[1]->si_max.sle_u);
 	printf("\telems: %u\n", args[1]->si_elems);
 	printf("\tnext: %p\n", args[1]->si_next);
 	printf("\tprev: %p\n\n", args[1]->si_prev);
@@ -192,8 +79,8 @@ slablist$target:::test_slab_move_prev
 	trace(args[1]->si_arr);
 	printf("\nTo slab %p, pre-move:\n", arg3);
 	printf("---------------------\n");
-	printf("\tmin: %u\n", args[3]->si_min);
-	printf("\tmax: %u\n", args[3]->si_max);
+	printf("\tmin: %u\n", args[3]->si_min.sle_u);
+	printf("\tmax: %u\n", args[3]->si_max.sle_u);
 	printf("\telems: %u\n", args[3]->si_elems);
 	printf("\tnext: %p\n", args[3]->si_next);
 	printf("\tprev: %p\n\n", args[3]->si_prev);
@@ -202,8 +89,8 @@ slablist$target:::test_slab_move_prev
 	trace(args[3]->si_arr);
 	printf("\nTo slab %p, post-move:\n", arg2);
 	printf("----------------------\n");
-	printf("\tmin: %u\n", args[2]->si_min);
-	printf("\tmax: %u\n", args[2]->si_max);
+	printf("\tmin: %u\n", args[2]->si_min.sle_u);
+	printf("\tmax: %u\n", args[2]->si_max.sle_u);
 	printf("\telems: %u\n", args[2]->si_elems);
 	printf("\tnext: %p\n", args[2]->si_next);
 	printf("\tprev: %p\n\n", args[2]->si_prev);
@@ -225,8 +112,8 @@ slablist$target:::test_subslab_move_prev
 	printf("sn[i] = sn[%d]\n", arg5);
 	printf("\nFrom subslab %p, pre-move:\n", arg1);
 	printf("------------------------------\n");
-	printf("\tmin: %u\n", args[1]->ssi_min);
-	printf("\tmax: %u\n", args[1]->ssi_max);
+	printf("\tmin: %u\n", args[1]->ssi_min.sle_u);
+	printf("\tmax: %u\n", args[1]->ssi_max.sle_u);
 	printf("\telems: %u\n", args[1]->ssi_elems);
 	printf("\tnext: %p\n", args[1]->ssi_next);
 	printf("\tprev: %p\n\n", args[1]->ssi_prev);
@@ -235,8 +122,8 @@ slablist$target:::test_subslab_move_prev
 	trace(subarrinfo[args[1]->ssi_arr]->sai_data);
 	printf("\nTo subslab %p, pre-move:\n", arg3);
 	printf("----------------------------\n");
-	printf("\tmin: %u\n", args[3]->ssi_min);
-	printf("\tmax: %u\n", args[3]->ssi_max);
+	printf("\tmin: %u\n", args[3]->ssi_min.sle_u);
+	printf("\tmax: %u\n", args[3]->ssi_max.sle_u);
 	printf("\telems: %u\n", args[3]->ssi_elems);
 	printf("\tnext: %p\n", args[3]->ssi_next);
 	printf("\tprev: %p\n\n", args[3]->ssi_prev);
@@ -245,8 +132,8 @@ slablist$target:::test_subslab_move_prev
 	trace(subarrinfo[args[3]->ssi_arr]->sai_data);
 	printf("\nTo subslab %p, post-move:\n", arg2);
 	printf("-----------------------------\n");
-	printf("\tmin: %u\n", args[2]->ssi_min);
-	printf("\tmax: %u\n", args[2]->ssi_max);
+	printf("\tmin: %u\n", args[2]->ssi_min.sle_u);
+	printf("\tmax: %u\n", args[2]->ssi_max.sle_u);
 	printf("\telems: %u\n", args[2]->ssi_elems);
 	printf("\tnext: %p\n", args[2]->ssi_next);
 	printf("\tprev: %p\n\n", args[2]->ssi_prev);
@@ -293,7 +180,7 @@ slablist$target:::get_extreme_path
 {
 	bblup_ssbcs[arg1].ssbci_subslab = args[0]->ssbci_subslab;
 	bblup_ssbcs[arg1].ssbci_on_edge = args[0]->ssbci_on_edge;
-	self->layers = arg1;
+	self->layers = arg2;
 }
 
 slablist$target:::get_extreme_path
@@ -311,8 +198,8 @@ slablist$target:::test_remove_slab
 	printf("baselayer is at the bottom.\n");
 	self->s = bblup_sbc.sbci_slab;
 	printf("\tslab: %p\n", self->s);
-	printf("\t\tmax: %u\n", slabinfo[self->s]->si_max);
-	printf("\t\tmin: %u\n", slabinfo[self->s]->si_min);
+	printf("\t\tmax: %u\n", slabinfo[self->s]->si_max.sle_u);
+	printf("\t\tmin: %u\n", slabinfo[self->s]->si_min.sle_u);
 }
 
 slablist$target:::test_remove_slab
@@ -320,8 +207,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -330,8 +217,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -340,8 +227,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -350,8 +237,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -360,8 +247,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -370,8 +257,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -380,8 +267,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -390,8 +277,8 @@ slablist$target:::test_remove_slab
 {
         self->ss = bblup_ssbcs[self->layers].ssbci_subslab;
         printf("\tsubslab: %p\n", self->ss);
-        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max);
-        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min);
+        printf("\t\tmax: %u\n", subslabinfo[self->ss]->ssi_max.sle_u);
+        printf("\t\tmin: %u\n", subslabinfo[self->ss]->ssi_min.sle_u);
         self->layers--;
 }
 
@@ -411,8 +298,8 @@ slablist$target:::test_remove_elem
 	fail = arg0;
 	printf("\nSlab details:\n");
 	printf("-------------\n");
-	printf("\tmax: %u\n", args[1]->si_max);
-	printf("\tmin: %u\n", args[1]->si_min);
+	printf("\tmax: %u\n", args[1]->si_max.sle_u);
+	printf("\tmin: %u\n", args[1]->si_min.sle_u);
 	printf("\telems: %u\n", args[1]->si_elems);
 	printf("\tnext: %p\n", args[1]->si_next);
 	printf("\tprev: %p\n\n", args[1]->si_prev);
@@ -435,8 +322,8 @@ slablist$target:::test_remove_slab
 	fail = arg0;
 	printf("\nSubslab details:\n");
 	printf("-------------\n");
-	printf("\tmax: %u\n", args[1]->ssi_max);
-	printf("\tmin: %u\n", args[1]->ssi_min);
+	printf("\tmax: %u\n", args[1]->ssi_max.sle_u);
+	printf("\tmin: %u\n", args[1]->ssi_min.sle_u);
 	printf("\telems: %u\n", args[1]->ssi_elems);
 	printf("\tnext: %p\n", args[1]->ssi_next);
 	printf("\tprev: %p\n\n", args[1]->ssi_prev);

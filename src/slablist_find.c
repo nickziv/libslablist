@@ -172,11 +172,11 @@ sml_node_get(slablist_t *sl, uint64_t pos)
 /*
  * NOTE: the lowest possible value for `pos` is 0
  */
-uintptr_t
+slablist_elem_t
 slablist_get(slablist_t *sl, uint64_t pos)
 {
 	lock_list(sl);
-	uintptr_t ret;
+	slablist_elem_t ret;
 	int i;
 	uint64_t off_pos;
 	slab_t *s;
@@ -195,13 +195,13 @@ slablist_get(slablist_t *sl, uint64_t pos)
 }
 
 int
-sub_is_elem_in_range(uintptr_t elem, subslab_t *s)
+sub_is_elem_in_range(slablist_elem_t elem, subslab_t *s)
 {
 	int eq_min;
 	int eq_max;
 	slablist_t *sl = s->ss_list;
-	uintptr_t max = s->ss_max;
-	uintptr_t min = s->ss_min;
+	slablist_elem_t max = s->ss_max;
+	slablist_elem_t min = s->ss_min;
 	eq_min = (sl->sl_cmp_elem(elem, min));
 	eq_max = (sl->sl_cmp_elem(elem, max));
 
@@ -221,13 +221,13 @@ sub_is_elem_in_range(uintptr_t elem, subslab_t *s)
 }
 
 int
-is_elem_in_range(uintptr_t elem, slab_t *s)
+is_elem_in_range(slablist_elem_t elem, slab_t *s)
 {
 	int eq_min;
 	int eq_max;
 	slablist_t *sl = s->s_list;
-	uintptr_t max = s->s_max;
-	uintptr_t min = s->s_min;
+	slablist_elem_t max = s->s_max;
+	slablist_elem_t min = s->s_min;
 	eq_min = (sl->sl_cmp_elem(elem, min));
 	eq_max = (sl->sl_cmp_elem(elem, max));
 
@@ -280,7 +280,7 @@ sublayer_slab_ptr_srch(void *elem, subslab_t *s)
  * Binary search for `elem` in slab `s`.
  */
 int
-slab_bin_srch(uintptr_t elem, slab_t *s)
+slab_bin_srch(slablist_elem_t elem, slab_t *s)
 {
 	int min = 0;
 	int max = s->s_elems - 1;
@@ -288,7 +288,7 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 	slablist_t *sl = s->s_list;
 	while (max >= min) {
 		int mid = (min + max) >> 1;
-		uintptr_t mid_elem = s->s_arr[mid];
+		slablist_elem_t mid_elem = s->s_arr[mid];
 		SLABLIST_SLAB_BIN_SRCH(s, mid_elem);
 		c = sl->sl_cmp_elem(elem, mid_elem);
 		if (c > 0) {
@@ -331,7 +331,7 @@ slab_bin_srch(uintptr_t elem, slab_t *s)
 }
 
 int
-slab_lin_srch(uintptr_t elem, slab_t *s)
+slab_lin_srch(slablist_elem_t elem, slab_t *s)
 {
 	slablist_t *sl = s->s_list;
 	int i = 0;
@@ -345,7 +345,7 @@ slab_lin_srch(uintptr_t elem, slab_t *s)
  * Does a binary search on a subslab that points to other subslabs.
  */
 int
-subslab_bin_srch(uintptr_t elem, subslab_t *s)
+subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 {
 	int min = 0;
 	int max = s->ss_elems - 1;
@@ -396,11 +396,12 @@ subslab_bin_srch(uintptr_t elem, subslab_t *s)
 }
 
 int
-subslab_lin_srch(uintptr_t elem, subslab_t *s)
+subslab_lin_srch(slablist_elem_t elem, subslab_t *s)
 {
 	int i = 0;
-	while (sub_is_elem_in_range(elem, GET_SUBSLAB_ELEM(s, i)) < 0
-	    && i < s->ss_elems) {
+	while (i < s->ss_elems
+	    && sub_is_elem_in_range(elem,
+	        (subslab_t *)GET_SUBSLAB_ELEM(s, i)) > 0) {
 		i++;
 	}
 	return (i);
@@ -410,7 +411,7 @@ subslab_lin_srch(uintptr_t elem, subslab_t *s)
  * Does a binary search on a subslab that points to other slabs.
  */
 int
-subslab_bin_srch_top(uintptr_t elem, subslab_t *s)
+subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 {
 	int min = 0;
 	int max = s->ss_elems - 1;
@@ -460,11 +461,11 @@ subslab_bin_srch_top(uintptr_t elem, subslab_t *s)
 }
 
 int
-subslab_lin_srch_top(uintptr_t elem, subslab_t *s)
+subslab_lin_srch_top(slablist_elem_t elem, subslab_t *s)
 {
 	int i = 0;
-	while (is_elem_in_range(elem, GET_SUBSLAB_ELEM(s, i)) < 0
-	    && i < s->ss_elems) {
+	while (i < s->ss_elems
+	    && is_elem_in_range(elem, (slab_t *)GET_SUBSLAB_ELEM(s, i)) > 0) {
 		i++;
 	}
 	return (i);
@@ -478,7 +479,7 @@ subslab_lin_srch_top(uintptr_t elem, subslab_t *s)
  *  slab with `elem`, or the slab nearest to it.
  */
 int
-find_subslab_in_subslab(bc_t *crumbs, uintptr_t elem)
+find_subslab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
 {
 	int x = 0;
 	subslab_t *s = retrieve_subslab(crumbs, (crumbs->bc_sscount - 1));
@@ -520,7 +521,7 @@ find_subslab_in_subslab(bc_t *crumbs, uintptr_t elem)
 }
 
 int
-find_slab_in_subslab(bc_t *crumbs, uintptr_t elem)
+find_slab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
 {
 	int x = 0;
 	subslab_t *s = retrieve_subslab(crumbs, (crumbs->bc_sscount - 1));
@@ -562,7 +563,7 @@ find_slab_in_subslab(bc_t *crumbs, uintptr_t elem)
 
 
 int
-sub_find_linear_scan(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
+sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
 {
 
 	SLABLIST_SUB_LINEAR_SCAN_BEGIN(sl);
@@ -602,7 +603,7 @@ end:;
 }
 
 int
-find_linear_scan(slablist_t *sl, uintptr_t elem, slab_t **sbptr)
+find_linear_scan(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 {
 
 	SLABLIST_LINEAR_SCAN_BEGIN(sl);
@@ -646,7 +647,7 @@ end:;
  * starting point. Records all subslabs that were walked over into the `crumbs`.
  */
 int
-find_bubble_up(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
+find_bubble_up(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
 
@@ -716,7 +717,7 @@ find_bubble_up(slablist_t *sl, uintptr_t elem, bc_t *crumbs)
  * user-supplied backpointer `found`.
  */
 int
-slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
+slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 {
 	lock_list(sl);
 
@@ -725,7 +726,7 @@ slablist_find(slablist_t *sl, uintptr_t key, uintptr_t *found)
 	bzero(&bc_path, sizeof (bc_t));
 	slab_t *potential;
 	uint64_t i = 0;
-	uintptr_t ret;
+	slablist_elem_t ret;
 	if (sl->sl_is_small_list) {
 		small_list_t *sml = sl->sl_head;
 		while (i < sl->sl_elems &&
@@ -792,7 +793,7 @@ get_rand_num(int rfd)
  * uniform distribution of returned positions, as a result of being written in
  * a rush.
  */
-uintptr_t
+slablist_elem_t
 slablist_get_rand(slablist_t *sl)
 {
 	lock_list(sl);
@@ -802,10 +803,11 @@ slablist_get_rand(slablist_t *sl)
 
 	uint64_t op = 0;
 
-	uintptr_t ret;
+	slablist_elem_t ret;
+	ret.sle_u = 0;
 
 	if (sl->sl_elems == 0) {
-		return (0);
+		return (ret);
 	}
 	r = r % sl->sl_elems;
 

@@ -139,8 +139,8 @@ slablist$target:::test_insert_slab
 	printf("%s\n", probename);
 	printf("\nSubslab details:\n");
 	printf("-----------------\n");
-	printf("\tmin: %u\n", args[1]->ssi_min);
-	printf("\tmax: %u\n", args[1]->ssi_max);
+	printf("\tmin: %u\n", args[1]->ssi_min.sle_u);
+	printf("\tmax: %u\n", args[1]->ssi_max.sle_u);
 	printf("\telems: %u\n", args[1]->ssi_elems);
 	printf("\tnext: %p\n", args[1]->ssi_next);
 	printf("\tprev: %p\n\n", args[1]->ssi_prev);

@@ -71,6 +71,8 @@
 #define E_TEST_SLAB_MOVE_NEXT_SNCP	39
 #define E_TEST_SLAB_MOVE_PREV_SCP	40
 #define E_TEST_SLAB_MOVE_PREV_SPCP	41
+#define E_TEST_SUBSLAB_ARR_MIN		42
+#define E_TEST_SUBSLAB_ARR_MAX		43
 
 int
 test_slab_to_sml(slablist_t *sl, slab_t *s)
@@ -126,8 +128,8 @@ test_smlist_elems_sorted(slablist_t *sl)
 		return (0);
 	}
 
-	uintptr_t e1;
-	uintptr_t e2;
+	slablist_elem_t e1;
+	slablist_elem_t e2;
 
 	while (i < (sl->sl_elems - 1)) {
 		prev = sml;
@@ -205,8 +207,8 @@ test_slab_extrema(slab_t *s)
 	uint32_t elems = s->s_elems;
 
 	/* test that extrema match the actual elems in the array */
-	if ((s->s_min != s->s_arr[0] ||
-	    s->s_max != s->s_arr[(elems - 1)])) {
+	if ((s->s_min.sle_u != s->s_arr[0].sle_u ||
+	    s->s_max.sle_u != s->s_arr[(elems - 1)].sle_u)) {
 		return (E_TEST_SLAB_EXTREMA);
 	}
 
@@ -219,14 +221,23 @@ test_subslab_extrema(subslab_t *ss)
 	slab_t *f = get_first_slab(ss);
 	slablist_t *top_lyr = f->s_list;
 
-	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_arr[0]) != 0 ){ 
+	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_min) != 0 ) {
 		return (E_TEST_SUBSLAB_MIN);
 	}
 
+	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_arr[0]) != 0 ) {
+		return (E_TEST_SUBSLAB_ARR_MIN);
+	}
+
+
 	slab_t *l = get_last_slab(ss);
 	uint32_t lelems = l->s_elems;
-	if (top_lyr->sl_cmp_elem(ss->ss_max, l->s_arr[(lelems - 1)]) != 0) {
+	if (top_lyr->sl_cmp_elem(ss->ss_max, l->s_max) != 0) {
 		return (E_TEST_SUBSLAB_MAX);
+	}
+
+	if (top_lyr->sl_cmp_elem(ss->ss_max, l->s_arr[(lelems - 1)]) != 0) {
+		return (E_TEST_SUBSLAB_ARR_MAX);
 	}
 
 	return (0);
@@ -268,8 +279,8 @@ test_slab(slab_t *s)
 		uint64_t j = 0;
 		elems = s->s_elems;
 		while (j < (elems - 1)) {
-			uintptr_t e1 = s->s_arr[j];
-			uintptr_t e2 = s->s_arr[(j+1)];
+			slablist_elem_t e1 = s->s_arr[j];
+			slablist_elem_t e2 = s->s_arr[(j+1)];
 			int c = sl->sl_cmp_elem(e1, e2);
 			if (c > 0) {
 				return (E_TEST_SLAB_UNSORTED);
@@ -436,7 +447,7 @@ test_subslab_ref(subslab_t *s)
 	
 
 int
-test_slab_bin_srch(uintptr_t elem, slab_t *s)
+test_slab_bin_srch(slablist_elem_t elem, slab_t *s)
 {
 	int f = test_slab(s);
 	if (f != 0) {
@@ -454,7 +465,7 @@ test_slab_bin_srch(uintptr_t elem, slab_t *s)
 }
 
 int
-test_subslab_bin_srch(uintptr_t elem, subslab_t *s)
+test_subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 {
 	int f = test_subslab(s);
 	if (f != 0) {
@@ -472,7 +483,7 @@ test_subslab_bin_srch(uintptr_t elem, subslab_t *s)
 }
 
 int
-test_subslab_bin_srch_top(uintptr_t elem, subslab_t *s)
+test_subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 {
 	int f = test_subslab(s);
 	if (f != 0) {
@@ -494,7 +505,7 @@ test_subslab_bin_srch_top(uintptr_t elem, subslab_t *s)
  * insert_elem() function.
  */
 int
-test_insert_elem(slab_t *s, uintptr_t elem, uint64_t i)
+test_insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 {
 	int f = test_slab(s);
 	if (f != 0) {
@@ -721,7 +732,7 @@ test_ripple_add_slab(slab_t *new, bc_t *crumbs, int bc)
 }
 
 int
-test_find_bubble_up(bc_t *crumbs, uintptr_t elem, subslab_t **last)
+test_find_bubble_up(bc_t *crumbs, slablist_elem_t elem, subslab_t **last)
 {
 	int f;
 	if (crumbs->bc_top.sbc_slab == NULL) {
@@ -815,7 +826,7 @@ test_slab_move_next(slab_t *scp, slab_t *sn, slab_t *sncp, int *i)
 		 * We start at `scp` and check all the elements against the
 		 * _copied_ elements that are stored in `sn`.
 		 */
-		if (scp->s_arr[k] != sn->s_arr[j]) {
+		if (scp->s_arr[k].sle_u != sn->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_NEXT_SCP);
 		}
@@ -828,7 +839,7 @@ test_slab_move_next(slab_t *scp, slab_t *sn, slab_t *sncp, int *i)
 		 * We now continue to `sncp` and check all the elements against
 		 * the _original_ elements that are stored in `sn`.
 		 */
-		if (sncp->s_arr[k] != sn->s_arr[j]) {
+		if (sncp->s_arr[k].sle_u != sn->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_NEXT_SNCP);
 		}
@@ -868,7 +879,7 @@ test_slab_move_prev(slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 		 * check against all of the elements that have been _copied_
 		 * into `sp`.
 		 */
-		if (scp->s_arr[k] != sp->s_arr[j]) {
+		if (scp->s_arr[k].sle_u != sp->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_PREV_SCP);
 		}
@@ -881,7 +892,7 @@ test_slab_move_prev(slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 		 * We then continue to `spcp` and check that against the
 		 * _original_ elems.
 		 */
-		if (spcp->s_arr[k] != sp->s_arr[j]) {
+		if (spcp->s_arr[k].sle_u != sp->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_PREV_SPCP);
 		}

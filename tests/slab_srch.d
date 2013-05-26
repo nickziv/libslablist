@@ -36,7 +36,7 @@ slablist$target:::get_extreme_path
 {
 	bblup_bcs[arg1].bci_slab = args[0]->bci_slab;
 	bblup_bcs[arg1].bci_on_edge = args[0]->bci_on_edge;
-	self->layers = arg1;
+	self->layers = arg2;
 }
 
 slablist$target:::test_slab_srch

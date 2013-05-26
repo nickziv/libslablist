@@ -29,27 +29,58 @@ end()
 }
 
 int
-cmpfun(uintptr_t v1, uintptr_t v2)
+cmpfun(slablist_elem_t v1, slablist_elem_t v2)
 {
-	uint64_t u1 = (uint64_t)v1;
-	uint64_t u2 = (uint64_t)v2;
-	if (u1 > u2) {
+	if (v1.sle_u > v2.sle_u) {
 		return (1);
 	}
 
-	if (u1 < u2) {
+	if (v1.sle_u < v2.sle_u) {
 		return (-1);
 	}
 
 	return (0);
 }
 
+slablist_elem_t
+add_foldr(slablist_elem_t accumulator, slablist_elem_t *arr, uint64_t elems)
+{
+	uint64_t i = 0;
+	while (i < elems) {
+		accumulator.sle_u += arr[i].sle_u;
+		i++;
+	}
+	return (accumulator);
+}
+
+slablist_elem_t
+add_foldl(slablist_elem_t accumulator, slablist_elem_t *arr, uint64_t elems)
+{
+	uint64_t i = elems - 1;
+	while (i > 0) {
+		accumulator.sle_u += arr[i].sle_u;
+		i--;
+	}
+	accumulator.sle_u += arr[i].sle_u;
+	return (accumulator);
+}
+
+void
+inc_map(slablist_elem_t *arr, uint64_t elems)
+{
+	uint64_t i = 0;
+	while (i < elems) {
+		arr[i].sle_u += 1;
+		i++;
+	}
+}
+
 
 int
-cmpfun_str(uintptr_t v1, uintptr_t v2)
+cmpfun_str(slablist_elem_t v1, slablist_elem_t v2)
 {
-	char *s1 = (char *)v1;
-	char *s2 = (char *)v2;
+	char *s1 = (char *)v1.sle_p;
+	char *s2 = (char *)v2.sle_p;
 	int ret;
 	if (s1 != NULL && s2 != NULL) {
 		ret = strcmp(s1, s2);
@@ -136,17 +167,19 @@ void
 do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 {
 	uint64_t ops = 0;
-	uintptr_t elem;
-	uintptr_t randrem;
-	uintptr_t remd = NULL;
+	slablist_elem_t elem;
+	slablist_elem_t randrem;
+	slablist_elem_t remd;
+	remd.sle_u = 0;
 	while (ops < maxops) {
 		if (str) {
-			elem = (uintptr_t)get_str(fd);
+			elem.sle_p = get_str(fd);
 		} else {
-			elem = get_data(fd);
+			uint64_t rd = get_data(fd);
+			elem.sle_u = rd;
 		}
 
-		uintptr_t found;
+		slablist_elem_t found;
 
 		slablist_add(sl, elem, 0, NULL);
 		/*
@@ -178,19 +211,22 @@ do_free_remaining(slablist_t *sl, int str, int ord)
 	uint64_t type = slablist_gettype(sl);
 	char *name = slablist_getname(sl);
 	printf("%s: %d\n", name, type);
-	uintptr_t elem;
-	uintptr_t randrem;
-	uintptr_t remd = NULL;
+	slablist_elem_t elem;
+	slablist_elem_t randrem;
+	slablist_elem_t zero_rem;
+	zero_rem.sle_u = 0;
+	slablist_elem_t remd;
+	remd.sle_p = NULL;
 	int ret;
 	while (remaining > 0) {
 		if (type == SL_SORTED) {
 			randrem = slablist_get_rand(sl);
 			ret = slablist_rem(sl, randrem, 0, &remd);
 		} else {
-			ret = slablist_rem(sl, NULL, 0, &remd);
+			ret = slablist_rem(sl, zero_rem, 0, &remd);
 		}
-		if (str && remd != NULL) {
-			rm_str((char *)remd);
+		if (str && remd.sle_p != NULL) {
+			rm_str(remd.sle_p);
 		}
 		remaining--;
 	}
