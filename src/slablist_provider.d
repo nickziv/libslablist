@@ -28,10 +28,6 @@ typedef struct { int dummy; } slinfo_t;
 typedef struct { int dummy; } slab_t;
 typedef struct { int dummy; } subslab_t;
 typedef struct { int dummy; } slablist_t;
-typedef struct { int dummy; } sbc_t;
-typedef struct { int dummy; } sbcinfo_t;
-typedef struct { int dummy; } ssbc_t;
-typedef struct { int dummy; } ssbcinfo_t;
 typedef union slablist_elem { int dummy; } slablist_elem_t;
 
 provider slablist {
@@ -43,27 +39,27 @@ provider slablist {
 		(slinfo_t *sl, slablist_elem_t e, uint64_t r);
 	probe add_end(int);
 	probe add_head(slablist_t *sl) : (slinfo_t *sl);
-	probe slab_add_into(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_ai(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_into_spill_next(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aisn(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_into_spill_prev(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aisp(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_into_spill_next_mk(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aisnm(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_into_spill_prev_mk(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aispm(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_before(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_ab(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_after(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aa(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_before_mk(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_abm(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_after_mk(slablist_t *sl, slab_t *s, slablist_elem_t e) :
+	probe slab_aam(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
-	probe slab_add_replace(slablist_t *sl, slab_t *s, slablist_elem_t e, int b) :
+	probe slab_ar(slablist_t *sl, slab_t *s, slablist_elem_t e, int b) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e, int b);
-	probe subslab_add_into(
+	probe subslab_ai(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -72,7 +68,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_into_spill_next(
+	probe subslab_aisn(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -81,7 +77,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_into_spill_prev(
+	probe subslab_aisp(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -90,7 +86,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_into_spill_next_mk(
+	probe subslab_aisnm(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -99,7 +95,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_into_spill_prev_mk(
+	probe subslab_aispm(
 		slablist_t *sl,
 		subslab_t *s, 
 		slab_t *s1,
@@ -108,7 +104,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_before(
+	probe subslab_ab(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -117,7 +113,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_after(
+	probe subslab_aa(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -126,7 +122,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_before_mk(
+	probe subslab_abm(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -135,7 +131,7 @@ provider slablist {
 		subslabinfo_t *s,
 		slabinfo_t *s1,
 		subslabinfo_t *s2);
-	probe subslab_add_after_mk(
+	probe subslab_aam(
 		slablist_t *sl,
 		subslab_t *s,
 		slab_t *s1,
@@ -209,10 +205,15 @@ provider slablist {
 	probe slab_set_max(slab_t *s) : (slabinfo_t *s);
 	probe subslab_set_min(subslab_t *s) : (subslabinfo_t *s);
 	probe subslab_set_max(subslab_t *s) : (subslabinfo_t *s);
+	probe slab_set_below(slab_t *s) : (slabinfo_t *s);
+	probe subslab_set_below(subslab_t *s) : (subslabinfo_t *s);
+	/* Traces the sum of usr_elems in testing code */
+	probe sum_usr_elems(uint64_t);
 	/*
 	 * Inc probes increase elem count in slabs or lists. Dec probes
 	 * decrease elem count in slabs or lists.
 	 */
+	probe set_usr_elems(subslab_t *s) : (subslabinfo_t *s);
 	probe slab_inc_elems(slab_t *s) : (slabinfo_t *s);
 	probe slab_dec_elems(slab_t *s) : (slabinfo_t *s);
 	probe subslab_inc_elems(subslab_t *s) : (subslabinfo_t *s);
@@ -298,6 +299,7 @@ provider slablist {
 		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
 	probe subslab_move_prev_to_mid(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
 		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
+	probe extreme_slab(slab_t *s) : (slabinfo_t *s);
 	/*
 	 * The first argument of every test probe is an error code that
 	 * indicates if a test failed, and why.
@@ -324,18 +326,6 @@ provider slablist {
 	 */
 	probe test_bread_crumbs(int, int);
 	/*
-	 * This probe fires whenever we walk over an extreme slab, while
-	 * executing get_first|last_slab(). This probe should be used to store
-	 * the breadcrumbs in an associative array, that can be accessed from a
-	 * D script if test_insert_elem(), test_find_bubble_up(), or
-	 * test_ripple_add() probes return an error code of 3, 4, or 5.
-	 *
-	 * Arg0 is the subslab, arg1 is the top-most slab, and l is the layer.
-	 * Either arg1 or arg0 MUST be NULL anytime the probe fires.
-	 */
-	probe get_extreme_path(ssbc_t *b0, sbc_t *b1,  int l) :
-		(ssbcinfo_t *b0, sbcinfo_t *b1, int l);
-	/*
 	 * This probe tests the conistency of the slab right before and right
 	 * after insert_elem() inserts an elem into a slab. Error codes 3, 4,
 	 * and 5 can only happen _after_ an insertion.
@@ -356,9 +346,9 @@ provider slablist {
 	 *		arg2 is the elem we are trying to insert.
 	 *		arg3 is the index we are trying to insert at in `s`
 	 */
-	probe test_insert_elem(int e, slab_t *s, slablist_elem_t elem, int i) :
+	probe test_add_elem(int e, slab_t *s, slablist_elem_t elem, int i) :
 		(int e, slabinfo_t *s, slablist_elem_t elem, int i);
-	probe test_insert_slab(int e, subslab_t *s, slab_t *s1, subslab_t *s2, int i) :
+	probe test_add_slab(int e, subslab_t *s, slab_t *s1, subslab_t *s2, int i) :
 		(int e, subslabinfo_t *s, slabinfo_t *s1, subslabinfo_t *s2, int i);
 	/*
 	 * This probe tests the conistency of the slab right before and right
@@ -423,7 +413,7 @@ provider slablist {
 		(int e, slabinfo_t *s, subslabinfo_t *ss, slablist_elem_t d, int l);
 	/*
 	 * This probe tests ripple_add() as it is rippling the new slab to the
-	 * sublayers using the bc_path.
+	 * sublayers.
 	 *	Error codes:
 	 *		0..5 Same as above
 	 *		6 `sb` is not a subslab of `s` / doesn't refer to `s`
@@ -438,8 +428,8 @@ provider slablist {
 		     void *bc, int b) :
 		(int e, slabinfo_t *s, subslabinfo_t *sb, void *bc, int b);
 	probe test_ripple_add_subslab(int e, subslab_t *s, subslab_t *sb,
-		     void *bc, int b) :
-		(int e, subslabinfo_t *s, subslabinfo_t *sb, void *bc, int b);
+		     slab_t *m, int b) :
+		(int e, subslabinfo_t *s, subslabinfo_t *sb, slabinfo_t *m, int b);
 	probe test_ripple_update_extrema(int e, subslab_t *s) :
 		(int e, subslabinfo_t *s);
 	/*
@@ -505,6 +495,8 @@ provider slablist {
 	 * a slab list as an argument, and not something else.
 	 */
 	probe test_is_slab_list(int);
+	probe test_get_elem_pos(int i, slab_t *s, slab_t *s2, uint64_t i1, uint64_t i2) :
+		(int i, slabinfo_t *s, slabinfo_t *s2, uint64_t i1, uint64_t i2);
 };
 
 #pragma D attributes Evolving/Evolving/ISA      provider slablist provider

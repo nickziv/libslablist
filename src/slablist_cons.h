@@ -37,7 +37,3 @@ extern void try_reap_all(slablist_t *);
 extern int lock_list(slablist_t *);
 extern int unlock_list(slablist_t *);
 extern int trylock_list(slablist_t *);
-extern void record_subslab(bc_t *, subslab_t *, int);
-extern void record_slab(bc_t *, slab_t *, int);
-extern subslab_t *retrieve_subslab(bc_t *, uint8_t);
-extern slab_t *retrieve_slab(bc_t *, uint8_t);

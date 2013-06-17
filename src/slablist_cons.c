@@ -245,6 +245,7 @@ void
 link_slab(slab_t *s1, slab_t *s2, int flag)
 {
 	slablist_t *sl = s2->s_list;
+	s1->s_below = s2->s_below;
 	if (flag == SLAB_LINK_BEFORE) {
 		SLABLIST_LINK_SLAB_BEFORE(sl, s1, s2);
 		s1->s_next = s2;
@@ -286,6 +287,7 @@ void
 link_subslab(subslab_t *s1, subslab_t *s2, int flag)
 {
 	slablist_t *sl = s2->ss_list;
+	s1->ss_below = s2->ss_below;
 	if (flag == SLAB_LINK_BEFORE) {
 		SLABLIST_LINK_SUBSLAB_BEFORE(sl, s1, s2);
 		s1->ss_next = s2;
@@ -374,28 +376,31 @@ static void
 remove_slabs(slablist_t *sl)
 {
 	slab_t *s;
+	slab_t *sn;
 	s = sl->sl_head;
 	uint64_t i = 0;
 	uint64_t nslabs = sl->sl_slabs;
 	while (i < nslabs) {
+		sn = s->s_next;
 		/*
 		 * We are not responsible for user-allocated objects.
 		 */
 		unlink_slab(s);
 		rm_slab(s);
 		SLABLIST_SLAB_RM(sl);
-		s = s->s_next;
+		s = sn;
 		i++;
 	}
 }
 
 /*
- * Removes all slabs from `sl`. Used as a catch-all.
+ * Removes all subslabs from `sl`. Used as a catch-all.
  */
 static void
 remove_subslabs(slablist_t *sl)
 {
 	subslab_t *s;
+	subslab_t *sn;
 	s = sl->sl_head;
 	uint64_t i = 0;
 	uint64_t nslabs = sl->sl_slabs;
@@ -403,10 +408,12 @@ remove_subslabs(slablist_t *sl)
 		/*
 		 * We are not responsible for user-allocated objects.
 		 */
+		sn = s->ss_next;
 		unlink_subslab(s);
+		rm_subarr(s->ss_arr);
 		rm_subslab(s);
 		SLABLIST_SUBSLAB_RM(sl);
-		s = s->ss_next;
+		s = sn;
 		i++;
 	}
 }
@@ -468,6 +475,24 @@ detach_sublayer(slablist_t *sl)
 {
 	slablist_t *sub = sl->sl_sublayer;
 	SLABLIST_DETACH_SUBLAYER(sl, sub);
+
+
+	uint64_t i = 0;
+	slab_t *s = sl->sl_head;
+	subslab_t *ss = sl->sl_head;
+	if (sl->sl_layer == 0) {
+		while (i < sl->sl_slabs) {
+			s->s_below = NULL;
+			s = s->s_next;
+			i++;
+		}
+	} else {
+		while (i < sl->sl_slabs) {
+			ss->ss_below = NULL;
+			ss = ss->ss_next;
+			i++;
+		}
+	}
 
 	remove_subslabs(sub);
 
@@ -546,8 +571,10 @@ attach_sublayer(slablist_t *sl)
 	if (sup->sl_layer) {
 		/* Copy pointers of all superslabs into the head subslab */
 		while (i < sl->sl_slabs) {
-			SLABLIST_SUBSLAB_ADD_INTO(sub, sh, NULL, sc);
+			SLABLIST_SUBSLAB_AI(sub, sh, NULL, sc);
 			SET_SUBSLAB_ELEM(sh, (void *)sc, i);
+			sc->ss_below = sh;
+			sh->ss_usr_elems += sc->ss_usr_elems;
 			sc = sc->ss_next;
 			i++;
 		}
@@ -562,8 +589,10 @@ attach_sublayer(slablist_t *sl)
 	} else {
 		/* Copy pointers of all superslabs into the head subslab */
 		while (i < sl->sl_slabs) {
-			SLABLIST_SUBSLAB_ADD_INTO(sub, sh, c, NULL);
+			SLABLIST_SUBSLAB_AI(sub, sh, c, NULL);
 			SET_SUBSLAB_ELEM(sh, (void *)c, i);
+			c->s_below = sh;
+			sh->ss_usr_elems += c->s_elems;
 			c = c->s_next;
 			i++;
 		}
@@ -687,59 +716,6 @@ try_reap_all(slablist_t *sl)
 		i++;
 	} while (i < sl->sl_sublayers);
 	*/
-}
-
-/*
- * Records the subslabs `s` into the bread crumb path `crumbs`.
- */
-void
-record_subslab(bc_t *crumbs, subslab_t *s, int edge)
-{
-	uint8_t i = crumbs->bc_sscount;
-	if (i >= (MAX_LYRS - 1)) {
-		abort();
-	}
-	crumbs->bc_ssarr[i].ssbc_subslab = s;
-	crumbs->bc_ssarr[i].ssbc_on_edge = edge;
-	crumbs->bc_sscount++;
-}
-
-/*
- * Records the slab `s` in the bread crumb path `crumbs`.
- */
-void
-record_slab(bc_t *crumbs, slab_t *s, int edge)
-{
-	uint8_t i = crumbs->bc_sscount;
-	if (i >= MAX_LYRS) {
-		abort();
-	}
-	crumbs->bc_top.sbc_slab = s;
-	crumbs->bc_top.sbc_on_edge = edge;
-}
-
-subslab_t *
-retrieve_subslab(bc_t *crumbs, uint8_t i)
-{
-	if (i >= crumbs->bc_sscount) {
-		abort();
-	}
-	subslab_t *s = crumbs->bc_ssarr[i].ssbc_subslab;
-	return (s);
-}
-
-subslab_t *
-retrieve_top_subslab(bc_t *crumbs)
-{
-	subslab_t *s = crumbs->bc_ssarr[(crumbs->bc_sscount - 1)].ssbc_subslab;
-	return (s);
-}
-
-slab_t *
-retrieve_slab(bc_t *crumbs)
-{
-	slab_t *s = crumbs->bc_top.sbc_slab;
-	return (s);
 }
 
 /*

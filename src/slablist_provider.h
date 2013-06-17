@@ -148,6 +148,15 @@ extern "C" {
 #define	SLABLIST_DETACH_SUBLAYER_ENABLED() \
 	__dtraceenabled_slablist___detach_sublayer(0)
 #endif
+#define	SLABLIST_EXTREME_SLAB(arg0) \
+	__dtrace_slablist___extreme_slab(arg0)
+#ifndef	__sparc
+#define	SLABLIST_EXTREME_SLAB_ENABLED() \
+	__dtraceenabled_slablist___extreme_slab()
+#else
+#define	SLABLIST_EXTREME_SLAB_ENABLED() \
+	__dtraceenabled_slablist___extreme_slab(0)
+#endif
 #define	SLABLIST_FIND_BEGIN(arg0, arg1) \
 	__dtrace_slablist___find_begin(arg0, arg1)
 #ifndef	__sparc
@@ -201,15 +210,6 @@ extern "C" {
 #else
 #define	SLABLIST_FWDSHIFT_END_ENABLED() \
 	__dtraceenabled_slablist___fwdshift_end(0)
-#endif
-#define	SLABLIST_GET_EXTREME_PATH(arg0, arg1, arg2) \
-	__dtrace_slablist___get_extreme_path(arg0, arg1, arg2)
-#ifndef	__sparc
-#define	SLABLIST_GET_EXTREME_PATH_ENABLED() \
-	__dtraceenabled_slablist___get_extreme_path()
-#else
-#define	SLABLIST_GET_EXTREME_PATH_ENABLED() \
-	__dtraceenabled_slablist___get_extreme_path(0)
 #endif
 #define	SLABLIST_GET_RAND(arg0, arg1) \
 	__dtrace_slablist___get_rand(arg0, arg1)
@@ -391,6 +391,15 @@ extern "C" {
 #define	SLABLIST_SET_CRUMB_ENABLED() \
 	__dtraceenabled_slablist___set_crumb(0)
 #endif
+#define	SLABLIST_SET_USR_ELEMS(arg0) \
+	__dtrace_slablist___set_usr_elems(arg0)
+#ifndef	__sparc
+#define	SLABLIST_SET_USR_ELEMS_ENABLED() \
+	__dtraceenabled_slablist___set_usr_elems()
+#else
+#define	SLABLIST_SET_USR_ELEMS_ENABLED() \
+	__dtraceenabled_slablist___set_usr_elems(0)
+#endif
 #define	SLABLIST_SL_DEC_ELEMS(arg0) \
 	__dtrace_slablist___sl_dec_elems(arg0)
 #ifndef	__sparc
@@ -463,95 +472,95 @@ extern "C" {
 #define	SLABLIST_SL_INC_SUBSLABS_ENABLED() \
 	__dtraceenabled_slablist___sl_inc_subslabs(0)
 #endif
-#define	SLABLIST_SLAB_ADD_AFTER(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_after(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AA(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aa(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_AFTER_ENABLED() \
-	__dtraceenabled_slablist___slab_add_after()
+#define	SLABLIST_SLAB_AA_ENABLED() \
+	__dtraceenabled_slablist___slab_aa()
 #else
-#define	SLABLIST_SLAB_ADD_AFTER_ENABLED() \
-	__dtraceenabled_slablist___slab_add_after(0)
+#define	SLABLIST_SLAB_AA_ENABLED() \
+	__dtraceenabled_slablist___slab_aa(0)
 #endif
-#define	SLABLIST_SLAB_ADD_AFTER_MK(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_after_mk(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AAM(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aam(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_AFTER_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_after_mk()
+#define	SLABLIST_SLAB_AAM_ENABLED() \
+	__dtraceenabled_slablist___slab_aam()
 #else
-#define	SLABLIST_SLAB_ADD_AFTER_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_after_mk(0)
+#define	SLABLIST_SLAB_AAM_ENABLED() \
+	__dtraceenabled_slablist___slab_aam(0)
 #endif
-#define	SLABLIST_SLAB_ADD_BEFORE(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_before(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AB(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_ab(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_BEFORE_ENABLED() \
-	__dtraceenabled_slablist___slab_add_before()
+#define	SLABLIST_SLAB_AB_ENABLED() \
+	__dtraceenabled_slablist___slab_ab()
 #else
-#define	SLABLIST_SLAB_ADD_BEFORE_ENABLED() \
-	__dtraceenabled_slablist___slab_add_before(0)
+#define	SLABLIST_SLAB_AB_ENABLED() \
+	__dtraceenabled_slablist___slab_ab(0)
 #endif
-#define	SLABLIST_SLAB_ADD_BEFORE_MK(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_before_mk(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_ABM(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_abm(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_BEFORE_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_before_mk()
+#define	SLABLIST_SLAB_ABM_ENABLED() \
+	__dtraceenabled_slablist___slab_abm()
 #else
-#define	SLABLIST_SLAB_ADD_BEFORE_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_before_mk(0)
+#define	SLABLIST_SLAB_ABM_ENABLED() \
+	__dtraceenabled_slablist___slab_abm(0)
 #endif
-#define	SLABLIST_SLAB_ADD_INTO(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_into(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AI(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_ai(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_INTO_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into()
+#define	SLABLIST_SLAB_AI_ENABLED() \
+	__dtraceenabled_slablist___slab_ai()
 #else
-#define	SLABLIST_SLAB_ADD_INTO_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into(0)
+#define	SLABLIST_SLAB_AI_ENABLED() \
+	__dtraceenabled_slablist___slab_ai(0)
 #endif
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_into_spill_next(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISN(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aisn(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_next()
+#define	SLABLIST_SLAB_AISN_ENABLED() \
+	__dtraceenabled_slablist___slab_aisn()
 #else
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_next(0)
+#define	SLABLIST_SLAB_AISN_ENABLED() \
+	__dtraceenabled_slablist___slab_aisn(0)
 #endif
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_into_spill_next_mk(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISNM(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aisnm(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_next_mk()
+#define	SLABLIST_SLAB_AISNM_ENABLED() \
+	__dtraceenabled_slablist___slab_aisnm()
 #else
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_next_mk(0)
+#define	SLABLIST_SLAB_AISNM_ENABLED() \
+	__dtraceenabled_slablist___slab_aisnm(0)
 #endif
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_into_spill_prev(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISP(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aisp(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_prev()
+#define	SLABLIST_SLAB_AISP_ENABLED() \
+	__dtraceenabled_slablist___slab_aisp()
 #else
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_prev(0)
+#define	SLABLIST_SLAB_AISP_ENABLED() \
+	__dtraceenabled_slablist___slab_aisp(0)
 #endif
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK(arg0, arg1, arg2) \
-	__dtrace_slablist___slab_add_into_spill_prev_mk(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISPM(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_aispm(arg0, arg1, arg2)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_prev_mk()
+#define	SLABLIST_SLAB_AISPM_ENABLED() \
+	__dtraceenabled_slablist___slab_aispm()
 #else
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() \
-	__dtraceenabled_slablist___slab_add_into_spill_prev_mk(0)
+#define	SLABLIST_SLAB_AISPM_ENABLED() \
+	__dtraceenabled_slablist___slab_aispm(0)
 #endif
-#define	SLABLIST_SLAB_ADD_REPLACE(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___slab_add_replace(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SLAB_AR(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___slab_ar(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SLAB_ADD_REPLACE_ENABLED() \
-	__dtraceenabled_slablist___slab_add_replace()
+#define	SLABLIST_SLAB_AR_ENABLED() \
+	__dtraceenabled_slablist___slab_ar()
 #else
-#define	SLABLIST_SLAB_ADD_REPLACE_ENABLED() \
-	__dtraceenabled_slablist___slab_add_replace(0)
+#define	SLABLIST_SLAB_AR_ENABLED() \
+	__dtraceenabled_slablist___slab_ar(0)
 #endif
 #define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1) \
 	__dtrace_slablist___slab_bin_srch(arg0, arg1)
@@ -634,6 +643,15 @@ extern "C" {
 #define	SLABLIST_SLAB_RM_ENABLED() \
 	__dtraceenabled_slablist___slab_rm(0)
 #endif
+#define	SLABLIST_SLAB_SET_BELOW(arg0) \
+	__dtrace_slablist___slab_set_below(arg0)
+#ifndef	__sparc
+#define	SLABLIST_SLAB_SET_BELOW_ENABLED() \
+	__dtraceenabled_slablist___slab_set_below()
+#else
+#define	SLABLIST_SLAB_SET_BELOW_ENABLED() \
+	__dtraceenabled_slablist___slab_set_below(0)
+#endif
 #define	SLABLIST_SLAB_SET_MAX(arg0) \
 	__dtrace_slablist___slab_set_max(arg0)
 #ifndef	__sparc
@@ -715,86 +733,86 @@ extern "C" {
 #define	SLABLIST_SUBFWDSHIFT_END_ENABLED() \
 	__dtraceenabled_slablist___subfwdshift_end(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_AFTER(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_after(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AA(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aa(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_AFTER_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_after()
+#define	SLABLIST_SUBSLAB_AA_ENABLED() \
+	__dtraceenabled_slablist___subslab_aa()
 #else
-#define	SLABLIST_SUBSLAB_ADD_AFTER_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_after(0)
+#define	SLABLIST_SUBSLAB_AA_ENABLED() \
+	__dtraceenabled_slablist___subslab_aa(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_AFTER_MK(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_after_mk(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AAM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aam(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_AFTER_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_after_mk()
+#define	SLABLIST_SUBSLAB_AAM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aam()
 #else
-#define	SLABLIST_SUBSLAB_ADD_AFTER_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_after_mk(0)
+#define	SLABLIST_SUBSLAB_AAM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aam(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_BEFORE(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_before(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AB(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_ab(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_before()
+#define	SLABLIST_SUBSLAB_AB_ENABLED() \
+	__dtraceenabled_slablist___subslab_ab()
 #else
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_before(0)
+#define	SLABLIST_SUBSLAB_AB_ENABLED() \
+	__dtraceenabled_slablist___subslab_ab(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_MK(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_before_mk(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_ABM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_abm(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_before_mk()
+#define	SLABLIST_SUBSLAB_ABM_ENABLED() \
+	__dtraceenabled_slablist___subslab_abm()
 #else
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_before_mk(0)
+#define	SLABLIST_SUBSLAB_ABM_ENABLED() \
+	__dtraceenabled_slablist___subslab_abm(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_INTO(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_into(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AI(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_ai(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_INTO_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into()
+#define	SLABLIST_SUBSLAB_AI_ENABLED() \
+	__dtraceenabled_slablist___subslab_ai()
 #else
-#define	SLABLIST_SUBSLAB_ADD_INTO_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into(0)
+#define	SLABLIST_SUBSLAB_AI_ENABLED() \
+	__dtraceenabled_slablist___subslab_ai(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_into_spill_next(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISN(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aisn(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_next()
+#define	SLABLIST_SUBSLAB_AISN_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisn()
 #else
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_next(0)
+#define	SLABLIST_SUBSLAB_AISN_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisn(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_into_spill_next_mk(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISNM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aisnm(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_next_mk()
+#define	SLABLIST_SUBSLAB_AISNM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisnm()
 #else
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_next_mk(0)
+#define	SLABLIST_SUBSLAB_AISNM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisnm(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_into_spill_prev(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISP(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aisp(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_prev()
+#define	SLABLIST_SUBSLAB_AISP_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisp()
 #else
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_prev(0)
+#define	SLABLIST_SUBSLAB_AISP_ENABLED() \
+	__dtraceenabled_slablist___subslab_aisp(0)
 #endif
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___subslab_add_into_spill_prev_mk(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISPM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___subslab_aispm(arg0, arg1, arg2, arg3)
 #ifndef	__sparc
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_prev_mk()
+#define	SLABLIST_SUBSLAB_AISPM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aispm()
 #else
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() \
-	__dtraceenabled_slablist___subslab_add_into_spill_prev_mk(0)
+#define	SLABLIST_SUBSLAB_AISPM_ENABLED() \
+	__dtraceenabled_slablist___subslab_aispm(0)
 #endif
 #define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1) \
 	__dtrace_slablist___subslab_bin_srch(arg0, arg1)
@@ -886,6 +904,15 @@ extern "C" {
 #define	SLABLIST_SUBSLAB_RM_ENABLED() \
 	__dtraceenabled_slablist___subslab_rm(0)
 #endif
+#define	SLABLIST_SUBSLAB_SET_BELOW(arg0) \
+	__dtrace_slablist___subslab_set_below(arg0)
+#ifndef	__sparc
+#define	SLABLIST_SUBSLAB_SET_BELOW_ENABLED() \
+	__dtraceenabled_slablist___subslab_set_below()
+#else
+#define	SLABLIST_SUBSLAB_SET_BELOW_ENABLED() \
+	__dtraceenabled_slablist___subslab_set_below(0)
+#endif
 #define	SLABLIST_SUBSLAB_SET_MAX(arg0) \
 	__dtrace_slablist___subslab_set_max(arg0)
 #ifndef	__sparc
@@ -903,6 +930,33 @@ extern "C" {
 #else
 #define	SLABLIST_SUBSLAB_SET_MIN_ENABLED() \
 	__dtraceenabled_slablist___subslab_set_min(0)
+#endif
+#define	SLABLIST_SUM_USR_ELEMS(arg0) \
+	__dtrace_slablist___sum_usr_elems(arg0)
+#ifndef	__sparc
+#define	SLABLIST_SUM_USR_ELEMS_ENABLED() \
+	__dtraceenabled_slablist___sum_usr_elems()
+#else
+#define	SLABLIST_SUM_USR_ELEMS_ENABLED() \
+	__dtraceenabled_slablist___sum_usr_elems(0)
+#endif
+#define	SLABLIST_TEST_ADD_ELEM(arg0, arg1, arg2, arg3) \
+	__dtrace_slablist___test_add_elem(arg0, arg1, arg2, arg3)
+#ifndef	__sparc
+#define	SLABLIST_TEST_ADD_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_add_elem()
+#else
+#define	SLABLIST_TEST_ADD_ELEM_ENABLED() \
+	__dtraceenabled_slablist___test_add_elem(0)
+#endif
+#define	SLABLIST_TEST_ADD_SLAB(arg0, arg1, arg2, arg3, arg4) \
+	__dtrace_slablist___test_add_slab(arg0, arg1, arg2, arg3, arg4)
+#ifndef	__sparc
+#define	SLABLIST_TEST_ADD_SLAB_ENABLED() \
+	__dtraceenabled_slablist___test_add_slab()
+#else
+#define	SLABLIST_TEST_ADD_SLAB_ENABLED() \
+	__dtraceenabled_slablist___test_add_slab(0)
 #endif
 #define	SLABLIST_TEST_BREAD_CRUMBS(arg0, arg1) \
 	__dtrace_slablist___test_bread_crumbs(arg0, arg1)
@@ -922,23 +976,14 @@ extern "C" {
 #define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() \
 	__dtraceenabled_slablist___test_find_bubble_up(0)
 #endif
-#define	SLABLIST_TEST_INSERT_ELEM(arg0, arg1, arg2, arg3) \
-	__dtrace_slablist___test_insert_elem(arg0, arg1, arg2, arg3)
+#define	SLABLIST_TEST_GET_ELEM_POS(arg0, arg1, arg2, arg3, arg4) \
+	__dtrace_slablist___test_get_elem_pos(arg0, arg1, arg2, arg3, arg4)
 #ifndef	__sparc
-#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() \
-	__dtraceenabled_slablist___test_insert_elem()
+#define	SLABLIST_TEST_GET_ELEM_POS_ENABLED() \
+	__dtraceenabled_slablist___test_get_elem_pos()
 #else
-#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() \
-	__dtraceenabled_slablist___test_insert_elem(0)
-#endif
-#define	SLABLIST_TEST_INSERT_SLAB(arg0, arg1, arg2, arg3, arg4) \
-	__dtrace_slablist___test_insert_slab(arg0, arg1, arg2, arg3, arg4)
-#ifndef	__sparc
-#define	SLABLIST_TEST_INSERT_SLAB_ENABLED() \
-	__dtraceenabled_slablist___test_insert_slab()
-#else
-#define	SLABLIST_TEST_INSERT_SLAB_ENABLED() \
-	__dtraceenabled_slablist___test_insert_slab(0)
+#define	SLABLIST_TEST_GET_ELEM_POS_ENABLED() \
+	__dtraceenabled_slablist___test_get_elem_pos(0)
 #endif
 #define	SLABLIST_TEST_IS_SLAB_LIST(arg0) \
 	__dtrace_slablist___test_is_slab_list(arg0)
@@ -1230,6 +1275,12 @@ extern int __dtraceenabled_slablist___detach_sublayer(void);
 #else
 extern int __dtraceenabled_slablist___detach_sublayer(long);
 #endif
+extern void __dtrace_slablist___extreme_slab(slab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___extreme_slab(void);
+#else
+extern int __dtraceenabled_slablist___extreme_slab(long);
+#endif
 extern void __dtrace_slablist___find_begin(slablist_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___find_begin(void);
@@ -1265,12 +1316,6 @@ extern void __dtrace_slablist___fwdshift_end(void);
 extern int __dtraceenabled_slablist___fwdshift_end(void);
 #else
 extern int __dtraceenabled_slablist___fwdshift_end(long);
-#endif
-extern void __dtrace_slablist___get_extreme_path(ssbc_t *, sbc_t *, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___get_extreme_path(void);
-#else
-extern int __dtraceenabled_slablist___get_extreme_path(long);
 #endif
 extern void __dtrace_slablist___get_rand(slablist_t *, slablist_elem_t);
 #ifndef	__sparc
@@ -1392,6 +1437,12 @@ extern int __dtraceenabled_slablist___set_crumb(void);
 #else
 extern int __dtraceenabled_slablist___set_crumb(long);
 #endif
+extern void __dtrace_slablist___set_usr_elems(subslab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___set_usr_elems(void);
+#else
+extern int __dtraceenabled_slablist___set_usr_elems(long);
+#endif
 extern void __dtrace_slablist___sl_dec_elems(slablist_t *);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___sl_dec_elems(void);
@@ -1440,65 +1491,65 @@ extern int __dtraceenabled_slablist___sl_inc_subslabs(void);
 #else
 extern int __dtraceenabled_slablist___sl_inc_subslabs(long);
 #endif
-extern void __dtrace_slablist___slab_add_after(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aa(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_after(void);
+extern int __dtraceenabled_slablist___slab_aa(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_after(long);
+extern int __dtraceenabled_slablist___slab_aa(long);
 #endif
-extern void __dtrace_slablist___slab_add_after_mk(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aam(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_after_mk(void);
+extern int __dtraceenabled_slablist___slab_aam(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_after_mk(long);
+extern int __dtraceenabled_slablist___slab_aam(long);
 #endif
-extern void __dtrace_slablist___slab_add_before(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_ab(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_before(void);
+extern int __dtraceenabled_slablist___slab_ab(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_before(long);
+extern int __dtraceenabled_slablist___slab_ab(long);
 #endif
-extern void __dtrace_slablist___slab_add_before_mk(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_abm(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_before_mk(void);
+extern int __dtraceenabled_slablist___slab_abm(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_before_mk(long);
+extern int __dtraceenabled_slablist___slab_abm(long);
 #endif
-extern void __dtrace_slablist___slab_add_into(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_ai(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_into(void);
+extern int __dtraceenabled_slablist___slab_ai(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_into(long);
+extern int __dtraceenabled_slablist___slab_ai(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_next(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aisn(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_into_spill_next(void);
+extern int __dtraceenabled_slablist___slab_aisn(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_into_spill_next(long);
+extern int __dtraceenabled_slablist___slab_aisn(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_next_mk(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aisnm(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_into_spill_next_mk(void);
+extern int __dtraceenabled_slablist___slab_aisnm(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_into_spill_next_mk(long);
+extern int __dtraceenabled_slablist___slab_aisnm(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_prev(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aisp(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_into_spill_prev(void);
+extern int __dtraceenabled_slablist___slab_aisp(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_into_spill_prev(long);
+extern int __dtraceenabled_slablist___slab_aisp(long);
 #endif
-extern void __dtrace_slablist___slab_add_into_spill_prev_mk(slablist_t *, slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_aispm(slablist_t *, slab_t *, slablist_elem_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_into_spill_prev_mk(void);
+extern int __dtraceenabled_slablist___slab_aispm(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_into_spill_prev_mk(long);
+extern int __dtraceenabled_slablist___slab_aispm(long);
 #endif
-extern void __dtrace_slablist___slab_add_replace(slablist_t *, slab_t *, slablist_elem_t, int);
+extern void __dtrace_slablist___slab_ar(slablist_t *, slab_t *, slablist_elem_t, int);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___slab_add_replace(void);
+extern int __dtraceenabled_slablist___slab_ar(void);
 #else
-extern int __dtraceenabled_slablist___slab_add_replace(long);
+extern int __dtraceenabled_slablist___slab_ar(long);
 #endif
 extern void __dtrace_slablist___slab_bin_srch(slab_t *, slablist_elem_t);
 #ifndef	__sparc
@@ -1554,6 +1605,12 @@ extern int __dtraceenabled_slablist___slab_rm(void);
 #else
 extern int __dtraceenabled_slablist___slab_rm(long);
 #endif
+extern void __dtrace_slablist___slab_set_below(slab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___slab_set_below(void);
+#else
+extern int __dtraceenabled_slablist___slab_set_below(long);
+#endif
 extern void __dtrace_slablist___slab_set_max(slab_t *);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_set_max(void);
@@ -1608,59 +1665,59 @@ extern int __dtraceenabled_slablist___subfwdshift_end(void);
 #else
 extern int __dtraceenabled_slablist___subfwdshift_end(long);
 #endif
-extern void __dtrace_slablist___subslab_add_after(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aa(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_after(void);
+extern int __dtraceenabled_slablist___subslab_aa(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_after(long);
+extern int __dtraceenabled_slablist___subslab_aa(long);
 #endif
-extern void __dtrace_slablist___subslab_add_after_mk(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aam(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_after_mk(void);
+extern int __dtraceenabled_slablist___subslab_aam(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_after_mk(long);
+extern int __dtraceenabled_slablist___subslab_aam(long);
 #endif
-extern void __dtrace_slablist___subslab_add_before(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_ab(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_before(void);
+extern int __dtraceenabled_slablist___subslab_ab(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_before(long);
+extern int __dtraceenabled_slablist___subslab_ab(long);
 #endif
-extern void __dtrace_slablist___subslab_add_before_mk(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_abm(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_before_mk(void);
+extern int __dtraceenabled_slablist___subslab_abm(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_before_mk(long);
+extern int __dtraceenabled_slablist___subslab_abm(long);
 #endif
-extern void __dtrace_slablist___subslab_add_into(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_ai(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_into(void);
+extern int __dtraceenabled_slablist___subslab_ai(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_into(long);
+extern int __dtraceenabled_slablist___subslab_ai(long);
 #endif
-extern void __dtrace_slablist___subslab_add_into_spill_next(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aisn(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_into_spill_next(void);
+extern int __dtraceenabled_slablist___subslab_aisn(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_into_spill_next(long);
+extern int __dtraceenabled_slablist___subslab_aisn(long);
 #endif
-extern void __dtrace_slablist___subslab_add_into_spill_next_mk(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aisnm(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_into_spill_next_mk(void);
+extern int __dtraceenabled_slablist___subslab_aisnm(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_into_spill_next_mk(long);
+extern int __dtraceenabled_slablist___subslab_aisnm(long);
 #endif
-extern void __dtrace_slablist___subslab_add_into_spill_prev(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aisp(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_into_spill_prev(void);
+extern int __dtraceenabled_slablist___subslab_aisp(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_into_spill_prev(long);
+extern int __dtraceenabled_slablist___subslab_aisp(long);
 #endif
-extern void __dtrace_slablist___subslab_add_into_spill_prev_mk(slablist_t *, subslab_t *, slab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_aispm(slablist_t *, subslab_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___subslab_add_into_spill_prev_mk(void);
+extern int __dtraceenabled_slablist___subslab_aispm(void);
 #else
-extern int __dtraceenabled_slablist___subslab_add_into_spill_prev_mk(long);
+extern int __dtraceenabled_slablist___subslab_aispm(long);
 #endif
 extern void __dtrace_slablist___subslab_bin_srch(subslab_t *, subslab_t *);
 #ifndef	__sparc
@@ -1722,6 +1779,12 @@ extern int __dtraceenabled_slablist___subslab_rm(void);
 #else
 extern int __dtraceenabled_slablist___subslab_rm(long);
 #endif
+extern void __dtrace_slablist___subslab_set_below(subslab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___subslab_set_below(void);
+#else
+extern int __dtraceenabled_slablist___subslab_set_below(long);
+#endif
 extern void __dtrace_slablist___subslab_set_max(subslab_t *);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___subslab_set_max(void);
@@ -1733,6 +1796,24 @@ extern void __dtrace_slablist___subslab_set_min(subslab_t *);
 extern int __dtraceenabled_slablist___subslab_set_min(void);
 #else
 extern int __dtraceenabled_slablist___subslab_set_min(long);
+#endif
+extern void __dtrace_slablist___sum_usr_elems(uint64_t);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___sum_usr_elems(void);
+#else
+extern int __dtraceenabled_slablist___sum_usr_elems(long);
+#endif
+extern void __dtrace_slablist___test_add_elem(int, slab_t *, slablist_elem_t, int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_add_elem(void);
+#else
+extern int __dtraceenabled_slablist___test_add_elem(long);
+#endif
+extern void __dtrace_slablist___test_add_slab(int, subslab_t *, slab_t *, subslab_t *, int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_add_slab(void);
+#else
+extern int __dtraceenabled_slablist___test_add_slab(long);
 #endif
 extern void __dtrace_slablist___test_bread_crumbs(int, int);
 #ifndef	__sparc
@@ -1746,17 +1827,11 @@ extern int __dtraceenabled_slablist___test_find_bubble_up(void);
 #else
 extern int __dtraceenabled_slablist___test_find_bubble_up(long);
 #endif
-extern void __dtrace_slablist___test_insert_elem(int, slab_t *, slablist_elem_t, int);
+extern void __dtrace_slablist___test_get_elem_pos(int, slab_t *, slab_t *, uint64_t, uint64_t);
 #ifndef	__sparc
-extern int __dtraceenabled_slablist___test_insert_elem(void);
+extern int __dtraceenabled_slablist___test_get_elem_pos(void);
 #else
-extern int __dtraceenabled_slablist___test_insert_elem(long);
-#endif
-extern void __dtrace_slablist___test_insert_slab(int, subslab_t *, slab_t *, subslab_t *, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___test_insert_slab(void);
-#else
-extern int __dtraceenabled_slablist___test_insert_slab(long);
+extern int __dtraceenabled_slablist___test_get_elem_pos(long);
 #endif
 extern void __dtrace_slablist___test_is_slab_list(int);
 #ifndef	__sparc
@@ -1788,7 +1863,7 @@ extern int __dtraceenabled_slablist___test_ripple_add_slab(void);
 #else
 extern int __dtraceenabled_slablist___test_ripple_add_slab(long);
 #endif
-extern void __dtrace_slablist___test_ripple_add_subslab(int, subslab_t *, subslab_t *, void *, int);
+extern void __dtrace_slablist___test_ripple_add_subslab(int, subslab_t *, subslab_t *, slab_t *, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_ripple_add_subslab(void);
 #else
@@ -1923,6 +1998,8 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_DESTROY_ENABLED() (0)
 #define	SLABLIST_DETACH_SUBLAYER(arg0, arg1)
 #define	SLABLIST_DETACH_SUBLAYER_ENABLED() (0)
+#define	SLABLIST_EXTREME_SLAB(arg0)
+#define	SLABLIST_EXTREME_SLAB_ENABLED() (0)
 #define	SLABLIST_FIND_BEGIN(arg0, arg1)
 #define	SLABLIST_FIND_BEGIN_ENABLED() (0)
 #define	SLABLIST_FIND_END(arg0, arg1)
@@ -1935,8 +2012,6 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_FWDSHIFT_BEGIN_ENABLED() (0)
 #define	SLABLIST_FWDSHIFT_END()
 #define	SLABLIST_FWDSHIFT_END_ENABLED() (0)
-#define	SLABLIST_GET_EXTREME_PATH(arg0, arg1, arg2)
-#define	SLABLIST_GET_EXTREME_PATH_ENABLED() (0)
 #define	SLABLIST_GET_RAND(arg0, arg1)
 #define	SLABLIST_GET_RAND_ENABLED() (0)
 #define	SLABLIST_GOT_HERE(arg0)
@@ -1977,6 +2052,8 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_RIPPLE_REM_SUBSLAB_ENABLED() (0)
 #define	SLABLIST_SET_CRUMB(arg0, arg1, arg2)
 #define	SLABLIST_SET_CRUMB_ENABLED() (0)
+#define	SLABLIST_SET_USR_ELEMS(arg0)
+#define	SLABLIST_SET_USR_ELEMS_ENABLED() (0)
 #define	SLABLIST_SL_DEC_ELEMS(arg0)
 #define	SLABLIST_SL_DEC_ELEMS_ENABLED() (0)
 #define	SLABLIST_SL_DEC_SLABS(arg0)
@@ -1993,26 +2070,26 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SL_INC_SUBLAYERS_ENABLED() (0)
 #define	SLABLIST_SL_INC_SUBSLABS(arg0)
 #define	SLABLIST_SL_INC_SUBSLABS_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_AFTER(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_AFTER_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_AFTER_MK(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_AFTER_MK_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_BEFORE(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_BEFORE_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_BEFORE_MK(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_BEFORE_MK_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_INTO(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_INTO_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK(arg0, arg1, arg2)
-#define	SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() (0)
-#define	SLABLIST_SLAB_ADD_REPLACE(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SLAB_ADD_REPLACE_ENABLED() (0)
+#define	SLABLIST_SLAB_AA(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AA_ENABLED() (0)
+#define	SLABLIST_SLAB_AAM(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AAM_ENABLED() (0)
+#define	SLABLIST_SLAB_AB(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AB_ENABLED() (0)
+#define	SLABLIST_SLAB_ABM(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_ABM_ENABLED() (0)
+#define	SLABLIST_SLAB_AI(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AI_ENABLED() (0)
+#define	SLABLIST_SLAB_AISN(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISN_ENABLED() (0)
+#define	SLABLIST_SLAB_AISNM(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISNM_ENABLED() (0)
+#define	SLABLIST_SLAB_AISP(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISP_ENABLED() (0)
+#define	SLABLIST_SLAB_AISPM(arg0, arg1, arg2)
+#define	SLABLIST_SLAB_AISPM_ENABLED() (0)
+#define	SLABLIST_SLAB_AR(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SLAB_AR_ENABLED() (0)
 #define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1)
 #define	SLABLIST_SLAB_BIN_SRCH_ENABLED() (0)
 #define	SLABLIST_SLAB_DEC_ELEMS(arg0)
@@ -2031,6 +2108,8 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SLAB_MOVE_PREV_TO_MID_ENABLED() (0)
 #define	SLABLIST_SLAB_RM(arg0)
 #define	SLABLIST_SLAB_RM_ENABLED() (0)
+#define	SLABLIST_SLAB_SET_BELOW(arg0)
+#define	SLABLIST_SLAB_SET_BELOW_ENABLED() (0)
 #define	SLABLIST_SLAB_SET_MAX(arg0)
 #define	SLABLIST_SLAB_SET_MAX_ENABLED() (0)
 #define	SLABLIST_SLAB_SET_MIN(arg0)
@@ -2049,24 +2128,24 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SUBFWDSHIFT_BEGIN_ENABLED() (0)
 #define	SLABLIST_SUBFWDSHIFT_END()
 #define	SLABLIST_SUBFWDSHIFT_END_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_AFTER(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_AFTER_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_AFTER_MK(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_AFTER_MK_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_BEFORE(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_MK(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_BEFORE_MK_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_INTO(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_INTO_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK(arg0, arg1, arg2, arg3)
-#define	SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AA(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AA_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AAM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AAM_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AB(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AB_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_ABM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_ABM_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AI(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AI_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AISN(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISN_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AISNM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISNM_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AISP(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISP_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_AISPM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_SUBSLAB_AISPM_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1)
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_BIN_SRCH_TOP(arg0, arg1)
@@ -2087,18 +2166,24 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SUBSLAB_MOVE_PREV_TO_MID_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_RM(arg0)
 #define	SLABLIST_SUBSLAB_RM_ENABLED() (0)
+#define	SLABLIST_SUBSLAB_SET_BELOW(arg0)
+#define	SLABLIST_SUBSLAB_SET_BELOW_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_SET_MAX(arg0)
 #define	SLABLIST_SUBSLAB_SET_MAX_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_SET_MIN(arg0)
 #define	SLABLIST_SUBSLAB_SET_MIN_ENABLED() (0)
+#define	SLABLIST_SUM_USR_ELEMS(arg0)
+#define	SLABLIST_SUM_USR_ELEMS_ENABLED() (0)
+#define	SLABLIST_TEST_ADD_ELEM(arg0, arg1, arg2, arg3)
+#define	SLABLIST_TEST_ADD_ELEM_ENABLED() (0)
+#define	SLABLIST_TEST_ADD_SLAB(arg0, arg1, arg2, arg3, arg4)
+#define	SLABLIST_TEST_ADD_SLAB_ENABLED() (0)
 #define	SLABLIST_TEST_BREAD_CRUMBS(arg0, arg1)
 #define	SLABLIST_TEST_BREAD_CRUMBS_ENABLED() (0)
 #define	SLABLIST_TEST_FIND_BUBBLE_UP(arg0, arg1, arg2, arg3, arg4)
 #define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() (0)
-#define	SLABLIST_TEST_INSERT_ELEM(arg0, arg1, arg2, arg3)
-#define	SLABLIST_TEST_INSERT_ELEM_ENABLED() (0)
-#define	SLABLIST_TEST_INSERT_SLAB(arg0, arg1, arg2, arg3, arg4)
-#define	SLABLIST_TEST_INSERT_SLAB_ENABLED() (0)
+#define	SLABLIST_TEST_GET_ELEM_POS(arg0, arg1, arg2, arg3, arg4)
+#define	SLABLIST_TEST_GET_ELEM_POS_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SLAB_LIST(arg0)
 #define	SLABLIST_TEST_IS_SLAB_LIST_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SML_LIST(arg0)

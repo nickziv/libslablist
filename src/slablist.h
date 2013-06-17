@@ -71,7 +71,7 @@ extern uint64_t slablist_getmslabs(slablist_t *);
 extern uint64_t slablist_getelems(slablist_t *);
 extern uint64_t slablist_gettype(slablist_t *);
 extern char *slablist_getname(slablist_t *);
-extern int slablist_add(slablist_t *, slablist_elem_t, int, slablist_elem_t *);
+extern int slablist_add(slablist_t *, slablist_elem_t, int);
 extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_elem_t *);
 extern void slablist_reap(slablist_t *);
 extern slablist_elem_t slablist_get(slablist_t *, uint64_t);

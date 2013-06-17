@@ -41,6 +41,9 @@ inline int E_TEST_SLAB_MOVE_PREV_SCP = 40;
 inline int E_TEST_SLAB_MOVE_PREV_SPCP = 41;
 inline int E_TEST_SUBSLAB_ARR_MIN = 42;
 inline int E_TEST_SUBSLAB_ARR_MAX = 43;
+inline int E_TEST_SUBSLAB_USR_ELEMS_OVER = 44;
+inline int E_TEST_SUBSLAB_USR_ELEMS_UNDER = 45;
+inline int E_TEST_ELEM_POS = 46;
 
 inline string e_test_descr[int err] =
 	err == 0 ? "[ PASS ]" :
@@ -88,6 +91,9 @@ inline string e_test_descr[int err] =
 	err == E_TEST_SLAB_MOVE_PREV_SPCP ? "[slab move-prev-spcp]":
 	err == E_TEST_SUBSLAB_ARR_MIN ? "[subslab min != top slab arr's min]" :
 	err == E_TEST_SUBSLAB_ARR_MAX ? "[subslab max != top slab arr's max]" :
+	err == E_TEST_SUBSLAB_USR_ELEMS_OVER ? "[subslab usrelems too large]" :
+	err == E_TEST_SUBSLAB_USR_ELEMS_UNDER ? "[subslab usrelems too small]" :
+	err == E_TEST_ELEM_POS ? "[get_elem_pos != get_elem_pos_old]" :
 	"[[BAD ERROR CODE]]";
 
 
@@ -95,8 +101,6 @@ typedef struct slab slab_t;
 typedef struct subslab subslab_t;
 typedef struct subarr subarr_t;
 typedef struct slablist slablist_t;
-typedef struct sbc sbc_t;
-typedef struct ssbc ssbc_t;
 typedef union slablist_elem {
 	double		sle_d;
 	void		*sle_p;
@@ -114,15 +118,18 @@ typedef union slablist_elem {
  */
 typedef struct slabinfo {
 	uint16_t		si_elems;
+	uintptr_t		si_below;
 	slablist_elem_t		si_max;
 	slablist_elem_t		si_min;
 	uintptr_t		si_next;
 	uintptr_t		si_prev;
-	slablist_elem_t		si_arr[122];
+	slablist_elem_t		si_arr[121];
 } slabinfo_t;
 
 typedef struct subslabinfo {
 	uint16_t		ssi_elems;
+	uintptr_t		ssi_below;
+	uint64_t		ssi_usr_elems;
 	union slablist_elem	ssi_max;
 	union slablist_elem	ssi_min;
 	uintptr_t		ssi_next;
@@ -153,18 +160,6 @@ typedef struct slinfo {
 	uint8_t			sli_is_sublayer;
 } slinfo_t;
 
-typedef struct sbcinfo {
-	slab_t			*sbci_slab;
-	uint8_t			sbci_on_edge;
-} sbcinfo_t;
-
-typedef struct ssbcinfo {
-	subslab_t		*ssbci_subslab;
-	uint8_t			ssbci_on_edge;
-} ssbcinfo_t;
-
-
-
 /*
  * These are the structs that are used by libslablist, internally. Because they
  * may change between releases, it is important to update this file with the
@@ -173,11 +168,12 @@ typedef struct ssbcinfo {
 struct slab {
         slab_t                  *s_next;
         slab_t                  *s_prev;
+        slab_t                  *s_below;
         slablist_t              *s_list;
         uint8_t                 s_elems;
         slablist_elem_t		s_max;
         slablist_elem_t		s_min;
-        slablist_elem_t		s_arr[122];
+        slablist_elem_t		s_arr[121];
 };
 
 struct subarr {
@@ -188,8 +184,10 @@ struct subslab {
         pthread_mutex_t         ss_mutex;
         subslab_t               *ss_next;
         subslab_t               *ss_prev;
+        subslab_t               *ss_below;
         slablist_t              *ss_list;
         uint16_t                ss_elems;
+        uint64_t                ss_usr_elems;
         slablist_elem_t		ss_max;
         slablist_elem_t		ss_min;
         subarr_t                *ss_arr;
@@ -221,17 +219,6 @@ struct slablist {
         void                    (*sl_ser_list)(int, uintptr_t);
 };
 
-struct sbc {
-	slab_t			*sbc_slab;
-	uint8_t			sbc_on_edge;
-};
-
-struct ssbc {
-	subslab_t		*ssbc_subslab;
-	uint8_t			ssbc_on_edge;
-};
-
-
 /*
  * Here we translate the libslablist structures into the DTrace consumer
  * structures. In slinfo, we use copyin and `&` to get the sl_is_* members.
@@ -257,6 +244,8 @@ translator slabinfo_t < slab_t *s >
 			sizeof (uintptr_t));
 	si_prev = *(uintptr_t *)copyin((uintptr_t)&s->s_prev,
 			sizeof (uintptr_t));
+	si_below = *(uintptr_t *)copyin((uintptr_t)&s->s_below,
+			sizeof (uintptr_t));
 };
 
 #pragma D binding "1.6.1" translator
@@ -264,6 +253,8 @@ translator subslabinfo_t < subslab_t *s >
 {
 	ssi_elems = *(uint64_t *)copyin((uintptr_t)&s->ss_elems,
 			sizeof (s->ss_elems));
+	ssi_usr_elems = *(uint64_t *)copyin((uintptr_t)&s->ss_usr_elems,
+			sizeof (s->ss_usr_elems));
 	ssi_max = *(union slablist_elem *)copyin((uintptr_t)&s->ss_max,
 			sizeof (s->ss_max));
 	ssi_min = *(union slablist_elem *)copyin((uintptr_t)&s->ss_min,
@@ -273,6 +264,8 @@ translator subslabinfo_t < subslab_t *s >
 	ssi_prev = *(uintptr_t *)copyin((uintptr_t)&s->ss_prev,
 			sizeof (uintptr_t));
 	ssi_arr = *(subarr_t **)copyin((uintptr_t)&s->ss_arr,
+			sizeof (uintptr_t));
+	ssi_below = *(uintptr_t *)copyin((uintptr_t)&s->ss_below,
 			sizeof (uintptr_t));
 };
 
@@ -324,22 +317,4 @@ translator slinfo_t < slablist_t *sl >
 				sizeof (sl->sl_flags))) & 0x10;
 	sli_is_sublayer = (*(uint8_t *)copyin((uintptr_t)&sl->sl_flags,
 				sizeof (sl->sl_flags))) & 0x04;
-};
-
-#pragma D binding "1.6.1" translator
-translator ssbcinfo_t < ssbc_t *ssbc >
-{
-	ssbci_subslab = *(subslab_t **)copyin((uintptr_t)&ssbc->ssbc_subslab,
-				sizeof (slab_t *));
-	ssbci_on_edge = *(uint8_t *)copyin((uintptr_t)&ssbc->ssbc_on_edge,
-			sizeof (ssbc->ssbc_on_edge));
-};
-
-#pragma D binding "1.6.1" translator
-translator sbcinfo_t < sbc_t *sbc >
-{
-	sbci_slab = *(slab_t **)copyin((uintptr_t)&sbc->sbc_slab,
-				sizeof (slab_t *));
-	sbci_on_edge = *(uint8_t *)copyin((uintptr_t)&sbc->sbc_on_edge,
-			sizeof (sbc->sbc_on_edge));
 };

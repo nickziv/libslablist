@@ -25,7 +25,7 @@
 /*
  * Insertion Implementation
  *
- * This file implements the procedures that insert elements into Slab Lists.
+ * This file implements the procedures that add elements into Slab Lists.
  * The code in this file uses functions defined in slablist_cons.c,
  * slablist_find.c, and slablist_test.c.
  *
@@ -88,7 +88,7 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *r
 			if (sl->sl_cmp_elem(elem, sml->sml_data) < 0) {
 				/*
 				 * If `elem` is less than the data in the
-				 * current sml_node, we insert `elem` before
+				 * current sml_node, we add `elem` before
 				 * it.
 				 */
 				nsml = mk_sml_node();
@@ -109,12 +109,12 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *r
 						*repd_elem = sml->sml_data;
 					}
 					sml->sml_data = elem;
-					SLABLIST_SLAB_ADD_REPLACE(sl, NULL, elem, 1);
+					SLABLIST_SLAB_AR(sl, NULL, elem, 1);
 				} else {
 					/*
-					 * We don't want to insert duplicates.
+					 * We don't want to add duplicates.
 					 */
-					SLABLIST_SLAB_ADD_REPLACE(sl, NULL, elem, 0);
+					SLABLIST_SLAB_AR(sl, NULL, elem, 0);
 					ret = SL_EDUP;
 					goto end;
 				}
@@ -181,22 +181,22 @@ end:;
 }
 
 /*
- * Inserts an `elem` to insert into slab `s` at index `i`.
+ * Inserts an `elem` to add into slab `s` at index `i`.
  */
 static void
-insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
+add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 {
 	/*
-	 * Test the consistency of the slab before insertion.
+	 * Test the consistency of the slab before addition.
 	 */
-	if (SLABLIST_TEST_INSERT_ELEM_ENABLED()) {
-		int f = test_insert_elem(s, elem, i);
+	if (SLABLIST_TEST_ADD_ELEM_ENABLED()) {
+		int f = test_add_elem(s, elem, i);
 		if (f) {
-			SLABLIST_TEST_INSERT_ELEM(f, s, elem, i);
+			SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
 		}
 	}
 
-	int ip = 0;		/* insert-point */
+	int ip = 0;		/* add-point */
 	slablist_t *sl;
 	sl = s->s_list;
 
@@ -209,7 +209,7 @@ insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 	SLABLIST_FWDSHIFT_END();
 
 	/*
-	 * If we inserted at the beginning of the slab, we have to change the
+	 * If we added at the beginning of the slab, we have to change the
 	 * minimum.
 	 */
 	if (ip == 0) {
@@ -218,7 +218,7 @@ insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 	}
 
 	/*
-	 * If we inserted at the end of the slab, we have to change the
+	 * If we added at the end of the slab, we have to change the
 	 * maximum.
 	 */
 	if (ip == (s->s_elems)) {
@@ -228,7 +228,7 @@ insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 
 	if (s->s_elems < SELEM_MAX) {
 		/*
-		 * Sometimes we are inserting into a slab that is full, with
+		 * Sometimes we are adding into a slab that is full, with
 		 * the intention of moving the last element into the next slab
 		 * (which is not full). In these situations, we don't want to
 		 * increment anything, as all the neccessary increments will
@@ -240,7 +240,7 @@ insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 	} else {
 		/*
 		 * We've over-written the old max (with the intention of
-		 * inserting it into the next slab). We have to update the max,
+		 * adding it into the next slab). We have to update the max,
 		 * as a result.
 		 */
 		s->s_max = s->s_arr[(SELEM_MAX - 1)];
@@ -249,33 +249,33 @@ insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 		SLABLIST_SLAB_SET_MIN(s);
 	}
 
-	if (SLABLIST_TEST_INSERT_ELEM_ENABLED()) {
+	if (SLABLIST_TEST_ADD_ELEM_ENABLED()) {
 		int f = test_slab_extrema(s);
 		if (f) {
-			SLABLIST_TEST_INSERT_ELEM(f, s, elem, i);
+			SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
 		}
 	}
 }
 
 /*
- * This function inserts either slab `s1` or subslab `s2` into subslab `s`, at
+ * This function adds either slab `s1` or subslab `s2` into subslab `s`, at
  * index `i`.
  */
 static void
-insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
+add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 {
 	/*
-	 * Test the consistency of the slab before insertion.
+	 * Test the consistency of the slab before addition.
 	 */
-	if (SLABLIST_TEST_INSERT_SLAB_ENABLED() && s1 != NULL) {
-		int f = test_insert_slab(s, s1, s2, i);
+	if (SLABLIST_TEST_ADD_SLAB_ENABLED() && s1 != NULL) {
+		int f = test_add_slab(s, s1, s2, i);
 		if (f) {
-			SLABLIST_TEST_INSERT_SLAB(f, s, s1, s2, i);
+			SLABLIST_TEST_ADD_SLAB(f, s, s1, s2, i);
 		}
 	}
 
 
-	int ip = 0;		/* insert-point */
+	int ip = 0;		/* add-point */
 	slablist_t *sl;
 	sl = s->ss_list;
 	slab_t *stmp_lst;
@@ -294,10 +294,14 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	slablist_elem_t min;
 
 	if (s1 != NULL) {
+		s1->s_below = s;
+		SLABLIST_SLAB_SET_BELOW(s1);
 		SET_SUBSLAB_ELEM(s, s1, i);
 		max = s1->s_max;
 		min = s1->s_min;
 	} else {
+		s2->ss_below = s;
+		SLABLIST_SUBSLAB_SET_BELOW(s2);
 		SET_SUBSLAB_ELEM(s, s2, i);
 		max = s2->ss_max;
 		min = s2->ss_min;
@@ -306,7 +310,7 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	SLABLIST_SUBFWDSHIFT_END();
 
 	/*
-	 * If we inserted at the beginning of the slab, we have to change the
+	 * If we added at the beginning of the slab, we have to change the
 	 * minimum.
 	 */
 	if (ip == 0) {
@@ -315,7 +319,7 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	}
 
 	/*
-	 * If we inserted at the end of the slab, we have to change the
+	 * If we added at the end of the slab, we have to change the
 	 * maximum.
 	 */
 	if (ip == (s->ss_elems)) {
@@ -325,7 +329,7 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 
 	if (s->ss_elems < SUBELEM_MAX) {
 		/*
-		 * Sometimes we are inserting into a slab that is full, with
+		 * Sometimes we are adding into a slab that is full, with
 		 * the intention of moving the last element into the next slab
 		 * (which is not full). In these situations, we don't want to
 		 * increment anything, as all the neccessary increments will
@@ -337,7 +341,7 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	} else {
 		/*
 		 * We've over-written the old max (with the intention of
-		 * inserting it into the next slab). We have to update the max,
+		 * adding it into the next slab). We have to update the max,
 		 * as a result.
 		 */
 		if (s1 != NULL) {
@@ -355,11 +359,11 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 		SLABLIST_SUBSLAB_SET_MIN(s);
 	}
 
-	if (SLABLIST_TEST_INSERT_SLAB_ENABLED()) {
+	if (SLABLIST_TEST_ADD_SLAB_ENABLED()) {
 		int f = test_subslab_ref(s);
-		SLABLIST_TEST_INSERT_SLAB(f, s, s1, s2, i);
+		SLABLIST_TEST_ADD_SLAB(f, s, s1, s2, i);
 		f = test_subslab_extrema(s);
-		SLABLIST_TEST_INSERT_SLAB(f, s, s1, s2, i);
+		SLABLIST_TEST_ADD_SLAB(f, s, s1, s2, i);
 	}
 }
 
@@ -368,7 +372,7 @@ insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
  * into the slab next to `s`.
  */
 static void
-insert_spill_next(slab_t *s, slablist_elem_t elem)
+addsn(slab_t *s, slablist_elem_t elem)
 {
 	slablist_elem_t lst_elem = s->s_arr[(s->s_elems - 1)];
 	slablist_elem_t b4_lst_elem = s->s_arr[(s->s_elems - 2)];
@@ -380,16 +384,32 @@ insert_spill_next(slab_t *s, slablist_elem_t elem)
 	SLABLIST_SLAB_SET_MAX(s);
 
 	int q = slab_bin_srch(elem, s);
-	insert_elem(snx, lst_elem, 0);
-	insert_elem(s, elem, q);
+	add_elem(snx, lst_elem, 0);
+	add_elem(s, elem, q);
 }
+
+/*
+ * This function increments the ss_usr_elems of all of the subslabs below
+ * `found`.
+ */
+static void
+ripple_inc_usr_elems(subslab_t *found)
+{
+	subslab_t *q = found;
+	while (q != NULL) {
+		q->ss_usr_elems++;
+		SLABLIST_SET_USR_ELEMS(q);
+		q = q->ss_below;
+	}
+}
+
 
 /*
  * Inserts slab `s1` or subslab `s2` into `s`, which is a full subslab, but
  * moves the maximum element into the subslab next to `s`.
  */
-static void
-sub_insert_spill_next(subslab_t *s, slab_t *s1, subslab_t *s2)
+static subslab_t *
+sub_addsn(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
 	uint16_t lst_index = s->ss_elems - 1;
 	uint16_t b4_lst_index = s->ss_elems - 2;
@@ -397,29 +417,48 @@ sub_insert_spill_next(subslab_t *s, slab_t *s1, subslab_t *s2)
 	slab_t *b4_lst_slab = NULL;
 	subslab_t *lst_subslab = NULL;
 	subslab_t *b4_lst_subslab = NULL;
+	uint64_t diff = 0;
 	if (s1 != NULL) {
 		lst_slab = GET_SUBSLAB_ELEM(s, lst_index);
 		b4_lst_slab = GET_SUBSLAB_ELEM(s, b4_lst_index);
 		s->ss_max = b4_lst_slab->s_max;
+		diff = lst_slab->s_elems;
 	} else {
 		lst_subslab = GET_SUBSLAB_ELEM(s, lst_index);
 		b4_lst_subslab = GET_SUBSLAB_ELEM(s, b4_lst_index);
 		s->ss_max = b4_lst_subslab->ss_max;
+		diff = lst_subslab->ss_usr_elems;
 	}
 	SLABLIST_SUBSLAB_SET_MAX(s);
 	subslab_t *snx = s->ss_next;
 	s->ss_elems--;
 	SLABLIST_SUBSLAB_DEC_ELEMS(s);
 
-	int q = 0;
+	int k = 0;
 	if (s1 != NULL) {
-		q = subslab_bin_srch_top(s1->s_max, s);
+		k = subslab_bin_srch_top(s1->s_max, s);
 	} else {
-		q = subslab_bin_srch(s2->ss_max, s);
+		k = subslab_bin_srch(s2->ss_max, s);
 	}
 
-	insert_slab(snx, lst_slab, lst_subslab, 0);
-	insert_slab(s, s1, s2, q);
+	add_slab(snx, lst_slab, lst_subslab, 0);
+	add_slab(s, s1, s2, k);
+	subslab_t *p = s;
+	subslab_t *q = snx;
+	/* XXX this may be redundant with the last loop */
+	if (0 && p == q && s1 != NULL) {
+		ripple_inc_usr_elems(s1->s_below);
+		return (NULL);
+	}
+	while (p != q) {
+		p->ss_usr_elems -= diff;
+		SLABLIST_SET_USR_ELEMS(p);
+		q->ss_usr_elems += diff;
+		SLABLIST_SET_USR_ELEMS(q);
+		p = p->ss_below;
+		q = q->ss_below;
+	}
+	return (p);
 }
 
 /*
@@ -427,7 +466,7 @@ sub_insert_spill_next(subslab_t *s, slab_t *s1, subslab_t *s2)
  * into the slab previous to `s`.
  */
 static void
-insert_spill_prev(slab_t *s, slablist_elem_t elem)
+addsp(slab_t *s, slablist_elem_t elem)
 {
 	/*
 	 * Whenever this function gets called we assume the `s` is FULL.
@@ -450,16 +489,16 @@ insert_spill_prev(slab_t *s, slablist_elem_t elem)
 	}
 	int q = slab_bin_srch(elem, s);
 
-	insert_elem(spv, fst_elem, j);
-	insert_elem(s, elem, q);
+	add_elem(spv, fst_elem, j);
+	add_elem(s, elem, q);
 }
 
 /*
  * Inserts slab `s1` or subslab `s2` into `s`, which is a full slab, but moves
  * the minimum element into the slab previous to `s`.
  */
-static void
-sub_insert_spill_prev(subslab_t *s, slab_t *s1, subslab_t *s2)
+static subslab_t *
+sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
 	/*
 	 * Whenever this function gets called we assume the `s` is FULL.
@@ -488,12 +527,15 @@ sub_insert_spill_prev(subslab_t *s, slab_t *s1, subslab_t *s2)
 	s->ss_elems--;
 	SLABLIST_SUBSLAB_DEC_ELEMS(s);
 
+	uint64_t diff = 0;
 	if (s1 != NULL) {
 		new_fst_slab = GET_SUBSLAB_ELEM(s, 0);
 		s->ss_min = new_fst_slab->s_min;
+		diff = fst_slab->s_elems;
 	} else {
 		new_fst_subslab = GET_SUBSLAB_ELEM(s, 0);
 		s->ss_min = new_fst_subslab->ss_min;
+		diff = fst_subslab->ss_usr_elems;
 	}
 	SLABLIST_SUBSLAB_SET_MIN(s);
 
@@ -505,38 +547,241 @@ sub_insert_spill_prev(subslab_t *s, slab_t *s1, subslab_t *s2)
 			j = subslab_bin_srch(fst_subslab->ss_max, spv);
 		}
 	}
-	int q;
+	int k;
 	if (s1 != NULL) {
-		q = subslab_bin_srch_top(s1->s_max, s);
+		k = subslab_bin_srch_top(s1->s_max, s);
 	} else {
-		q = subslab_bin_srch(s2->ss_max, s);
+		k = subslab_bin_srch(s2->ss_max, s);
 	}
 
-	insert_slab(spv, fst_slab, fst_subslab, j);
-	insert_slab(s, s1, s2, q);
+	add_slab(spv, fst_slab, fst_subslab, j);
+	add_slab(s, s1, s2, k);
+	subslab_t *p = s;
+	subslab_t *q = spv;
+	if (0 && p == q && s1 != NULL) {
+		ripple_inc_usr_elems(s1->s_below);
+		return (NULL);
+	}
+	while (p != q) {
+		p->ss_usr_elems -= diff;
+		SLABLIST_SET_USR_ELEMS(p);
+		q->ss_usr_elems += diff;
+		SLABLIST_SET_USR_ELEMS(q);
+		p = p->ss_below;
+		q = q->ss_below;
+	}
+	return (p);
+}
+
+void
+subslab_update_extrema(subslab_t *p)
+{
+	int last = p->ss_elems - 1;
+	subslab_t *ssf;
+	subslab_t *ssl;
+	/* update extrema of `p` and `q` */
+	if (p->ss_list->sl_layer == 1) {
+		slab_t *f = GET_SUBSLAB_ELEM(p, 0);
+		slab_t *l = GET_SUBSLAB_ELEM(p, last);
+		p->ss_min = f->s_min;
+		p->ss_max = l->s_max;
+		SLABLIST_SUBSLAB_SET_MIN(p);
+		SLABLIST_SUBSLAB_SET_MAX(p);
+	} else {
+		ssf = GET_SUBSLAB_ELEM(p, 0);
+		ssl = GET_SUBSLAB_ELEM(p, last);
+		p->ss_min = ssf->ss_min;
+		p->ss_max = ssl->ss_max;
+		SLABLIST_SUBSLAB_SET_MIN(p);
+		SLABLIST_SUBSLAB_SET_MAX(p);
+	}
+}
+
+static void
+ripple_update_extrema(slablist_t *sl, subslab_t *p)
+{
+	while (p != NULL) {
+		subslab_update_extrema(p);
+		if (p->ss_next != NULL) {
+			subslab_update_extrema(p->ss_next);
+		}
+		if (p->ss_prev != NULL) {
+			subslab_update_extrema(p->ss_prev);
+		}
+		p = p->ss_below;
+	}
+}
+
+
+/* EASY */
+void
+ripple_ai(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	subslab_t *p = s->s_below;
+	ripple_update_extrema(s->s_list, p);
+	ripple_inc_usr_elems(s->s_below);
+}
+
+void
+ripple_aa(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	subslab_t *p = s->s_below;
+	ripple_update_extrema(s->s_list, p);
+	ripple_inc_usr_elems(s->s_next->s_below);
+}
+
+void
+ripple_ab(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	subslab_t *p = s->s_below;
+	ripple_update_extrema(s->s_list, p);
+	ripple_inc_usr_elems(s->s_prev->s_below);
+}
+
+void
+ripple_aisn(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	subslab_t *p = s->s_next->s_below;
+	ripple_update_extrema(s->s_list, p);
+	ripple_inc_usr_elems(s->s_next->s_below);
+}
+
+void
+ripple_aisp(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	subslab_t *p = s->s_prev->s_below;
+	ripple_update_extrema(s->s_list, p);
+	ripple_inc_usr_elems(s->s_prev->s_below);
+}
+
+
+/* fwd declaration for ripple funcs below */
+static add_ctx_t *subslab_gen_add(int, slab_t *, subslab_t *, subslab_t *);
+
+void
+ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
+{
+	add_ctx_t *t = NULL;
+	int status;
+	int broke = 0;
+	int skip_loop = 1;
+	/*
+	 * We update the extrema.
+	 */
+	ripple_update_extrema(s->s_list, p);
+	if (n->s_below != NULL) {
+		status = sub_is_elem_in_range(n->s_min, n->s_below);
+		t = subslab_gen_add(status, n, nn, n->s_below);
+		while (t->ac_subslab_new != NULL) {
+			skip_loop = 0;
+			nn = t->ac_subslab_new;
+			rm_add_ctx(t);
+			/*
+			 * If there is no subslab, there is no point in
+			 * continueing.
+			 */
+			if (nn->ss_below == NULL) {
+				broke = 1;
+				break;
+			}
+			status = sub_is_elem_in_range(nn->ss_min, nn->ss_below);
+			t = subslab_gen_add(status, NULL, nn, nn->ss_below);
+		}
+		/*
+		 * We update the extrema again (who knows what may have changed).
+		 */
+		ripple_update_extrema(s->s_list, p);
+		ripple_inc_usr_elems(n->s_below);
+		if (!broke || skip_loop) {
+			rm_add_ctx(t);
+		}
+	}
+}
+
+void
+ripple_aam(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	slab_t *n = s->s_next; /* new slab */
+	subslab_t *nn = NULL; /* new subslab */
+	subslab_t *p = s->s_next->s_below;
+	ripple_common(s, p, n, nn);
+}
+
+void
+ripple_abm(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	slab_t *n = s->s_prev; /* new slab */
+	subslab_t *nn = NULL; /* new subslab */
+	subslab_t *p = s->s_prev->s_below;
+	ripple_common(s, p, n, nn);
+}
+
+void
+ripple_aisnm(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	slab_t *n = s->s_next; /* new slab */
+	subslab_t *nn = NULL; /* new subslab */
+	subslab_t *p = s->s_next->s_below;
+	ripple_common(s, p, n, nn);
+}
+
+void
+ripple_aispm(slab_t *s)
+{
+	if (s->s_below == NULL) {
+		return;
+	}
+	slab_t *n = s->s_prev; /* new slab */
+	subslab_t *nn = NULL; /* new subslab */
+	subslab_t *p = s->s_prev->s_below;
+	ripple_common(s, p, n, nn);
 }
 
 /*
- * Assuming that `elem` is in the range of `s`, we insert into `s`. If `rep` is
+ * Assuming that `elem` is in the range of `s`, we add into `s`. If `rep` is
  * not 0, we can replace an elem that has the same key as `elem` with `elem`.
  * The replaced elem is saved in `repd_elem`. If we can't replace but find a
  * duplicate we notify the caller, by setting `edup`.
  */
-static slab_t *
-gen_insert_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep,
-	slablist_elem_t *repd_elem, int *edup)
+static add_ctx_t *
+gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 {
 	/*
-	 * If we are inserting into a subslab, then we are inserting an
+	 * If we are adding into a subslab, then we are adding an
 	 * `elem` that is a pointer to a slab.
 	 */
 	slab_t *ns = NULL;
+	add_ctx_t *ctx = mk_add_ctx();
 
 	int i = 0;
 	/*
 	 * If the slab `s` is not full, or if there is the possibility of
-	 * replacing an existing element we try to insert into the slab. On the
-	 * other hand, if the slab is full, we have to try to insert the elem
+	 * replacing an existing element we try to add into the slab. On the
+	 * other hand, if the slab is full, we have to try to add the elem
 	 * into the slab `s` while moving elems between the adjacent slabs.
 	 */
 	if (s->s_elems < SELEM_MAX || rep) {
@@ -548,69 +793,82 @@ gen_insert_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep,
 			 * range can it be a duplicate.
 			 */
 			if (rep) {
-				if (repd_elem != NULL) {
-					*repd_elem = s->s_arr[i];
-				}
+				ctx->ac_repd_elem = s->s_arr[i];
+				ctx->ac_how = AC_HOW_INTO;
 				s->s_arr[i] = elem;
-				SLABLIST_SLAB_ADD_REPLACE(sl, NULL, elem, 1);
-				return (NULL);
+				SLABLIST_SLAB_AR(sl, NULL, elem, 1);
+				return (ctx);
 			} else {
-				SLABLIST_SLAB_ADD_REPLACE(sl, NULL, elem, 0);
-				*edup = SL_EDUP;
-				return (NULL);
+				SLABLIST_SLAB_AR(sl, NULL, elem, 0);
+				ctx->ac_how = AC_HOW_EDUP;
+				return (ctx);
 			}
 		}
-		SLABLIST_SLAB_ADD_INTO(sl, s, elem);
-		insert_elem(s, elem, i);
+		SLABLIST_SLAB_AI(sl, s, elem);
+		add_elem(s, elem, i);
+		ripple_ai(s);
+		ctx->ac_how = AC_HOW_INTO;
 
 	} else {
 
 		slab_t *snx = s->s_next;
 		slab_t *spv = s->s_prev;
 		if (snx != NULL && snx->s_elems < SELEM_MAX) {
-			SLABLIST_SLAB_ADD_INTO_SPILL_NEXT(sl, s, elem);
-			insert_spill_next(s, elem);
-			return (ns);
+			SLABLIST_SLAB_AISN(sl, s, elem);
+			addsn(s, elem);
+			ripple_aisn(s);
+			ctx->ac_how = AC_HOW_SP_NX;
+			return (ctx);
 		}
 		if (spv != NULL && spv->s_elems < SELEM_MAX) {
-			SLABLIST_SLAB_ADD_INTO_SPILL_PREV(sl, s, elem);
-			insert_spill_prev(s, elem);
-			return (ns);
+			SLABLIST_SLAB_AISP(sl, s, elem);
+			addsp(s, elem);
+			ripple_aisp(s);
+			ctx->ac_how = AC_HOW_SP_PV;
+			return (ctx);
 		}
 		if (snx == NULL || snx->s_elems == SELEM_MAX) {
-			SLABLIST_SLAB_ADD_INTO_SPILL_NEXT_MK(sl, s, elem);
+			SLABLIST_SLAB_AISNM(sl, s, elem);
 			ns = mk_slab();
 			SLABLIST_SLAB_MK(sl);
 			link_slab(ns, s, SLAB_LINK_AFTER);
-			insert_spill_next(s, elem);
-			return (ns);
+			addsn(s, elem);
+			ripple_aisnm(s);
+			ctx->ac_how = AC_HOW_SP_NX;
+			ctx->ac_slab_new = ns;
+			return (ctx);
 		}
 		if (spv == NULL || spv->s_elems == SELEM_MAX) {
-			SLABLIST_SLAB_ADD_INTO_SPILL_PREV_MK(sl, s, elem);
+			SLABLIST_SLAB_AISPM(sl, s, elem);
 			ns = mk_slab();
 			SLABLIST_SLAB_MK(sl);
 			link_slab(ns, s, SLAB_LINK_BEFORE);
-			insert_spill_prev(s, elem);
-			return (ns);
+			addsp(s, elem);
+			ripple_aispm(s);
+			ctx->ac_how = AC_HOW_SP_PV;
+			ctx->ac_slab_new = ns;
+			return (ctx);
 		}
 	}
-	return (NULL);
+
+	return (ctx);
 }
 
-static subslab_t *
-sub_gen_insert_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
+static add_ctx_t *
+sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	/*
-	 * If we are inserting into a subslab, then we are inserting an
+	 * If we are adding into a subslab, then we are adding an
 	 * `elem` that is a pointer to a slab.
 	 */
 	subslab_t *ns = NULL;
+	add_ctx_t *ctx = mk_add_ctx();
 
 	int i = 0;
 	/*
 	 * If the slab `s` is not full, or if there is the possibility of
-	 * replacing an existing element we try to insert into the slab. On the
-	 * other hand, if the slab is full, we have to try to insert the elem
+	 * replacing an existing element we try to add into the slab. On the
+	 * other hand, if the slab is full, we have to try to add the elem
 	 * into the slab `s` while moving elems between the adjacent slabs.
 	 */
 	if (s->ss_elems < SUBELEM_MAX) {
@@ -621,97 +879,120 @@ sub_gen_insert_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 			i = subslab_bin_srch(s2->ss_max, s);
 		}
 
-		SLABLIST_SUBSLAB_ADD_INTO(sl, s, s1, s2);
-		insert_slab(s, s1, s2, i);
-
+		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
+		add_slab(s, s1, s2, i);
+		ctx->ac_how = AC_HOW_INTO;
 	} else {
 
 		subslab_t *snx = s->ss_next;
 		subslab_t *spv = s->ss_prev;
+		subslab_t *common = NULL;
 		if (snx != NULL && snx->ss_elems < SUBELEM_MAX) {
-			SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT(sl, s, s1, s2);
-			sub_insert_spill_next(s, s1, s2);
-			return (ns);
+			SLABLIST_SUBSLAB_AISN(sl, s, s1, s2);
+			common = sub_addsn(s, s1, s2, 0);
+			ctx->ac_how = AC_HOW_SP_NX;
+			ctx->ac_subslab_common = common;
+			return (ctx);
 		}
 		if (spv != NULL && spv->ss_elems < SUBELEM_MAX) {
-			SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV(sl, s, s1, s2);
-			sub_insert_spill_prev(s, s1, s2);
-			return (ns);
+			SLABLIST_SUBSLAB_AISP(sl, s, s1, s2);
+			common = sub_addsp(s, s1, s2, 0);
+			ctx->ac_how = AC_HOW_SP_PV;
+			ctx->ac_subslab_common = common;
+			return (ctx);
 		}
 		if (snx == NULL || snx->ss_elems == SUBELEM_MAX) {
-			SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT_MK(sl, s, s1, s2);
+			SLABLIST_SUBSLAB_AISNM(sl, s, s1, s2);
 			ns = mk_subslab();
 			ns->ss_arr = mk_subarr();
 			SLABLIST_SUBSLAB_MK(sl);
 			link_subslab(ns, s, SLAB_LINK_AFTER);
-			sub_insert_spill_next(s, s1, s2);
-			return (ns);
+			common = sub_addsn(s, s1, s2, 1);
+			ctx->ac_how = AC_HOW_SP_NX;
+			ctx->ac_subslab_new = ns;
+			ctx->ac_subslab_common = common;
+			return (ctx);
 		}
 		if (spv == NULL || spv->ss_elems == SUBELEM_MAX) {
-			SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV_MK(sl, s, s1, s2);
+			SLABLIST_SUBSLAB_AISPM(sl, s, s1, s2);
 			ns = mk_subslab();
 			ns->ss_arr = mk_subarr();
 			SLABLIST_SUBSLAB_MK(sl);
 			link_subslab(ns, s, SLAB_LINK_BEFORE);
-			sub_insert_spill_prev(s, s1, s2);
-			return (ns);
+			common = sub_addsp(s, s1, s2, 1);
+			ctx->ac_how = AC_HOW_SP_PV;
+			ctx->ac_subslab_new = ns;
+			ctx->ac_subslab_common = common;
+			return (ctx);
 		}
 	}
-	return (NULL);
+	return (ctx);
 }
 
 /*
  * Assuming that `elem` is under the range of `s`, we have the following
- * possible way of inserting `elem` into the slablist.
+ * possible way of adding `elem` into the slablist.
  *
  * We can:
  *
  *	Insert into `s` if not full.
  *	Insert into `s->s_prev` if not full.
- *	Spill max of `s` into next, insert into `s`.
- *	Create new previous slab, insert into that.
+ *	Spill max of `s` into next, add into `s`.
+ *	Create new previous slab, add into that.
  */
-static slab_t *
-gen_insert_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
+static add_ctx_t *
+gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 {
 	/*
-	 * If we are inserting into a subslab, then we are inserting an
+	 * If we are adding into a subslab, then we are adding an
 	 * `elem` that is a pointer to a slab.
 	 */
 	int i = slab_bin_srch(elem, s);
 	slab_t *ns = NULL;
+	add_ctx_t *ctx = mk_add_ctx();
 	if (s->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_INTO(sl, s, elem);
-		insert_elem(s, elem, i);
-		return (ns);
+		SLABLIST_SLAB_AI(sl, s, elem);
+		add_elem(s, elem, i);
+		ripple_ai(s);
+		ctx->ac_how = AC_HOW_INTO;
+		return (ctx);
 	}
 	if (s->s_prev != NULL && s->s_prev->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_BEFORE(sl, s, elem);
+		SLABLIST_SLAB_AB(sl, s, elem);
 		i = slab_bin_srch(elem, s->s_prev);
-		insert_elem(s->s_prev, elem, i);
-		return (ns);
+		add_elem(s->s_prev, elem, i);
+		ripple_ab(s);
+		ctx->ac_how = AC_HOW_BEFORE;
+		return (ctx);
 	}
 	if (s->s_next != NULL && s->s_next->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_INTO_SPILL_NEXT(sl, s, elem);
-		insert_spill_next(s, elem);
-		return (ns);
+		SLABLIST_SLAB_AISN(sl, s, elem);
+		addsn(s, elem);
+		ripple_aisn(s);
+		ctx->ac_how = AC_HOW_SP_NX;
+		return (ctx);
 	}
-	SLABLIST_SLAB_ADD_BEFORE_MK(sl, s, elem);
+	SLABLIST_SLAB_ABM(sl, s, elem);
 	ns = mk_slab();
 	SLABLIST_SLAB_MK(sl);
 	link_slab(ns, s, SLAB_LINK_BEFORE);
-	insert_elem(s->s_prev, elem, 0);
-	return (ns);
+	add_elem(s->s_prev, elem, 0);
+	ripple_abm(s);
+	ctx->ac_how = AC_HOW_BEFORE;
+	ctx->ac_slab_new = ns;
+	return (ctx);
 }
 
-static subslab_t *
-sub_gen_insert_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
+static add_ctx_t *
+sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	/*
-	 * If we are inserting into a subslab, then we are inserting a slab or
+	 * If we are adding into a subslab, then we are adding a slab or
 	 * subslab pointer.
 	 */
 	int i;
+	add_ctx_t *ctx = mk_add_ctx();
+
 	if (s1 != NULL) {
 		i = subslab_bin_srch_top(s1->s_max, s);
 	} else {
@@ -719,78 +1000,98 @@ sub_gen_insert_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	}
 	subslab_t *ns = NULL;
 	if (s->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_INTO(sl, s, s1, s2);
-		insert_slab(s, s1, s2, i);
-		return (ns);
+		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
+		add_slab(s, s1, s2, i);
+		ctx->ac_how = AC_HOW_INTO;
+		return (ctx);
 	}
 	if (s->ss_prev != NULL && s->ss_prev->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_BEFORE(sl, s, s1, s2);
+		SLABLIST_SUBSLAB_AB(sl, s, s1, s2);
 		if (s1 != NULL) {
 			i = subslab_bin_srch_top(s1->s_max, s->ss_prev);
 		} else {
 			i = subslab_bin_srch(s2->ss_max, s->ss_prev);
 		}
-		insert_slab(s->ss_prev, s1, s2, i);
-		return (ns);
+		add_slab(s->ss_prev, s1, s2, i);
+		ctx->ac_how = AC_HOW_BEFORE;
+		return (ctx);
 	}
+	subslab_t *common = NULL;
 	if (s->ss_next != NULL && s->ss_next->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_INTO_SPILL_NEXT(sl, s, s1, s2);
-		sub_insert_spill_next(s, s1, s2);
-		return (ns);
+		SLABLIST_SUBSLAB_AISN(sl, s, s1, s2);
+		common = sub_addsn(s, s1, s2, 0);
+		ctx->ac_how = AC_HOW_SP_NX;
+		ctx->ac_subslab_common = common;
+		return (ctx);
 	}
-	SLABLIST_SUBSLAB_ADD_BEFORE_MK(sl, s, s1, s2);
+	SLABLIST_SUBSLAB_ABM(sl, s, s1, s2);
 	ns = mk_subslab();
 	ns->ss_arr = mk_subarr();
 	SLABLIST_SUBSLAB_MK(sl);
 	link_subslab(ns, s, SLAB_LINK_BEFORE);
-	insert_slab(s->ss_prev, s1, s2, 0);
-	return (ns);
+	add_slab(s->ss_prev, s1, s2, 0);
+	ctx->ac_how = AC_HOW_BEFORE;
+	ctx->ac_subslab_new = ns;
+	return (ctx);
 }
 
 /*
  * Assuming that `elem` is under the range of `s`, we have the following
- * possible way of inserting `elem` into the slablist.
+ * possible way of adding `elem` into the slablist.
  *
  * We can:
  *
  *	Insert into `s` if not full.
  *	Insert into `s->s_next` if not full.
- *	Spill min of `s` into prev, insert into `s`.
- *	Create new next slab, insert into that.
+ *	Spill min of `s` into prev, add into `s`.
+ *	Create new next slab, add into that.
  */
-static slab_t *
-gen_insert_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
+static add_ctx_t *
+gen_add_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 {
 	int i = slab_bin_srch(elem, s);
 	slab_t *ns = NULL;
+	add_ctx_t *ctx = mk_add_ctx();
+
 	if (s->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_INTO(sl, s, elem);
-		insert_elem(s, elem, i);
-		return (ns);
+		SLABLIST_SLAB_AI(sl, s, elem);
+		add_elem(s, elem, i);
+		ripple_ai(s);
+		ctx->ac_how = AC_HOW_INTO;
+		return (ctx);
 	}
 	if (s->s_next != NULL && s->s_next->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_AFTER(sl, s, elem);
+		SLABLIST_SLAB_AA(sl, s, elem);
 		i = slab_bin_srch(elem, s->s_next);
-		insert_elem(s->s_next, elem, i);
-		return (ns);
+		add_elem(s->s_next, elem, i);
+		ripple_aa(s);
+		ctx->ac_how = AC_HOW_AFTER;
+		return (ctx);
 	}
 	if (s->s_prev != NULL && s->s_prev->s_elems < SELEM_MAX) {
-		SLABLIST_SLAB_ADD_INTO_SPILL_PREV(sl, s, elem);
-		insert_spill_prev(s, elem);
-		return (ns);
+		SLABLIST_SLAB_AISP(sl, s, elem);
+		addsp(s, elem);
+		ripple_aisp(s);
+		ctx->ac_how = AC_HOW_SP_PV;
+		return (ctx);
 	}
-	SLABLIST_SLAB_ADD_AFTER_MK(sl, s, elem);
+	SLABLIST_SLAB_AAM(sl, s, elem);
 	ns = mk_slab();
 	SLABLIST_SLAB_MK(sl);
 	link_slab(ns, s, SLAB_LINK_AFTER);
-	insert_elem(s->s_next, elem, 0);
-	return (ns);
+	add_elem(s->s_next, elem, 0);
+	ripple_aam(s);
+	ctx->ac_how = AC_HOW_AFTER;
+	ctx->ac_slab_new = ns;
+	return (ctx);
 }
 
-static subslab_t *
-sub_gen_insert_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
+static add_ctx_t *
+sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	int i = 0;
+	add_ctx_t *ctx = mk_add_ctx();
+
 	if (s1 != NULL) {
 		i = subslab_bin_srch_top(s1->s_max, s);
 	} else {
@@ -798,37 +1099,44 @@ sub_gen_insert_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	}
 	subslab_t *ns = NULL;
 	if (s->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_INTO(sl, s, s1, s2);
-		insert_slab(s, s1, s2, i);
-		return (ns);
+		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
+		add_slab(s, s1, s2, i);
+		ctx->ac_how = AC_HOW_INTO;
+		return (ctx);
 	}
 	if (s->ss_next != NULL && s->ss_next->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_AFTER(sl, s, s1, s2);
+		SLABLIST_SUBSLAB_AA(sl, s, s1, s2);
 		if (s1 != NULL) {
 			i = subslab_bin_srch_top(s1->s_max, s->ss_next);
 		} else {
 			i = subslab_bin_srch(s2->ss_max, s->ss_next);
 		}
-		insert_slab(s->ss_next, s1, s2, i);
-		return (ns);
+		add_slab(s->ss_next, s1, s2, i);
+		ctx->ac_how = AC_HOW_AFTER;
+		return (ctx);
 	}
+	subslab_t *common = NULL;
 	if (s->ss_prev != NULL && s->ss_prev->ss_elems < SUBELEM_MAX) {
-		SLABLIST_SUBSLAB_ADD_INTO_SPILL_PREV(sl, s, s1, s2);
-		sub_insert_spill_prev(s, s1, s2);
-		return (ns);
+		SLABLIST_SUBSLAB_AISP(sl, s, s1, s2);
+		common = sub_addsp(s, s1, s2, 0);
+		ctx->ac_how = AC_HOW_SP_PV;
+		ctx->ac_subslab_common = common;
+		return (ctx);
 	}
-	SLABLIST_SUBSLAB_ADD_AFTER_MK(sl, s, s1, s2);
+	SLABLIST_SUBSLAB_AAM(sl, s, s1, s2);
 	ns = mk_subslab();
 	ns->ss_arr = mk_subarr();
 	SLABLIST_SUBSLAB_MK(sl);
 	link_subslab(ns, s, SLAB_LINK_AFTER);
-	insert_slab(s->ss_next, s1, s2, 0);
-	return (ns);
+	add_slab(s->ss_next, s1, s2, 0);
+	ctx->ac_how = AC_HOW_AFTER;
+	ctx->ac_subslab_new = ns;
+	return (ctx);
 }
 
 /*
  * This procedure is invoked after a slab is found. Given the status it finds a
- * way to insert elem into the slablist. It inserts the element into a slab of
+ * way to add elem into the slablist. It adds the element into a slab of
  * appropriate range, doing this may require changing the range of the slab,
  * creating new adjacent slabs, or shifting the min/max of the current slab
  * into adjacent slabs. Or it creates a new slab with the appropriate range.
@@ -836,222 +1144,61 @@ sub_gen_insert_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
  * was found, and on whether the slab (and the slabs adjacent to it) are at
  * capacity. See the above three functions for more details.
  */
-static slab_t *
-slab_gen_insert(int status, slablist_elem_t elem, slab_t *s, int rep,
-    slablist_elem_t *repd_elem, int *edup)
+static add_ctx_t *
+slab_gen_add(int status, slablist_elem_t elem, slab_t *s, int rep)
 {
-	slab_t *ns = NULL;
+	add_ctx_t *ctx = NULL;
 	slablist_t *sl = s->s_list;
-	*edup = 0;
 
 	if (status == FS_IN_RANGE) {
-		ns = gen_insert_ira(sl, s, elem, rep, repd_elem, edup);
-		return (ns);
+		ctx = gen_add_ira(sl, s, elem, rep);
+		return (ctx);
 	}
 
 	if (status == FS_OVER_RANGE) {
-		ns = gen_insert_ora(sl, s, elem);
-		return (ns);
+		ctx = gen_add_ora(sl, s, elem);
+		return (ctx);
 	}
 
 	if (status == FS_UNDER_RANGE) {
-		ns = gen_insert_ura(sl, s, elem);
-		return (ns);
+		ctx = gen_add_ura(sl, s, elem);
+		return (ctx);
 	}
 
-	return (NULL);
+	return (ctx);
 }
 
-static subslab_t *
-subslab_gen_insert(int status, slab_t *s1, subslab_t *s2, subslab_t *s)
+static add_ctx_t *
+subslab_gen_add(int status, slab_t *s1, subslab_t *s2, subslab_t *s)
 {
-	subslab_t *ns = NULL;
 	slablist_t *sl = s->ss_list;
+	add_ctx_t *ctx = NULL;
 
 	if (status == FS_IN_RANGE) {
-		ns = sub_gen_insert_ira(sl, s, s1, s2);
-		return (ns);
+		ctx = sub_gen_add_ira(sl, s, s1, s2);
+		return (ctx);
 	}
 
 	if (status == FS_OVER_RANGE) {
-		ns = sub_gen_insert_ora(sl, s, s1, s2);
-		return (ns);
+		ctx = sub_gen_add_ora(sl, s, s1, s2);
+		return (ctx);
 	}
 
 	if (status == FS_UNDER_RANGE) {
-		ns = sub_gen_insert_ura(sl, s, s1, s2);
-		return (ns);
+		ctx = sub_gen_add_ura(sl, s, s1, s2);
+		return (ctx);
 	}
 
-	return (NULL);
-}
-
-/*
- * Updates the extrema of subslab `s` with the extrema found in the first and
- * last (sub)slabs references from `s`.
- */
-int
-subslab_update_extrema(subslab_t *s)
-{
-	subslab_t *sub = s;
-	slab_t *sup1;
-	subslab_t *sup2;
-	int ret = 0;
-	int last = sub->ss_elems - 1;
-	if (sub->ss_list->sl_layer == 1) {
-		sup1 = GET_SUBSLAB_ELEM(sub, 0);
-		if (sub->ss_min.sle_u != sup1->s_min.sle_u) {
-			sub->ss_min = sup1->s_min;
-			SLABLIST_SUBSLAB_SET_MIN(sub);
-			ret |= 1;
-		}
-		sup1 = GET_SUBSLAB_ELEM(sub, last);
-		int last = sup1->s_elems - 1;
-		if (sub->ss_max.sle_u != sup1->s_max.sle_u) {
-			sub->ss_max = sup1->s_max;
-			SLABLIST_SUBSLAB_SET_MAX(sub);
-			ret |= 2;
-		}
-		last = sup1->s_elems - 1;
-		return (ret);
-	} else {
-		sup2 = GET_SUBSLAB_ELEM(sub, 0);
-		if (sub->ss_min.sle_u != sup2->ss_min.sle_u) {
-			sub->ss_min = sup2->ss_min;
-			SLABLIST_SUBSLAB_SET_MIN(sub);
-			ret |= 1;
-		}
-		sup2 = GET_SUBSLAB_ELEM(sub, last);
-		if (sub->ss_max.sle_u != sup2->ss_max.sle_u) {
-			sub->ss_max = sup2->ss_max;
-			SLABLIST_SUBSLAB_SET_MAX(sub);
-			ret |= 2;
-		}
-		return (ret);
-	}
-}
-
-/*
- * Given a bread crumb path, this function makes all crumbs have matching
- * extrema.
- */
-void
-ripple_update_extrema(bc_t *crumbs, int i)
-{
-	/*
-	 * This loop ripples any changed extrema to the sublayers. We update
-	 * crumbs[bc] and adjacent slabs (if any).
-	 */
-	int bc = i;
-	subslab_t *sub;
-	while (bc > 0) {
-		sub = retrieve_subslab(crumbs, (bc - 1));
-		subslab_update_extrema(sub);
-		
-		if (sub->ss_next != NULL) {
-			subslab_update_extrema(sub->ss_next);
-		}
-
-		if (sub->ss_prev != NULL) {
-			subslab_update_extrema(sub->ss_prev);
-		}
-		bc--;
-	}
-}
-
-/*
- * If a new slab was added to the slablist, in order to complete an insertion,
- * this function "ripples" this change through the sublayers, so that the new
- * slab is potentially reachable from the baselayer.
- */
-static void
-ripple_add_to_sublayers(slablist_t *sl, slab_t *new, bc_t *crumbs)
-{
-	subslab_t *baseslab = retrieve_subslab(crumbs, 0);
-	subslab_t *s = NULL;
-	subslab_t *new_subslab = NULL;
-	slablist_t *baselayer = baseslab->ss_list;
-	uint8_t superlayers = baselayer->sl_layer;
-	slablist_t *csl = sl;
-	slablist_t *psl;
-	int fs;
-	int layer = 0;
-	int bc = 0;
-
-	bc += (superlayers);
-	ripple_update_extrema(crumbs, bc);
-
-
-	/*
-	 * First, we ripple the new slab to the immediate sublayer. Then we
-	 * ripple, any new subslabs to the sublayers below the immediate
-	 * sublayer.
-	 */
-	bc = (superlayers - 1);
-	if (new != NULL) {
-		s = retrieve_subslab(crumbs, bc);
-		if (SLABLIST_TEST_RIPPLE_ADD_SLAB_ENABLED()) {
-			int f = test_ripple_add_slab(new, crumbs, bc);
-			SLABLIST_TEST_RIPPLE_ADD_SLAB(f, new, s, crumbs, bc);
-		}
-		SLABLIST_RIPPLE_ADD_SLAB(csl, new, s);
-		fs = sub_is_elem_in_range(new->s_min, s);
-		new_subslab = subslab_gen_insert(fs, new, NULL, s);
-	}
-	layer++;
-	bc--;
-
-	/*
-	 * This loop ripples any new subslabs to the sublayers, as well as any
-	 * changed extrema.
-	 */
-	bc = (superlayers - 2);
-	while (layer < superlayers) {
-		s = retrieve_subslab(crumbs, bc);
-		if (new_subslab != NULL &&
-		    SLABLIST_TEST_RIPPLE_ADD_SUBSLAB_ENABLED()) {
-			int f = test_ripple_add_subslab(new_subslab, crumbs, bc);
-			SLABLIST_TEST_RIPPLE_ADD_SUBSLAB(f, new_subslab, s,
-				crumbs, bc);
-		}
-
-		psl = csl;
-		csl = csl->sl_sublayer;
-		SLABLIST_RIPPLE_ADD_SUBSLAB(csl, new_subslab, s);
-		if (new_subslab != NULL) {
-			fs = sub_is_elem_in_range(new_subslab->ss_min, s);
-		}
-
-		if (new_subslab != NULL) {
-			new_subslab = subslab_gen_insert(fs, NULL, new_subslab, s);
-		}
-
-		/*
-		 * Even though we update the extrema before, the extrema can
-		 * change as a result of the previous insertion. The insert
-		 * functions update extrema in the slab `S` that is being
-		 * inserted into. However, the insertion function doesn't
-		 * update the extrema of any subslabs that have `S` as a first
-		 * or last slab. That is why we call this function -- to make
-		 * sure the subslabs' extrema are consistent with what has
-		 * changed in upper layers.
-		 */
-		subslab_update_extrema(s);
-
-		csl->sl_elems++;
-		SLABLIST_SL_INC_ELEMS(csl);
-		layer++;
-		bc--;
-	}
+	return (ctx);
 }
 
 /*
  * This function adds an element to a slablist. `rep` indicates if an
- * already-inserted element with an identical key should to be replaced.
+ * already-added element with an identical key should to be replaced.
  * This function is an entry point into libslablist.
  */
 int
-slablist_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *repd_elem)
+slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 {
 	lock_list(sl);
 
@@ -1094,8 +1241,7 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *rep
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
 
 		int fs;
-		bc_t bc_path;
-		bzero(&bc_path, sizeof (bc_t));
+		slab_t *found;
 		if (sl->sl_sublayers) {
 			/*
 			 * If this slablist has sublayers, we create a buffer
@@ -1106,32 +1252,16 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *rep
 			 * the overlier. If we don't have sublayers, then we
 			 * do a linear srch to find the appropriate slab.
 			 */
-			fs = find_bubble_up(sl, elem, &bc_path);
-			s = bc_path.bc_top.sbc_slab;
-
-			if (SLABLIST_TEST_BREAD_CRUMBS_ENABLED()) {
-				uint64_t bcn = sl->sl_sublayers;
-				int l;
-				int f = test_breadcrumbs(&bc_path, &l, bcn);
-				SLABLIST_TEST_BREAD_CRUMBS(f, l);
-			}
+			fs = find_bubble_up(sl, elem, &found);
+			s = found;
 
 		} else {
+
 			fs = find_linear_scan(sl, elem, &s);
 		}
 
-		slab_t *new = slab_gen_insert(fs, elem, s, rep, repd_elem,
-				&edup);
-
-		if (sl->sl_sublayers) {
-			/*
-			 * If this slablist has sublayers we need to update the
-			 * sublayers with new extrema and a possibly a new
-			 * reference. Then we remove the buffer containing the
-			 * bread crumbs.
-			 */
-			ripple_add_to_sublayers(sl, new, &bc_path);
-		}
+		add_ctx_t *ctx = slab_gen_add(fs, elem, s, rep);
+		rm_add_ctx(ctx);
 
 		slablist_t *usl = NULL;
 
@@ -1176,7 +1306,7 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *rep
 		}
 	}
 
-	try_reap_all(sl);
+	// try_reap_all(sl);
 
 	if (edup != SL_SUCCESS) {
 		ret = SL_EDUP;

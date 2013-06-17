@@ -181,7 +181,7 @@ do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 
 		slablist_elem_t found;
 
-		slablist_add(sl, elem, 0, NULL);
+		slablist_add(sl, elem, 0);
 		/*
 		if (!ord) {
 			slablist_find(sl, elem, &found);

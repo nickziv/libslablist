@@ -23,7 +23,9 @@
  */
 
 extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
-extern slab_t *slab_get(slablist_t *, uint64_t, uint64_t *, int);
+extern slab_t *slab_get_elem_pos(slablist_t *, uint64_t, uint64_t *);
+extern slab_t *slab_get_elem_pos_old(slablist_t *, uint64_t, uint64_t *);
+extern slab_t *slab_get_pos(slablist_t *, uint64_t);
 extern int sublayer_slab_ptr_srch(void *, subslab_t *);
 extern int slab_bin_srch(slablist_elem_t, slab_t *);
 extern int subslab_bin_srch(slablist_elem_t, subslab_t *);
@@ -31,7 +33,7 @@ extern int subslab_bin_srch_top(slablist_elem_t, subslab_t *);
 extern int slab_lin_srch(slablist_elem_t, slab_t *);
 extern int subslab_lin_srch(slablist_elem_t, subslab_t *);
 extern int subslab_lin_srch_top(slablist_elem_t, subslab_t *);
-extern int find_bubble_up(slablist_t *, slablist_elem_t, bc_t *);
+extern int find_bubble_up(slablist_t *, slablist_elem_t, slab_t **);
 extern int find_linear_scan(slablist_t *, slablist_elem_t, slab_t **);
 extern int is_elem_in_range(slablist_elem_t, slab_t *);
 extern int sub_is_elem_in_range(slablist_elem_t, subslab_t *);

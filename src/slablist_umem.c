@@ -31,6 +31,7 @@ umem_cache_t *cache_slab;
 umem_cache_t *cache_subslab;
 umem_cache_t *cache_subarr;
 umem_cache_t *cache_small_list;
+umem_cache_t *cache_add_ctx;
 
 int
 slablist_ctor(void *buf, void *ignored, int flags)
@@ -74,18 +75,11 @@ small_list_ctor(void *buf, void *ignored, int flags)
 	return (0);
 }
 
-
 int
-bc_ctor(void *buf, void *ignored, int flags)
+add_ctx_ctor(void *buf, void *ignored, int flags)
 {
-	bzero(buf, sizeof (bc_t));
-	return (0);
-}
-
-int
-bc_path_ctor(void *buf, void *ignored, int flags)
-{
-	bzero(buf, MAX_LYRS * sizeof (bc_t));
+	add_ctx_t *ctx = buf;
+	bzero(ctx, (sizeof (add_ctx_t)));
 	return (0);
 }
 
@@ -142,6 +136,16 @@ slablist_umem_init()
 		NULL,
 		0);
 
+	cache_add_ctx = umem_cache_create("add_ctx",
+		sizeof (add_ctx_t),
+		0,
+		add_ctx_ctor,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0);
+
 	return (0);
 }
 
@@ -187,6 +191,20 @@ rm_subslab(subslab_t *s)
 {
 	bzero(s, sizeof (subslab_t));
 	umem_cache_free(cache_subslab, s);
+}
+
+add_ctx_t *
+mk_add_ctx()
+{
+	add_ctx_t *ctx= umem_cache_alloc(cache_add_ctx, UMEM_NOFAIL);
+	return (ctx);
+}
+
+void
+rm_add_ctx(add_ctx_t *ctx)
+{
+	bzero(ctx, sizeof (add_ctx_t));
+	umem_cache_free(cache_add_ctx, ctx);
 }
 
 subarr_t *

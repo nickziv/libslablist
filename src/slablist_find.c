@@ -31,74 +31,112 @@
 #include "slablist_test.h"
 #include "slablist_cons.h"
 
+void marker1(){};
+void marker2(){};
+void marker3(){};
+void marker4(){};
+void marker5(){};
 
-/*
- * Gets the slab that is either the pos'th slab from the left, or gets the slab
- * that contains the pos'th element. The flag specifies which behaviour, of the
- * two to take. When we get the slab that contains the pos'th elem, we fill
- * off_pos with the total number of elements in the slabs that precede the
- * returned slab. This way the caller can figure out the position of pos'th
- * element in the slab.
- */
 slab_t *
-slab_get(slablist_t *sl, uint64_t pos, uint64_t *off_pos, int flag)
+slab_get_elem_pos_old(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 {
 	slab_t *slab = sl->sl_head;
 	uint64_t i;
 	uint64_t ecnt = 0;
 	uint64_t mod;
+	/* get the slab that contains the value at this position */
+	uint64_t e = sl->sl_elems;
 
-	if (slab == NULL) {
-		return (NULL);
-	}
-
-	if (sl->sl_is_small_list) {
+	if (e < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
 		/*
-		 * `slab` doesn't point to a slab, it points to linked list
-		 * node, which we won't return (as that would be wrong).
+		 * If the number of elements is less than the position
+		 * we want and the list is not circular, were return
+		 * NULL.
 		 */
 		return (NULL);
 	}
 
-	if (flag == SLAB_VAL_POS) {
-		/* get the slab that contains the value at this position */
-		uint64_t e = sl->sl_elems;
+	if (e < pos) {
+		/*
+		 * If on the other hand, the number of elements is less
+		 * than the desired position, but the list _is_
+		 * circular, we take the mod of desired position and
+		 * the number of elements. Otherwise, mod is equal to
+		 * the position.
+		 */
+		mod = pos % e;
+	} else {
+		mod = pos;
+	}
 
-		if (e < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-			/*
-			 * If the number of elements is less than the position
-			 * we want and the list is not circular, were return
-			 * NULL.
-			 */
+	i = 0;
+	while (i < sl->sl_slabs) {
+		/*
+		 * We keep updating `ecnt` with the number of elements
+		 * in all of the slabs that we have visited. As soon as
+		 * `ecnt` exceeds `mod`, which is the position that our
+		 * desired element is in, we return the slab that we
+		 * are currently at, and set `off_pos` to the value of
+		 * `ecnt` _before_ we visited the current slab.
+		 */
+		ecnt += slab->s_elems;
+
+		if (ecnt >= mod) {
+			*off_pos = ecnt - slab->s_elems;
+			return (slab);
+		}
+
+		slab = slab->s_next;
+		i++;
+	}
+	return (slab);
+}
+
+/*
+ * Gets the slab that is either the pos'th slab from the left, or gets the slab
+ * that contains the pos'th element. The flag specifies which behaviour, of the
+ * two to take. When we get the slab that contains the pos'th elem, we fill
+ * off_pos with the index of the element.
+ */
+slab_t *
+slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
+{
+	slab_t *slab = sl->sl_head;
+	/* get the slab that contains the value at this position */
+	uint64_t act_pos;
+
+
+	/*
+	 * If the number of elements is less than the desired position, but the
+	 * list _is_ _circular_, we take the mod of desired position and the
+	 * number of elementsm to get the _actual position_. Otherwise, the
+	 * actual poistion is equal to the position.
+	 */
+	if (sl->sl_elems < pos) {
+		if (!SLIST_IS_CIRCULAR(sl->sl_flags)) {
 			return (NULL);
 		}
+		act_pos = pos % sl->sl_elems;
+	} else {
+		act_pos = pos;
+	}
 
-		if (e < pos) {
-			/*
-			 * If on the other hand, the number of elements is less
-			 * than the desired position, but the list _is_
-			 * circular, we take the mod of desired position and
-			 * the number of elements. Otherwise, mod is equal to
-			 * the position.
-			 */
-			mod = pos % e;
-		} else {
-			mod = pos;
-		}
-
-		i = 0;
+	marker1();
+	if (!(sl->sl_sublayers)) {
+		uint64_t ecnt = sl->sl_elems;
+		uint64_t i = 0;
+		/*
+		 * We keep updating `ecnt` with the number of elements
+		 * in all of the slabs that we have visited. As soon as
+		 * `ecnt` exceeds `act_pos`, which is the position that our
+		 * desired element is in, we return the slab that we
+		 * are currently at, and set `off_pos` to the value of
+		 * `ecnt` _before_ we visited the current slab.
+		 */
 		while (i < sl->sl_slabs) {
-			/*
-			 * We keep updating `ecnt` with the number of elements
-			 * in all of the slabs that we have visited. As soon as
-			 * `ecnt` exceeds `mod`, which is the position that our
-			 * desired element is in, we return the slab that we
-			 * are currently at, and set `off_pos` to the value of
-			 * `ecnt` _before_ we visited the current slab.
-			 */
 			ecnt += slab->s_elems;
 
-			if (ecnt >= mod) {
+			if (ecnt >= act_pos) {
 				*off_pos = ecnt - slab->s_elems;
 				return (slab);
 			}
@@ -108,32 +146,111 @@ slab_get(slablist_t *sl, uint64_t pos, uint64_t *off_pos, int flag)
 		}
 	}
 
-	if (flag == SLAB_IN_POS) {
-		/* get the slab that is of this number */
-
-		if (pos == 0) {
-			return (sl->sl_head);
+	marker2();
+	slablist_t *bl = sl->sl_baselayer;
+	subslab_t *b = bl->sl_head;
+	uint16_t layers = bl->sl_layer;
+	uint16_t layer = 0;
+	uint64_t sum_usr_elems = 0;
+	/*
+	 * We visit the subslabs in the baselayer, adding up their ss_usr_elems
+	 * members, until this sum exceeds the position we are looking for.
+	 */
+	while (b != NULL) {
+		sum_usr_elems += b->ss_usr_elems;
+		if (sum_usr_elems >= act_pos) {
+			break;
 		}
-
-		if (sl->sl_slabs < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-			/* a slab doesn't exist at this position */
-			return (NULL);
-		}
-
-		mod = pos;
-
-		if (sl->sl_slabs < pos) {
-			mod = pos % sl->sl_slabs;
-		}
-
-		for (i = 0; i < mod; i++) {
-			slab = slab->s_next;
-		}
-
-		return (slab);
+		b = b->ss_next;
 	}
 
-	return (NULL);
+	/*
+	 * Clearly, the slab containing the element at the desired position is
+	 * reachable from subslab `b`. In `elems_skipped` we store the number
+	 * of elements we had to skip before we got subslab `b`.
+	 */
+	uint64_t elems_skipped = sum_usr_elems - b->ss_usr_elems;
+
+	marker3();
+	/*
+	 * We reset `sum_usr_elems` to `elems_skipped`, so that we can now work
+	 * our way up the layers, using the same basic algorithm we used in the
+	 * above loop. We don't reach the toplayer in this loop, because the
+	 * toplayer is made of the slab_t struct instead of the subslab_t
+	 * struct.
+	 */
+	sum_usr_elems = elems_skipped;
+	while (layer < layers - 1) {
+		subslab_t *c = GET_SUBSLAB_ELEM(b, 0);
+		while (c != NULL) {
+			sum_usr_elems += c->ss_usr_elems;
+			if (sum_usr_elems >= act_pos) {
+				break;
+			}
+			c = c->ss_next;
+		}
+		b = c;
+		elems_skipped = sum_usr_elems - b->ss_usr_elems;
+		layer++;
+	}
+
+	marker4();
+	/*
+	 * We have reached the toplayer, and we now employ the same basic
+	 * algorithm as in the above inner-loop but for slab_t's instead.
+	 */
+	slab_t *s = GET_SUBSLAB_ELEM(b, 0);
+	sum_usr_elems = elems_skipped;
+	while (s != NULL) {
+		sum_usr_elems += s->s_elems;
+		if (sum_usr_elems >= act_pos) {
+			break;
+		}
+		s = s->s_next;
+	}
+
+	elems_skipped = sum_usr_elems - s->s_elems;
+	*off_pos = act_pos - elems_skipped - 1;
+	if (SLABLIST_TEST_GET_ELEM_POS_ENABLED()) {
+		slab_t *old_slab;
+		uint64_t obptr;
+		int f = test_slab_get_elem_pos(sl, s, &old_slab, pos, *off_pos,
+		    &obptr);
+		uint64_t deriv = pos - obptr - 1;
+		SLABLIST_TEST_GET_ELEM_POS(f, s, old_slab, *off_pos, deriv);
+	}
+	return (s);
+}
+
+slab_t *
+slab_get_pos(slablist_t *sl, uint64_t pos)
+{
+	slab_t *slab = sl->sl_head;
+	uint64_t i;
+	uint64_t mod;
+
+	/* get the slab that is of this number */
+
+	if (pos == 0) {
+		return (sl->sl_head);
+	}
+
+	if (sl->sl_slabs < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
+		/* a slab doesn't exist at this position */
+		return (NULL);
+	}
+
+	mod = pos;
+
+	if (sl->sl_slabs < pos) {
+		mod = pos % sl->sl_slabs;
+	}
+
+	for (i = 0; i < mod; i++) {
+		slab = slab->s_next;
+	}
+
+	return (slab);
 }
 
 static small_list_t *
@@ -177,7 +294,6 @@ slablist_get(slablist_t *sl, uint64_t pos)
 {
 	lock_list(sl);
 	slablist_elem_t ret;
-	int i;
 	uint64_t off_pos;
 	slab_t *s;
 	small_list_t *sml = NULL;
@@ -185,9 +301,8 @@ slablist_get(slablist_t *sl, uint64_t pos)
 		sml = sml_node_get(sl, pos);
 		ret = sml->sml_data;
 	} else {
-		s = slab_get(sl, pos, &off_pos, SLAB_VAL_POS);
-		i = pos - off_pos;
-		ret = s->s_arr[i];
+		s = slab_get_elem_pos(sl, pos, &off_pos);
+		ret = s->s_arr[off_pos];
 	}
 
 	unlock_list(sl);
@@ -204,6 +319,7 @@ sub_is_elem_in_range(slablist_elem_t elem, subslab_t *s)
 	slablist_elem_t min = s->ss_min;
 	eq_min = (sl->sl_cmp_elem(elem, min));
 	eq_max = (sl->sl_cmp_elem(elem, max));
+
 
 	if ((eq_max <= 0) && (eq_min >= 0)) {
 		return (FS_IN_RANGE);
@@ -335,7 +451,8 @@ slab_lin_srch(slablist_elem_t elem, slab_t *s)
 {
 	slablist_t *sl = s->s_list;
 	int i = 0;
-	while (sl->sl_cmp_elem(elem, s->s_arr[i]) > 0 && i < s->s_elems) {
+	while (i < s->s_elems
+	    && sl->sl_cmp_elem(elem, s->s_arr[i]) > 0) {
 		i++;
 	}
 	return (i);
@@ -479,10 +596,9 @@ subslab_lin_srch_top(slablist_elem_t elem, subslab_t *s)
  *  slab with `elem`, or the slab nearest to it.
  */
 int
-find_subslab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
+find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 {
 	int x = 0;
-	subslab_t *s = retrieve_subslab(crumbs, (crumbs->bc_sscount - 1));
 	x = subslab_bin_srch(elem, s);
 	if (x > s->ss_elems - 1) {
 		/*
@@ -503,28 +619,19 @@ find_subslab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
 		x = s->ss_elems - 1;
 	}
 
-	subslab_t *found = GET_SUBSLAB_ELEM(s, x);
+	subslab_t *found2 = GET_SUBSLAB_ELEM(s, x);
 
-	int edge = NOT_ON_EDGE;
+	int r = sub_is_elem_in_range(elem, found2);
 
-	if (!x) {
-		edge = ON_LEFT_EDGE;
-	} else if (x == s->ss_elems - 1) {
-		edge = ON_RIGHT_EDGE;
-	}
-
-	record_subslab(crumbs, found, edge);
-
-	int r = sub_is_elem_in_range(elem, found);
+	*found = found2;
 
 	return (r);
 }
 
 int
-find_slab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
+find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 {
 	int x = 0;
-	subslab_t *s = retrieve_subslab(crumbs, (crumbs->bc_sscount - 1));
 	x = subslab_bin_srch_top(elem, s);
 	if (x > s->ss_elems - 1) {
 		/*
@@ -547,14 +654,7 @@ find_slab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
 
 	slab_t *next = (slab_t *)GET_SUBSLAB_ELEM(s, x);
 
-	int edge = NOT_ON_EDGE;
-	if (!x) {
-		edge = ON_LEFT_EDGE;
-	} else if (x == s->ss_elems - 1) {
-		edge = ON_RIGHT_EDGE;
-	}
-
-	record_slab(crumbs, next, edge);
+	*found = next;
 
 	int r = is_elem_in_range(elem, next);
 
@@ -563,7 +663,7 @@ find_slab_in_subslab(bc_t *crumbs, slablist_elem_t elem)
 
 
 int
-sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
+sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, subslab_t **found)
 {
 
 	SLABLIST_SUB_LINEAR_SCAN_BEGIN(sl);
@@ -577,7 +677,7 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
 	 * empirically faster.
 	 */
 	if (r != FS_OVER_RANGE) {
-		record_subslab(crumbs, s, ON_LEFT_EDGE);
+		*found = s;
 		SLABLIST_SUB_LINEAR_SCAN_END(r);
 		return (r);
 	}
@@ -597,7 +697,7 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
 		i++;
 	}
 end:;
-	record_subslab(crumbs, s, ON_LEFT_EDGE);
+	*found = s;
 	SLABLIST_SUB_LINEAR_SCAN_END(r);
 	return (r);
 }
@@ -647,64 +747,60 @@ end:;
  * starting point. Records all subslabs that were walked over into the `crumbs`.
  */
 int
-find_bubble_up(slablist_t *sl, slablist_elem_t elem, bc_t *crumbs)
+find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
 
 	int fs;
 	int layers = 1;
 	int f = 0;
-	subslab_t *last_crumb = NULL;
-	subslab_t *ss = NULL;
+	subslab_t *found = NULL;
 	if (sl->sl_sublayers > 1) {
 
 		/* find the baseslab from which to start bubbling up */
-		fs = sub_find_linear_scan(sl->sl_baselayer, elem, crumbs);
+		fs = sub_find_linear_scan(sl->sl_baselayer, elem, &found);
+		SLABLIST_BUBBLE_UP(sl, found);
 
 		/* Bubble up throught all of the sublayers */
 		while (layers < sl->sl_sublayers) {
 
 			/* We test the last subslab we found */
 			if (SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED()) {
-				f = test_find_bubble_up(crumbs, elem,
-				    &last_crumb);
+				f = test_find_bubble_up(found, NULL, elem);
 				SLABLIST_TEST_FIND_BUBBLE_UP(f, NULL,
-				    last_crumb, elem, layers);
+				    found, elem, layers);
 			}
 
 			/* we get the appropriate subslab */
-			fs = find_subslab_in_subslab(crumbs, elem);
+			fs = find_subslab_in_subslab(found, elem, &found);
 
-			/* we get the newest subslab, and trace it */
-			ss = retrieve_subslab(crumbs, crumbs->bc_sscount - 1);
-
-			SLABLIST_BUBBLE_UP(sl, ss);
+			SLABLIST_BUBBLE_UP(sl, found);
 			layers++;
 		}
 
 		/* We test the last subslab we found */
 		if (SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED()) {
-			f = test_find_bubble_up(crumbs, elem, &last_crumb);
-			SLABLIST_TEST_FIND_BUBBLE_UP(f, NULL, last_crumb, elem,
+			f = test_find_bubble_up(found, NULL, elem);
+			SLABLIST_TEST_FIND_BUBBLE_UP(f, NULL, found, elem,
 			    layers);
 		}
 		
 		/* Find the target slab */
-		fs = find_slab_in_subslab(crumbs, elem);
+		fs = find_slab_in_subslab(found, elem, sbptr);
 
 		/* We test the last slab we found */
 		if (SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED()) {
-			f = test_find_bubble_up(crumbs, elem, &last_crumb);
+			f = test_find_bubble_up(NULL, *sbptr, elem);
 			SLABLIST_TEST_FIND_BUBBLE_UP(f,
-			    crumbs->bc_top.sbc_slab, NULL, elem, layers);
+			    *sbptr, NULL, elem, layers);
 		}
 
-		SLABLIST_BUBBLE_UP_TOP(sl, crumbs->bc_top.sbc_slab);
+		SLABLIST_BUBBLE_UP_TOP(sl, *sbptr);
 	}
 	if (sl->sl_sublayers == 1) {
-		fs = sub_find_linear_scan(sl->sl_sublayer, elem, crumbs);
-		fs = find_slab_in_subslab(crumbs, elem);
-		SLABLIST_BUBBLE_UP_TOP(sl, crumbs->bc_top.sbc_slab);
+		fs = sub_find_linear_scan(sl->sl_sublayer, elem, &found);
+		fs = find_slab_in_subslab(found, elem, sbptr);
+		SLABLIST_BUBBLE_UP_TOP(sl, *sbptr);
 	}
 
 
@@ -722,8 +818,6 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 	lock_list(sl);
 
 	SLABLIST_FIND_BEGIN(sl, key);
-	bc_t bc_path;
-	bzero(&bc_path, sizeof (bc_t));
 	slab_t *potential;
 	uint64_t i = 0;
 	slablist_elem_t ret;
@@ -743,8 +837,7 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 	if (SLIST_SORTED(sl->sl_flags)) {
 
 		if (sl->sl_sublayers) {
-			find_bubble_up(sl, key, &bc_path);
-			potential = bc_path.bc_top.sbc_slab;
+			find_bubble_up(sl, key, &potential);
 		} else {
 			find_linear_scan(sl, key, &potential);
 		}
@@ -820,8 +913,8 @@ slablist_get_rand(slablist_t *sl)
 		sml = sml_node_get(sl, r);
 		ret = sml->sml_data;
 	} else {
-		s = slab_get(sl, r, &op, SLAB_VAL_POS);
-		ret = s->s_arr[(r - op - 1)];
+		s = slab_get_elem_pos(sl, r, &op);
+		ret = s->s_arr[(op)];
 	}
 
 	close(rfd);

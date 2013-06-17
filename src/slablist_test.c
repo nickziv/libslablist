@@ -73,6 +73,23 @@
 #define E_TEST_SLAB_MOVE_PREV_SPCP	41
 #define E_TEST_SUBSLAB_ARR_MIN		42
 #define E_TEST_SUBSLAB_ARR_MAX		43
+#define E_TEST_SUBSLAB_USR_ELEMS_OVER	44
+#define E_TEST_SUBSLAB_USR_ELEMS_UNDER	45
+#define E_TEST_ELEM_POS			46
+
+int
+test_slab_get_elem_pos(slablist_t *sl, slab_t *s, slab_t **f, uint64_t pos,
+    uint64_t op, uint64_t *opbptr)
+{
+	uint64_t off;
+	slab_t *s2 = slab_get_elem_pos_old(sl, pos, &off);
+	if (s2 != s || (pos - off - 1) != op) {
+		*f = s2;
+		*opbptr = off;
+		return (E_TEST_ELEM_POS);
+	}
+	return (0);
+}
 
 int
 test_slab_to_sml(slablist_t *sl, slab_t *s)
@@ -148,56 +165,32 @@ test_smlist_elems_sorted(slablist_t *sl)
 slab_t *
 get_first_slab(subslab_t *baseslab)
 {
-        subslab_t *ss = baseslab;
-	slab_t *s;
-        int layers = baseslab->ss_list->sl_layer;
-        int layer = 0;
-	ssbc_t ssbc;
-	ssbc.ssbc_subslab = ss;
-	ssbc.ssbc_on_edge = ON_LEFT_EDGE;
-	SLABLIST_GET_EXTREME_PATH(&ssbc, NULL, layer);
-        while (layer < layers - 1) {
-		ss = (subslab_t *)GET_SUBSLAB_ELEM(ss, 0);
-		ssbc.ssbc_subslab = ss;
+	int layer = 0;
+	int layers = baseslab->ss_list->sl_layer;
+	subslab_t *s = baseslab;
+	while (layer < layers - 1) {
+		s = GET_SUBSLAB_ELEM(s, 0);
 		layer++;
-		SLABLIST_GET_EXTREME_PATH(&ssbc, NULL, layer);
-        }
-
-	s = (slab_t *)GET_SUBSLAB_ELEM(ss, 0);
-	sbc_t sbc;
-	sbc.sbc_slab = s;
-	layer++;
-	SLABLIST_GET_EXTREME_PATH(NULL, &sbc, layer);
-        return (s);
+	}
+	slab_t *sf = GET_SUBSLAB_ELEM(s, 0);
+	return (sf);
 }
 
 slab_t *
 get_last_slab(subslab_t *baseslab)
 {
-        subslab_t *ss = baseslab;
-	slab_t *s;
-        int layers = baseslab->ss_list->sl_layer;
-        int layer = 0;
-	ssbc_t ssbc;
-	ssbc.ssbc_subslab = ss;
-	ssbc.ssbc_on_edge = ON_LEFT_EDGE;
-	SLABLIST_GET_EXTREME_PATH(&ssbc, NULL, layer);
-	int last = 0;
-        while (layer < layers - 1) {
-		last = ss->ss_elems - 1;
-		ss = (subslab_t *)GET_SUBSLAB_ELEM(ss, last);
-		ssbc.ssbc_subslab = ss;
+	int layer = 0;
+	int layers = baseslab->ss_list->sl_layer;
+	subslab_t *s = baseslab;
+	int last;
+	while (layer < layers - 1) {
+		last = s->ss_elems - 1;
+		s = GET_SUBSLAB_ELEM(s, last);
 		layer++;
-		SLABLIST_GET_EXTREME_PATH(&ssbc, NULL, layer);
-        }
-
-	last = ss->ss_elems - 1;
-	s = (slab_t *)GET_SUBSLAB_ELEM(ss, last);
-	sbc_t sbc;
-	sbc.sbc_slab = s;
-	layer++;
-	SLABLIST_GET_EXTREME_PATH(NULL, &sbc, layer);
-        return (s);
+	}
+	last = s->ss_elems - 1;
+	slab_t *sl = GET_SUBSLAB_ELEM(s, last);
+	return (sl);
 }
 
 int
@@ -216,9 +209,40 @@ test_slab_extrema(slab_t *s)
 }
 
 int
+test_subslab_usr_elems(subslab_t *ss)
+{
+	uint64_t i = 0;
+	uint64_t sum = 0;
+	subslab_t *sref = NULL;
+	slab_t *ref = NULL;
+	if (ss->ss_list->sl_layer > 1) {
+		while (i < ss->ss_elems) {
+			sref = GET_SUBSLAB_ELEM(ss, i);
+			sum += sref->ss_usr_elems;
+			i++;
+		}
+	} else {
+		while (i < ss->ss_elems) {
+			ref = GET_SUBSLAB_ELEM(ss, i);
+			sum += ref->s_elems;
+			i++;
+		}
+	}
+	SLABLIST_SUM_USR_ELEMS(sum);
+	if (sum < ss->ss_usr_elems) {
+		return (E_TEST_SUBSLAB_USR_ELEMS_OVER);
+	}
+	if (sum > ss->ss_usr_elems) {
+		return (E_TEST_SUBSLAB_USR_ELEMS_UNDER);
+	}
+	return (0);
+}
+
+int
 test_subslab_extrema(subslab_t *ss)
 {
 	slab_t *f = get_first_slab(ss);
+	SLABLIST_EXTREME_SLAB(f);
 	slablist_t *top_lyr = f->s_list;
 
 	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_min) != 0 ) {
@@ -231,6 +255,7 @@ test_subslab_extrema(subslab_t *ss)
 
 
 	slab_t *l = get_last_slab(ss);
+	SLABLIST_EXTREME_SLAB(l);
 	uint32_t lelems = l->s_elems;
 	if (top_lyr->sl_cmp_elem(ss->ss_max, l->s_max) != 0) {
 		return (E_TEST_SUBSLAB_MAX);
@@ -294,19 +319,19 @@ test_slab(slab_t *s)
 	 * next slab
 	 */
 	if (s->s_prev != NULL) {
-		if (sl->sl_cmp_elem(s->s_prev->s_max, s->s_min) > 0
-		    || sl->sl_cmp_elem(s->s_prev->s_max, s->s_max) > 0
-		    || sl->sl_cmp_elem(s->s_prev->s_min, s->s_min) > 0
-		    || sl->sl_cmp_elem(s->s_prev->s_min, s->s_max) > 0) {
+		if (sl->sl_cmp_elem(s->s_prev->s_max, s->s_min) > 0 ||
+		    sl->sl_cmp_elem(s->s_prev->s_max, s->s_max) > 0 ||
+		    sl->sl_cmp_elem(s->s_prev->s_min, s->s_min) > 0 ||
+		    sl->sl_cmp_elem(s->s_prev->s_min, s->s_max) > 0) {
 			return (E_TEST_SLAB_PREV);
 		}
 	}
 
 	if (s->s_next != NULL) {
-		if (sl->sl_cmp_elem(s->s_next->s_max, s->s_min) < 0
-		    || sl->sl_cmp_elem(s->s_next->s_max, s->s_max) < 0
-		    || sl->sl_cmp_elem(s->s_next->s_min, s->s_min) < 0
-		    || sl->sl_cmp_elem(s->s_next->s_min, s->s_max) < 0) {
+		if (sl->sl_cmp_elem(s->s_next->s_max, s->s_min) < 0 ||
+		    sl->sl_cmp_elem(s->s_next->s_max, s->s_max) < 0 ||
+		    sl->sl_cmp_elem(s->s_next->s_min, s->s_min) < 0 ||
+		    sl->sl_cmp_elem(s->s_next->s_min, s->s_max) < 0) {
 			return (E_TEST_SLAB_NEXT);
 		}
 	}
@@ -394,19 +419,19 @@ test_subslab(subslab_t *s)
 	}
 
 	if (s->ss_prev != NULL) {
-		if (sl->sl_cmp_elem(s->ss_prev->ss_max, s->ss_min) > 0
-		    || sl->sl_cmp_elem(s->ss_prev->ss_max, s->ss_max) > 0
-		    || sl->sl_cmp_elem(s->ss_prev->ss_min, s->ss_min) > 0
-		    || sl->sl_cmp_elem(s->ss_prev->ss_min, s->ss_max) > 0) {
+		if (sl->sl_cmp_elem(s->ss_prev->ss_max, s->ss_min) > 0 ||
+		    sl->sl_cmp_elem(s->ss_prev->ss_max, s->ss_max) > 0 ||
+		    sl->sl_cmp_elem(s->ss_prev->ss_min, s->ss_min) > 0 ||
+		    sl->sl_cmp_elem(s->ss_prev->ss_min, s->ss_max) > 0) {
 			return (E_TEST_SUBSLAB_PREV);
 		}
 	}
 
 	if (s->ss_next != NULL) {
-		if (sl->sl_cmp_elem(s->ss_next->ss_max, s->ss_min) < 0
-		    || sl->sl_cmp_elem(s->ss_next->ss_max, s->ss_max) < 0
-		    || sl->sl_cmp_elem(s->ss_next->ss_min, s->ss_min) < 0
-		    || sl->sl_cmp_elem(s->ss_next->ss_min, s->ss_max) < 0) {
+		if (sl->sl_cmp_elem(s->ss_next->ss_max, s->ss_min) < 0 ||
+		    sl->sl_cmp_elem(s->ss_next->ss_max, s->ss_max) < 0 ||
+		    sl->sl_cmp_elem(s->ss_next->ss_min, s->ss_min) < 0 ||
+		    sl->sl_cmp_elem(s->ss_next->ss_min, s->ss_max) < 0) {
 			return (E_TEST_SUBSLAB_NEXT);
 		}
 	}
@@ -502,10 +527,10 @@ test_subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 
 /*
  * This function tests that a slab is consistent within the context of the
- * insert_elem() function.
+ * add_elem() function.
  */
 int
-test_insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
+test_add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 {
 	int f = test_slab(s);
 	if (f != 0) {
@@ -518,7 +543,7 @@ test_insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 		return (E_TEST_INS_ELEM_INDEX);
 	}
 
-	/* test that the elem is being inserted into the right place */
+	/* test that the elem is being added into the right place */
 	uint64_t elems = s->s_elems;
 
 	if (elems == 0 || sl->sl_layer != 0) {
@@ -548,10 +573,10 @@ test_insert_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 }
 /*
  * This function tests that a slab is consistent within the context of the
- * insert_elem() function.
+ * add_elem() function.
  */
 int
-test_insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
+test_add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 {
 	int f = test_subslab(s);
 	if (f != 0) {
@@ -564,7 +589,7 @@ test_insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 		return (E_TEST_INS_SLAB_INDEX);
 	}
 
-	/* test that the elem is being inserted into the right place */
+	/* test that the elem is being added into the right place */
 	uint64_t elems = s->ss_elems;
 
 	if (elems == 0) {
@@ -572,14 +597,14 @@ test_insert_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	}
 
 	/*
-	 * We can't insert slab_t's into layers beneath the second layer.
+	 * We can't add slab_t's into layers beneath the second layer.
 	 */
 	if (s1 != NULL && sl->sl_layer > 1) {
 		return (E_TEST_INS_SLAB_LAYER);
 	}
 
 	/*
-	 * We can't insert subslab_t's into the first or second layer.
+	 * We can't add subslab_t's into the first or second layer.
 	 */
 	if (s2 != NULL && sl->sl_layer < 2) {
 		return (E_TEST_INS_SUBSLAB_LAYER);
@@ -675,7 +700,7 @@ test_remove_slab(uint64_t i, subslab_t *s)
 }
 
 int
-test_ripple_add_subslab(subslab_t *new, bc_t *crumbs, int bc)
+test_ripple_add_subslab(subslab_t *new, int bc)
 {
 	int f = test_subslab(new);
 	if (f != 0) {
@@ -683,10 +708,8 @@ test_ripple_add_subslab(subslab_t *new, bc_t *crumbs, int bc)
 	}
 
 	if (bc != 0) {
-		uint8_t top_ss = crumbs->bc_sscount - 1;
-		uint8_t sub_ss = top_ss - 1;
-		subslab_t *sub = retrieve_subslab(crumbs, sub_ss);
-		subslab_t *s = retrieve_subslab(crumbs, top_ss);
+		subslab_t *sub = new->ss_below;
+		subslab_t *s = new;
 		int i = 0;
 		int has = 0;
 		while (i < sub->ss_elems) {
@@ -704,17 +727,16 @@ test_ripple_add_subslab(subslab_t *new, bc_t *crumbs, int bc)
 }
 
 int
-test_ripple_add_slab(slab_t *new, bc_t *crumbs, int bc)
+test_ripple_add_slab(slab_t *new, slab_t *modified, int bc)
 {
 	int f = test_slab(new);
 	if (f != 0) {
 		return (f);
 	}
 
-	uint8_t sub_ss = crumbs->bc_sscount - 1;
+	subslab_t *sub = modified->s_below;
 	if (bc != 0) {
-		subslab_t *sub = retrieve_subslab(crumbs, sub_ss);
-		slab_t *s = crumbs->bc_top.sbc_slab;
+		slab_t *s = modified;
 		int i = 0;
 		int has = 0;
 		while (i < sub->ss_elems) {
@@ -732,13 +754,11 @@ test_ripple_add_slab(slab_t *new, bc_t *crumbs, int bc)
 }
 
 int
-test_find_bubble_up(bc_t *crumbs, slablist_elem_t elem, subslab_t **last)
+test_find_bubble_up(subslab_t *found, slab_t *sbptr, slablist_elem_t elem)
 {
 	int f;
-	if (crumbs->bc_top.sbc_slab == NULL) {
-		int bc = crumbs->bc_sscount - 1;
-		subslab_t *ss = retrieve_subslab(crumbs, bc);
-		*last = ss;
+	if (sbptr == NULL) {
+		subslab_t *ss = found;
 		slablist_t *sl = ss->ss_list;
 		f = test_subslab(ss);
 		if (f != 0) {
@@ -752,6 +772,10 @@ test_find_bubble_up(bc_t *crumbs, slablist_elem_t elem, subslab_t **last)
 		if (f != 0) {
 			return (f);
 		}
+		f = test_subslab_usr_elems(ss);
+		if (f != 0) {
+			return (f);
+		}
 
 		if (sl->sl_layer > 1) {
 			f = test_subslab_bin_srch(elem, ss);
@@ -761,7 +785,7 @@ test_find_bubble_up(bc_t *crumbs, slablist_elem_t elem, subslab_t **last)
 
 	} else {
 
-		slab_t *s = crumbs->bc_top.sbc_slab;
+		slab_t *s = sbptr;
 		f = test_slab(s);
 		if (f != 0) {
 			return (f);
@@ -775,28 +799,6 @@ test_find_bubble_up(bc_t *crumbs, slablist_elem_t elem, subslab_t **last)
 	return (0);
 }
 
-
-int
-test_breadcrumbs(bc_t *bc, int *l, uint64_t bcn)
-{
-	uint64_t i = 0;
-	int cl;
-	int nl;
-	while (i < (bcn - 1)) {
-		subslab_t *s0 = bc->bc_ssarr[i].ssbc_subslab;
-		subslab_t *s1 = bc->bc_ssarr[(i + 1)].ssbc_subslab;
-		cl = s0->ss_list->sl_layer;
-		nl = s1->ss_list->sl_layer;
-		if (cl <= nl) {
-			*l = nl;
-			return (1);
-		}
-		i++;
-	}
-
-	*l = nl;
-	return (0);
-}
 
 int
 test_slab_move_next(slab_t *scp, slab_t *sn, slab_t *sncp, int *i)

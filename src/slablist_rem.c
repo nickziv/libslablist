@@ -210,10 +210,53 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 
 
 	/*
-	 * We actually move the elems from s to sn.
+	 * We update the s_below bptr, and get the sum of the
+	 * ss_usr_elems/s_elems.
+	 */
+	uint64_t i = from;
+	uint64_t sum_usr_elems = 0;
+	if (sl->sl_layer == 1) {
+		while (i < (from + cpelems)) {
+			slab_t *slab = GET_SUBSLAB_ELEM(s, i);
+			sum_usr_elems += slab->s_elems;
+			slab->s_below = sn;
+			SLABLIST_SLAB_SET_BELOW(slab);
+			i++;
+		}
+	} else {
+		while (i < (from + cpelems)) {
+			subslab_t *ss = GET_SUBSLAB_ELEM(s, i);
+			sum_usr_elems += ss->ss_usr_elems;
+			ss->ss_below = sn;
+			SLABLIST_SUBSLAB_SET_BELOW(sn);
+			i++;
+		}
+	}
+
+
+	/*
+	 * We actually move the elems from s to sn
 	 */
 	bcopy(&(GET_SUBSLAB_ELEM(s, from)), &(GET_SUBSLAB_ELEM(sn, 0)),
 	    cpelems*sz);
+
+	/*
+	 * We update the ss_usr_elems count for all of the subslabs below s and
+	 * sn.
+	 */
+	subslab_t *p = s;
+	subslab_t *q = sn;
+	while (p != NULL) {
+		p->ss_usr_elems -= sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(p);
+		p = p->ss_below;
+	}
+	while (q != NULL) {
+		q->ss_usr_elems += sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(q);
+		q = q->ss_below;
+	}
+	/* at this point p = q, and so no update is neccessary */
 
 	sn->ss_elems = sn->ss_elems + cpelems;
 	s->ss_elems = s->ss_elems - cpelems;
@@ -317,10 +360,50 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	}
 
 	/*
+	 * We update the sbptrs of the to-be-moved slabs.
+	 */
+	uint64_t i = 0;
+	uint64_t sum_usr_elems = 0;
+	if (sl->sl_layer == 1) {
+		while (i < cpelems) {
+			slab_t *slab = GET_SUBSLAB_ELEM(s, i);
+			sum_usr_elems += slab->s_elems;
+			slab->s_below = sp;
+			SLABLIST_SLAB_SET_BELOW(slab);
+			i++;
+		}
+	} else {
+		while (i < cpelems) {
+			subslab_t *ss = GET_SUBSLAB_ELEM(s, i);
+			sum_usr_elems += ss->ss_usr_elems;
+			ss->ss_below = sp;
+			SLABLIST_SUBSLAB_SET_BELOW(ss);
+			i++;
+		}
+	}
+	/*
 	 * We move the elems from s to sp.
 	 */
 	bcopy(&(GET_SUBSLAB_ELEM(s, 0)), &(GET_SUBSLAB_ELEM(sp, pelems)),
 	    cpelems*sz);
+
+	subslab_t *p = s;
+	subslab_t *q = sp;
+	/*
+	 * We update the ss_usr_elems count for all of the subslabs below s and
+	 * sp.
+	 */
+	while (p != NULL) {
+		p->ss_usr_elems -= sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(p);
+		p = p->ss_below;
+	}
+	while (q != NULL) {
+		q->ss_usr_elems += sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(q);
+		q = q->ss_below;
+	}
+	/* at this point p = q, and so no update is neccessary */
 	sp->ss_elems = sp->ss_elems + cpelems;
 	s->ss_elems = s->ss_elems - cpelems;
 	/* bwd shift */
@@ -438,6 +521,24 @@ move_to_next(slab_t *s, slab_t *sn)
 	sn->s_elems = sn->s_elems + cpelems;
 	s->s_elems = s->s_elems - cpelems;
 
+	/*
+	 * We update the ss_usr_elems count for all of the subslabs below s and
+	 * sn.
+	 */
+	uint64_t sum_usr_elems = cpelems;
+	subslab_t *p = s->s_below;
+	subslab_t *q = sn->s_below;
+	while (p != NULL) {
+		p->ss_usr_elems -= sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(p);
+		p = p->ss_below;
+	}
+	while (q != NULL) {
+		q->ss_usr_elems += sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(q);
+		q = q->ss_below;
+	}
+
 	if (SLABLIST_TEST_SLAB_MOVE_NEXT_ENABLED()) {
 		/*
 		 * Here we ccompare the modified slabs with their pre-mod
@@ -513,6 +614,23 @@ move_to_prev(slab_t *s, slab_t *sp)
 	s->s_elems = s->s_elems - cpelems;
 	/* bwd shift */
 	bcopy((s->s_arr + cpelems), (s->s_arr), (melems-cpelems)*sz);
+	/*
+	 * We update the ss_usr_elems count for all of the subslabs below s and
+	 * sp.
+	 */
+	uint64_t sum_usr_elems = cpelems;
+	subslab_t *p = s->s_below;
+	subslab_t *q = sp->s_below;
+	while (p != NULL) {
+		p->ss_usr_elems -= sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(p);
+		p = p->ss_below;
+	}
+	while (q != NULL) {
+		q->ss_usr_elems += sum_usr_elems;
+		SLABLIST_SET_USR_ELEMS(q);
+		q = q->ss_below;
+	}
 
 	if (SLABLIST_TEST_SLAB_MOVE_PREV_ENABLED()) {
 		/*
@@ -561,26 +679,27 @@ move_to_prev(slab_t *s, slab_t *sp)
  * the number of elements in the slab(s) on the right.
  */
 slab_t *
-slab_generic_rem(slab_t *sm)
+slab_generic_rem(slab_t *sm, subslab_t **below)
 {
 	slab_t *sn = sm->s_next;
 	slab_t *sp = sm->s_prev;
 	slab_t *uls = NULL; /* this is ptr to slab we have to unlink + free */
 	slablist_t *sl = sm->s_list;
+	*below = sm->s_below;
 
+	/*
+	 * If the slab becomes empty we can free it right away.
+	 */
 	if (sm->s_elems == 0) {
-		/*
-		 * If the slab becomes empty we can free it right away.
-		 */
 		uls = sm;
 		goto end;
 	}
 
+	/*
+	 * If we have only one slab, there is nothing for us to do and
+	 * we return from the function.
+	 */
 	if (sl->sl_slabs == 1) {
-		/*
-		 * If we have only one slab, there is nothing for us to do and
-		 * we return from the function.
-		 */
 		return (NULL);
 	}
 
@@ -614,7 +733,7 @@ slab_generic_rem(slab_t *sm)
 		move_to_prev(sm, sp);
 		SLABLIST_SLAB_MOVE_NEXT_TO_MID(sl, sn, sm);
 		move_to_prev(sn, sm);
-		uls = sp;
+		uls = sn;
 		goto end;
 	}
 	if (sp != NULL && sn != NULL
@@ -645,12 +764,13 @@ end:;
 }
 
 subslab_t *
-subslab_generic_rem(subslab_t *sm)
+subslab_generic_rem(subslab_t *sm, subslab_t **below)
 {
 	subslab_t *sn = sm->ss_next;
 	subslab_t *sp = sm->ss_prev;
 	subslab_t *uls = NULL; /* this is ptr to slab we have to unlink + free */
 	slablist_t *sl = sm->ss_list;
+	*below = sm->ss_below;
 
 	if (sm->ss_elems == 0) {
 		/*
@@ -698,7 +818,7 @@ subslab_generic_rem(subslab_t *sm)
 		sub_move_to_prev(sm, sp);
 		SLABLIST_SUBSLAB_MOVE_NEXT_TO_MID(sl, sn, sm);
 		sub_move_to_prev(sn, sm);
-		uls = sp;
+		uls = sn;
 		goto end;
 	}
 	if (sp != NULL && sn != NULL
@@ -757,6 +877,16 @@ remove_elem(uint64_t i, slab_t *s)
 	s->s_elems--;
 	SLABLIST_SLAB_DEC_ELEMS(s);
 
+	/*
+	 * Now we decrement the ss_usr_elems of the subslabs below s.
+	 */
+	subslab_t *ss = s->s_below;
+	while (ss != NULL) {
+		ss->ss_usr_elems--;
+		SLABLIST_SET_USR_ELEMS(ss);
+		ss = ss->ss_below;
+	}
+
 	if (s->s_elems && i == 0) {
 		s->s_min = s->s_arr[0];
 		SLABLIST_SLAB_SET_MIN(s);
@@ -781,7 +911,6 @@ static void
 remove_slab(uint64_t i, subslab_t *s)
 {
 	slablist_t *sl = s->ss_list;
-
 
 	SLABLIST_SUBBWDSHIFT_BEGIN(sl, s, i);
 	size_t sz = 8 * (s->ss_elems - (i + 1));
@@ -842,94 +971,61 @@ remove_slab(uint64_t i, subslab_t *s)
  * removing any references to the slab that has been freed.
  */
 void
-ripple_rem_to_sublayers(slablist_t *sl, slab_t *r, bc_t *crumbs)
+ripple_rem_to_sublayers(slablist_t *sl, slab_t *remd, subslab_t *below)
 {
-	slablist_t *csl = sl;
-	subslab_t *baseslab = retrieve_subslab(crumbs, 0);
-	slablist_t *baselayer = baseslab->ss_list;
-	int superlayers = baselayer->sl_layer;
-	int layer = 0;
-	int bc = 0;
-	subslab_t *s;
-	subslab_t *sp;
-	subslab_t *sn;
-	subslab_t *sr = NULL;
-	bc += (superlayers - 1);
-	int i;
-	int ssc_diff = 1;
+	subslab_t *e[3];
+	e[0] = below;
+	e[1] = below->ss_next;
+	e[2] = below->ss_prev;
+	int epos = 0;
+	subslab_t *ss = below;
+	subslab_t *ss_below;
+	void *r = remd;
+	int i = 0;
 	/*
-	 * In this loop we update the sublayers by removing references to the
-	 * removed slab (r), and any subsequently removed subslabs (sr).
+	 * We ripple the removal to the subslabs.
 	 */
-	while ((sr != NULL || r != NULL) && layer < superlayers) {
-		s = retrieve_subslab(crumbs, crumbs->bc_sscount - ssc_diff);
-		ssc_diff++;
-		if (r != NULL) {
-			SLABLIST_RIPPLE_REM_SLAB(sl, r, s);
-		} else {
-			SLABLIST_RIPPLE_REM_SUBSLAB(sl, sr, s);
+	while (ss != NULL && r != NULL) {
+		i = sublayer_slab_ptr_srch(r, ss);
+		remove_slab(i, ss);
+		r = subslab_generic_rem(ss, &ss_below);
+		if (r == below) {
+			epos = 1;
 		}
-		csl = csl->sl_sublayer;
-		sp = s->ss_prev;
-		sn = s->ss_next;
-		if (r != NULL) {
-			i = sublayer_slab_ptr_srch(r, s);
-		} else {
-			i = sublayer_slab_ptr_srch(sr, s);
-		}
-		if (i != -1) {
-			/* clearly r is ref'd in this subslab... */
-			remove_slab(i, s);
-			sr = subslab_generic_rem(s);
-			goto try_setbc;
-		}
-		i = sublayer_slab_ptr_srch(r, sn);
-		if (i != -1) {
-			/* clearly r is ref'd in next subslab ... */
-			remove_slab(i, sn);
-			sr = subslab_generic_rem(sn);
-			goto try_setbc;
-		}
-		i = sublayer_slab_ptr_srch(r, sp);
-		if (i != -1) {
-			/* clearly r is ref'd in prev subslab ... */
-			remove_slab(i, sp);
-			sr = subslab_generic_rem(sp);
-			goto try_setbc;
-		}
-
-try_setbc:;
-		/*
-		 * After we complete the removal of r's reference, we set r to
-		 * NULL. This way, this loop will only continue if sr is not
-		 * NULL.
-		 */
-		r = NULL;
-		if (sr == s) {
-			/*
-			 * If we removed crumbs[bc] we need to update the
-			 * crumbs[bc] to point to an adjacent subslab, if
-			 * possible.
-			 */
-			if (sn != NULL) {
-				crumbs->bc_ssarr[bc].ssbc_subslab = sn;
-			} else if (sp != NULL) {
-				crumbs->bc_ssarr[bc].ssbc_subslab = sp;
-			}
-			subslab_t *set = crumbs->bc_ssarr[bc].ssbc_subslab;
-			SLABLIST_SET_CRUMB(sl, set, bc);
-		}
-		csl->sl_elems--;
-		SLABLIST_SL_DEC_ELEMS(csl);
-		layer++;
-		bc--;
+		ss = ss_below;
 	}
-
 	/*
-	 * Now we update the extrema.
+	 * We update the extrema as necessary.
 	 */
-	bc = superlayers;
-	ripple_update_extrema(crumbs, bc);
+	while (epos < 3) {
+		ss = e[epos];
+		if (ss == NULL) {
+			epos++;
+			continue;
+		}
+		/*
+		 * Update the extrema of the topmost subslab.
+		 */
+		int last = ss->ss_elems - 1;
+		slab_t *l = GET_SUBSLAB_ELEM(ss, last);
+		slab_t *f = GET_SUBSLAB_ELEM(ss, 0);
+		ss->ss_min = f->s_min;
+		ss->ss_max = l->s_max;
+		ss = ss->ss_below;
+		/*
+		 * And now we update the extrema of the subslabs that contain
+		 * subslabs.
+		 */
+		while (ss != NULL) {
+			last = ss->ss_elems - 1;
+			subslab_t *ssf = GET_SUBSLAB_ELEM(ss, 0);
+			subslab_t *ssl = GET_SUBSLAB_ELEM(ss, last);
+			ss->ss_min = ssf->ss_min;
+			ss->ss_max = ssl->ss_max;
+			ss = ss->ss_below;
+		}
+		epos++;
+	}
 }
 
 
@@ -955,31 +1051,20 @@ slablist_reap(slablist_t *sl)
 	 */
 	SLABLIST_REAP_BEGIN(sl);
 	slab_t *s = sl->sl_head;
-	bc_t bc_path;
 	slab_t *sn = NULL;
 	slab_t *rmd;
-	slablist_elem_t min;
+	subslab_t *below = NULL;
 	uint64_t i = 0;
 	while (i < (sl->sl_slabs - 1)) {
-		/* we need a blank bc_t for each iteration */
-		bzero(&bc_path, sizeof (bc_t));
 		rmd = NULL;
 		sn = s->s_next;
-		min = sn->s_min;
 		if (s->s_elems < SELEM_MAX) {
-			if (sl->sl_sublayers) {
-				/*
-				 * We build a bread crumb path so that we can
-				 * ripple changes down after we 1) deallocate
-				 * the slab and 2) change its extrema.
-				 */
-				find_bubble_up(sl, min, &bc_path);
-			}
 			move_to_prev(sn, s);
 			if (sn->s_elems == 0) {
 				/*
 				 * We unlink and free the slab.
 				 */
+				below = sn->s_below;
 				unlink_slab(sn);
 				rm_slab(sn);
 				rmd = sn;
@@ -989,10 +1074,9 @@ slablist_reap(slablist_t *sl)
 			if (sl->sl_sublayers) {
 				/*
 				 * If we have sublayers, we ripple the changes
-				 * down, using the bread crumb path created in
-				 * the previous if-stmt.
+				 * down.
 				 */
-				ripple_rem_to_sublayers(sl, rmd, &bc_path);
+				ripple_rem_to_sublayers(sl, rmd, below);
 			}
 		}
 		s = s->s_next;
@@ -1013,10 +1097,9 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 
 	uint64_t off_pos;
 	slab_t *s = NULL;
-	bc_t bc_path;
-	bzero(&bc_path, sizeof (bc_t));
 	int i;
 	int ret;
+	slab_t *found = NULL;
 
 	if (!(sl->sl_is_small_list) && sl->sl_elems == SMELEM_MAX) {
 		/*
@@ -1049,15 +1132,8 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 
 		if (sl->sl_sublayers) {
 
-			find_bubble_up(sl, elem, &bc_path);
-			s = bc_path.bc_top.sbc_slab;
-
-			if (SLABLIST_TEST_BREAD_CRUMBS_ENABLED()) {
-				uint64_t bcn = sl->sl_sublayers;
-				int l;
-				int f = test_breadcrumbs(&bc_path, &l, bcn);
-				SLABLIST_TEST_BREAD_CRUMBS(f, l);
-			}
+			find_bubble_up(sl, elem, &found);
+			s = found;
 
 		} else {
 
@@ -1084,8 +1160,8 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 
 		SLABLIST_REM_BEGIN(sl, elem, pos);
 
-		s = slab_get(sl, pos, &off_pos, SLAB_VAL_POS);
-		i = pos - off_pos;
+		s = slab_get_elem_pos(sl, pos, &off_pos);
+		i = off_pos;
 	}
 
 	if (rdl != NULL) {
@@ -1095,9 +1171,10 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 	remove_elem(i, s);
 
 	slab_t *remd = NULL;
-	remd = slab_generic_rem(s);
+	subslab_t *below = NULL;
+	remd = slab_generic_rem(s, &below);
 	if (sl->sl_sublayers) {
-		ripple_rem_to_sublayers(sl, remd, &bc_path);
+		ripple_rem_to_sublayers(sl, remd, below);
 		slablist_t *subl = sl->sl_baselayer;
 		slablist_t *supl = subl->sl_superlayer;
 		if (subl != sl && supl->sl_slabs < sl->sl_req_sublayer) {
@@ -1110,7 +1187,7 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 	}
 
 
-	try_reap_all(sl);
+	// try_reap_all(sl);
 
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);

@@ -413,7 +413,7 @@
 #define	FS_OVER_RANGE	1
 
 #define	SUBELEM_MAX	((uint32_t)512)
-#define	SELEM_MAX	((uint16_t)122)
+#define	SELEM_MAX	((uint16_t)121)
 #define	SMELEM_MAX	((uint64_t)60)
 
 #define	SLAB_FREE_SPACE(s)	((uint64_t)(SELEM_MAX - s->s_elems))
@@ -421,8 +421,6 @@
 
 #define GET_SUBSLAB_ELEM(s, e)		(s->ss_arr->sa_data[e])
 #define SET_SUBSLAB_ELEM(s, e, i)	(s->ss_arr->sa_data[i] = e)
-
-#define BC_HAS_TOPSLAB(c)	(c->bc_sbc.sbc_slab != NULL)
 
 typedef struct slab slab_t;
 typedef struct subslab subslab_t;
@@ -435,6 +433,7 @@ typedef struct small_list {
 struct slab {
 	slab_t			*s_next;
 	slab_t 			*s_prev;
+	subslab_t		*s_below;
 	slablist_t		*s_list;
 	uint8_t			s_elems;
 	slablist_elem_t		s_max;
@@ -450,28 +449,37 @@ struct subslab {
 	pthread_mutex_t		ss_mutex;
 	subslab_t		*ss_next;
 	subslab_t		*ss_prev;
+	subslab_t		*ss_below;
 	slablist_t		*ss_list;
 	uint16_t		ss_elems;
+	uint64_t		ss_usr_elems;
 	slablist_elem_t		ss_max;
 	slablist_elem_t		ss_min;
 	subarr_t		*ss_arr;
 };
 
-typedef struct ssbc {
-	subslab_t		*ssbc_subslab;
-	uint8_t			ssbc_on_edge;
-} ssbc_t;
+#define AC_HOW_INTO		0
+#define AC_HOW_SP_NX		1
+#define AC_HOW_SP_PV		2
+#define AC_HOW_BEFORE		3
+#define AC_HOW_AFTER		4
+#define AC_HOW_EDUP		5
 
-typedef struct sbc {
-	slab_t			*sbc_slab;
-	uint8_t			sbc_on_edge;
-} sbc_t;
+typedef struct add_ctx {
+	int			ac_how;
+	slab_t			*ac_slab_new;
+	subslab_t		*ac_subslab_new;
+	slablist_elem_t		ac_repd_elem;
+	subslab_t		*ac_subslab_common;
+} add_ctx_t;
 
-typedef struct bc {
-	uint8_t			bc_sscount;
-	ssbc_t			bc_ssarr[(MAX_LYRS - 1)];
-	sbc_t			bc_top;
-} bc_t;
+typedef struct rem_ctx {
+	int			rc_how;
+	slab_t			*rc_slab_remd;
+	subslab_t		*rc_subslab_remd;
+	subslab_t		*rc_below;
+} rem_ctx_t;
+
 
 struct slablist {
 	pthread_mutex_t		sl_mutex;
@@ -514,15 +522,5 @@ void *mk_zbuf(size_t);
 void rm_buf(void*, size_t);
 small_list_t *mk_sml_node(void);
 void rm_sml_node(small_list_t *);
-
-/*
- * Shared ripple functions.
- */
-void ripple_update_extrema(bc_t *, int);
-
-
-
-/*
- * Search functions
- */
-int find_slab_in_slab(slab_t *s, slablist_elem_t elem, bc_t *l);
+add_ctx_t *mk_add_ctx(void);
+void rm_add_ctx(add_ctx_t *);
