@@ -234,9 +234,9 @@ do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 void
 do_free_remaining(slablist_t *sl, int str, int ord)
 {
-	uint64_t remaining = slablist_getelems(sl);
-	uint64_t type = slablist_gettype(sl);
-	char *name = slablist_getname(sl);
+	uint64_t remaining = slablist_get_elems(sl);
+	uint64_t type = slablist_get_type(sl);
+	char *name = slablist_get_name(sl);
 	printf("%s: %d\n", name, type);
 	slablist_elem_t elem;
 	slablist_elem_t randrem;
@@ -305,25 +305,25 @@ main(int ac, char *av[])
 
 	if (strsrt) {
 		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
-					bndfun_str, 10, 30, 30, 8, SL_SORTED);
+					bndfun_str, SL_SORTED);
 		do_ops(sl_str_s, maxops, STR, SRT);
 		do_free_remaining(sl_str_s, STR, SRT);
 	}
 	if (intsrt) {
-		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, bndfun, 10, 30, 30, 8,
+		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, bndfun,
 					SL_SORTED);
 		do_ops(sl_int_s, maxops, INT, SRT);
 		do_free_remaining(sl_int_s, INT, SRT);
 	}
 	if (strord) {
 		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
-					bndfun_str, 10, 30, 30, 8, SL_ORDERED);
+					bndfun_str, SL_ORDERED);
 		do_ops(sl_str_o, maxops, STR, ORD);
 		do_free_remaining(sl_str_o, STR, ORD);
 	}
 	if (intord) {
-		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun, 10, 30, 30,
-					8, SL_ORDERED);
+		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun,
+					SL_ORDERED);
 		do_ops(sl_int_o, maxops, INT, ORD);
 		do_free_remaining(sl_int_o, INT, ORD);
 	}

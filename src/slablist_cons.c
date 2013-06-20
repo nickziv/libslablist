@@ -65,10 +65,6 @@ slablist_create(
 	size_t obj_size,	/* size of elem */
 	slablist_cmp_t cmpfun,	/* comparison function callback */
 	slablist_bnd_t bndfun,	/* bounds function callback */
-	uint16_t sublayer_req,	/* slabs needed to attach sublayer */
-	uint64_t mslabs,	/* minimum number of slabs to reap */
-	uint8_t mpslabs,	/* minimum percentage of slabs to reap */
-	uint8_t brk,		/* elems needed to use bin search */
 	uint8_t fl)		/* flags */
 {
 	if (init == 0) {
@@ -89,36 +85,12 @@ slablist_create(
 	list->sl_bnd_elem = bndfun;
 	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
-	/*
-	 * Set the mpslabs, which can never be larger than 99.
-	 */
-	if (mpslabs > 99) {
-		list->sl_mpslabs = 99;
-	} else {
-		list->sl_mpslabs = mpslabs;
-	}
 
-	list->sl_mslabs = mslabs;
+	/* reap defaults */
+	list->sl_mpslabs = 30;	
+	list->sl_mslabs = 30;
 
-	/*
-	 * Set the brk value, which can never be larger than the number of
-	 * elems that can fit in a slab.
-	 */
-	if (brk <= SELEM_MAX) {
-		list->sl_brk = brk;
-	} else {
-		list->sl_brk = SELEM_MAX;
-	}
-
-	/*
-	 * Set the sublayer_req value, which can never be larger than the
-	 * number of elems that can fit in a slab.
-	 */
-	if (sublayer_req <= SELEM_MAX) {
-		list->sl_req_sublayer = sublayer_req;
-	} else {
-		list->sl_req_sublayer = SELEM_MAX;
-	}
+	list->sl_req_sublayer = 10;
 
 	SLABLIST_CREATE(list);
 	/*
@@ -137,10 +109,11 @@ slablist_create(
 }
 
 /*
- * This function allows the user to set a new minimum capacity.
+ * This function allows the user to set the minimum percentage of reapable
+ * slabs that need to be present before a reap begins.
  */
 void
-slablist_setmpslabs(slablist_t *sl, uint8_t new)
+slablist_set_reap_pslabs(slablist_t *sl, uint8_t new)
 {
 	lock_list(sl);
 	if (new <= 99) {
@@ -151,40 +124,66 @@ slablist_setmpslabs(slablist_t *sl, uint8_t new)
 	unlock_list(sl);
 }
 
+/*
+ * This function allows the user to set the minimum number of reapable slabs
+ * that need to be present before a reap begins.
+ */
 void
-slablist_setmslabs(slablist_t *sl, uint64_t new)
+slablist_set_reap_slabs(slablist_t *sl, uint64_t new)
 {
 	lock_list(sl);
 	sl->sl_mslabs = new;
 	unlock_list(sl);
 }
 
+void
+slablist_set_attach_req(slablist_t *sl, uint64_t req)
+{
+	lock_list(sl);
+	/*
+	 * Set the sublayer_req value, which can never be larger than the
+	 * number of elems that can fit in a subslab.
+	 */
+	if (req <= SUBELEM_MAX) {
+		sl->sl_req_sublayer = req;
+	} else {
+		sl->sl_req_sublayer = SUBELEM_MAX;
+	}
+	unlock_list(sl);
+}
+
+uint64_t
+slablist_get_attach_req(slablist_t *sl)
+{
+	return (sl->sl_req_sublayer);
+}
+
 char *
-slablist_getname(slablist_t *sl)
+slablist_get_name(slablist_t *sl)
 {
 	return (sl->sl_name);
 }
 
 uint8_t
-slablist_getmpslabs(slablist_t *sl)
+slablist_get_reap_pslabs(slablist_t *sl)
 {
 	return (sl->sl_mpslabs);
 }
 
 uint64_t
-slablist_getmslabs(slablist_t *sl)
+slablist_get_reap_slabs(slablist_t *sl)
 {
 	return (sl->sl_mslabs);
 }
 
 uint64_t
-slablist_getelems(slablist_t *sl)
+slablist_get_elems(slablist_t *sl)
 {
 	return (sl->sl_elems);
 }
 
 uint64_t
-slablist_gettype(slablist_t *sl)
+slablist_get_type(slablist_t *sl)
 {
 	if (SLIST_SORTED(sl->sl_flags)) {
 		return (SL_SORTED);

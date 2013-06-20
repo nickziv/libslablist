@@ -62,16 +62,17 @@ extern void slablist_map(slablist_t *, slablist_map_t);
 extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t, slablist_elem_t zero);
 extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t, slablist_elem_t zero);
 
-slablist_t *slablist_create(char *, size_t, slablist_cmp_t, slablist_bnd_t, uint16_t, uint64_t,
-		uint8_t, uint8_t, uint8_t);
+slablist_t *slablist_create(char *, size_t, slablist_cmp_t, slablist_bnd_t, uint8_t);
 extern void slablist_destroy(slablist_t *);
-extern void slablist_setmpslabs(slablist_t *, uint8_t);
-extern void slablist_setmslabs(slablist_t *, uint64_t);
-extern uint8_t slablist_getmpslabs(slablist_t *);
-extern uint64_t slablist_getmslabs(slablist_t *);
-extern uint64_t slablist_getelems(slablist_t *);
-extern uint64_t slablist_gettype(slablist_t *);
-extern char *slablist_getname(slablist_t *);
+extern void slablist_set_reap_pslabs(slablist_t *, uint8_t);
+extern void slablist_set_reap_slabs(slablist_t *, uint64_t);
+extern void slablist_set_attach_req(slablist_t *, uint64_t);
+extern uint64_t slablist_get_attach_req(slablist_t *);
+extern uint8_t slablist_get_reap_pslabs(slablist_t *);
+extern uint64_t slablist_get_reap_slabs(slablist_t *);
+extern uint64_t slablist_get_elems(slablist_t *);
+extern uint64_t slablist_get_type(slablist_t *);
+extern char *slablist_get_name(slablist_t *);
 extern int slablist_add(slablist_t *, slablist_elem_t, int);
 extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_elem_t *);
 extern void slablist_reap(slablist_t *);
