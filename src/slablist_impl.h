@@ -37,7 +37,7 @@
  * hold 976 bytes  of data plus some metadata. The metadata is 41 bytes in size
  * (80 bytes with compiler-inserted padding). This makes the slab exactly 1K in
  * size, meaning that we can fit 4 slabs on one page. The 976 bytes of data is
- * carved into 8-byte elements, meaning that each slab can hold 122 elements.
+ * carved into 8-byte elements, meaning that each slab can hold 121 elements.
  *
  * Elements can be any 8-byte sequence (64-bit integers, 64-bit double
  * precision floating point numbers, 64-bit pointers, and so on).
@@ -60,6 +60,7 @@
  *		Legend:
  *			nextslab: ptr to the next slab (8 bytes)
  *			prevslab: ptr to the prev slab (8 bytes)
+ *			subslab ptr: ptr to this slab's subslab
  *			slistptr: ptr to slab list slab belongs to (8 bytes)
  *			NE: number of elements in slab (2 bytes)
  *				^ the compiler may pad this to be 8 bytes
@@ -70,9 +71,9 @@
  *   base of slab structure --->  +----------+----------+----------+----+
  *                                | nextslab | prevslab | slistptr | NE |
  *                                +----------+----------+----------+----+
- *                                | maxvalue | minvalue | 976 bytes...  |
+ *                                | maxvalue | minvalue |  subslab ptr  |
  *                                +----------+----------+---------------+
- *                                |         ...of user data...          |
+ *                                |         968 bytes of user data      |
  *                                +-------------------------------------+
  *                                |                ||                   |
  *                                |                ||                   |
@@ -179,7 +180,7 @@
  * ordered slab list merely inserts each new element to the end of the list.
  *
  * Ranges on slabs are useful for sorted slab lists, as we can use it to
- * traverse the list 122 times more quickly than a linked list, when searching
+ * traverse the list 121 times more quickly than a linked list, when searching
  * for an element. When we get to a slab that _may_ contain an element, we try
  * to find the index of the element via binary search.
  *
@@ -229,15 +230,15 @@
  *
  * If the maximum number of subslabs the baselayer can have is N, then it can
  * have at most N*512 elems. If we have only 1 sublayer attached to the slab
- * list, then we have at most N*512*122 elems. If we have two sublayers we have
- * N*(512^2)*122 user-inserted elems. If we have three, N*(512^3)*122 elems.
+ * list, then we have at most N*512*121 elems. If we have two sublayers we have
+ * N*(512^2)*121 user-inserted elems. If we have three, N*(512^3)*121 elems.
  * And so on. In general, of all the memory allocated to a slab list, subslabs
  * only take up 1% or less.
  *
  * Slablists are limited to a maximum of 8 sublayers. With a completely full
  * slab list, of 8-byte integers, we would consume 0.365 _zettabytes_ of RAM.
- * That exceeds the largest _hard drives_ on the marked today (2012), let alone
- * any amount _RAM_ one could cram into computer.
+ * That exceeds the largest _hard drives_ on the market today (2012), let alone
+ * any amount of _RAM_ one could cram into computer.
  *
  * If we wanted to find a slab with element `E`, and our slab list has
  * sublayers, we 1) go to the baselayer , 2) we do a linear search on that
