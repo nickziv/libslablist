@@ -309,60 +309,6 @@ slablist_get(slablist_t *sl, uint64_t pos)
 	return (ret);
 }
 
-int
-sub_is_elem_in_range(slablist_elem_t elem, subslab_t *s)
-{
-	int eq_min;
-	int eq_max;
-	slablist_t *sl = s->ss_list;
-	slablist_elem_t max = s->ss_max;
-	slablist_elem_t min = s->ss_min;
-	eq_min = (sl->sl_cmp_elem(elem, min));
-	eq_max = (sl->sl_cmp_elem(elem, max));
-
-
-	if ((eq_max <= 0) && (eq_min >= 0)) {
-		return (FS_IN_RANGE);
-	}
-
-	if (eq_max == 1) {
-		return (FS_OVER_RANGE);
-	}
-
-	if (eq_min == -1) {
-		return (FS_UNDER_RANGE);
-	}
-
-	return (404);
-}
-
-int
-is_elem_in_range(slablist_elem_t elem, slab_t *s)
-{
-	int eq_min;
-	int eq_max;
-	slablist_t *sl = s->s_list;
-	slablist_elem_t max = s->s_max;
-	slablist_elem_t min = s->s_min;
-	eq_min = (sl->sl_cmp_elem(elem, min));
-	eq_max = (sl->sl_cmp_elem(elem, max));
-
-	if ((eq_max <= 0) && (eq_min >= 0)) {
-		return (FS_IN_RANGE);
-	}
-
-	if (eq_max == 1) {
-		return (FS_OVER_RANGE);
-	}
-
-	if (eq_min == -1) {
-		return (FS_UNDER_RANGE);
-	}
-
-	return (404);
-}
-
-
 extern void link_slab(slab_t *, slab_t *, int);
 
 /*
@@ -467,11 +413,13 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 	int min = 0;
 	int max = s->ss_elems - 1;
 	int c = 0;
+	slablist_t *sl = s->ss_list;
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
 		SLABLIST_SUBSLAB_BIN_SRCH(s, (subslab_t *)mid_elem);
-		c = sub_is_elem_in_range(elem, (subslab_t *)mid_elem);
+		c = sl->sl_bnd_elem(elem, ((subslab_t *)mid_elem)->ss_min,
+			((subslab_t *)mid_elem)->ss_max);
 		if (c > 0) {
 			min = mid + 1;
 			continue;
@@ -494,8 +442,9 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 		min = s->ss_elems - 1;
 	}
 
-	if (sub_is_elem_in_range(elem,
-	    (subslab_t *)GET_SUBSLAB_ELEM(s, min)) > 0) {
+	subslab_t *minss = GET_SUBSLAB_ELEM(s, min);
+	c = sl->sl_bnd_elem(elem, minss->ss_min, minss->ss_max);
+	if (c > 0) {
 		/*
 		 * If the binary search took us to an element that is smaller
 		 * than `elem`, we return the index of the next element, which
@@ -516,9 +465,14 @@ int
 subslab_lin_srch(slablist_elem_t elem, subslab_t *s)
 {
 	int i = 0;
+	slablist_elem_t e;
+	e.sle_p = GET_SUBSLAB_ELEM(s, i);
+	subslab_t *eptr = e.sle_p;
+	slablist_t *sl = s->ss_list;
 	while (i < s->ss_elems
-	    && sub_is_elem_in_range(elem,
-	        (subslab_t *)GET_SUBSLAB_ELEM(s, i)) > 0) {
+	    && sl->sl_bnd_elem(elem, eptr->ss_min, eptr->ss_max) > 0) {
+		e.sle_p = GET_SUBSLAB_ELEM(s, i);
+		eptr = e.sle_p;
 		i++;
 	}
 	return (i);
@@ -533,11 +487,13 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 	int min = 0;
 	int max = s->ss_elems - 1;
 	int c = 0;
+	slablist_t *sl = s->ss_list;
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
 		SLABLIST_SUBSLAB_BIN_SRCH_TOP(s, (slab_t *)mid_elem);
-		c = is_elem_in_range(elem, (slab_t *)mid_elem);
+		c = sl->sl_bnd_elem(elem, ((slab_t *)mid_elem)->s_min,
+			((slab_t *)mid_elem)->s_max);
 		if (c > 0) {
 			min = mid + 1;
 			continue;
@@ -560,7 +516,8 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 		min = s->ss_elems - 1;
 	}
 
-	if (is_elem_in_range(elem, (slab_t *)GET_SUBSLAB_ELEM(s, min)) > 0) {
+	slab_t *tmp = GET_SUBSLAB_ELEM(s, min);
+	if (sl->sl_bnd_elem(elem, tmp->s_min, tmp->s_max) > 0) {
 		/*
 		 * If the binary search took us to an element that is smaller
 		 * than `elem`, we return the index of the next element, which
@@ -581,8 +538,14 @@ int
 subslab_lin_srch_top(slablist_elem_t elem, subslab_t *s)
 {
 	int i = 0;
+	slablist_elem_t e;
+	e.sle_p = GET_SUBSLAB_ELEM(s, i);
+	slab_t *eptr = e.sle_p;
+	slablist_t *sl = s->ss_list;
 	while (i < s->ss_elems
-	    && is_elem_in_range(elem, (slab_t *)GET_SUBSLAB_ELEM(s, i)) > 0) {
+	    && sl->sl_bnd_elem(elem, eptr->s_min, eptr->s_max) > 0) {
+		e.sle_p = GET_SUBSLAB_ELEM(s, i);
+		eptr = e.sle_p;
 		i++;
 	}
 	return (i);
@@ -600,6 +563,7 @@ find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 {
 	int x = 0;
 	x = subslab_bin_srch(elem, s);
+	slablist_t *sl = s->ss_list;
 	if (x > s->ss_elems - 1) {
 		/*
 		 * If we get an index `x` that is larger than the index
@@ -621,7 +585,7 @@ find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 
 	subslab_t *found2 = GET_SUBSLAB_ELEM(s, x);
 
-	int r = sub_is_elem_in_range(elem, found2);
+	int r = sl->sl_bnd_elem(elem, found2->ss_min, found2->ss_max);
 
 	*found = found2;
 
@@ -633,6 +597,7 @@ find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 {
 	int x = 0;
 	x = subslab_bin_srch_top(elem, s);
+	slablist_t *sl = s->ss_list;
 	if (x > s->ss_elems - 1) {
 		/*
 		 * If we get an index `x` that is larger than the index
@@ -656,7 +621,7 @@ find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 
 	*found = next;
 
-	int r = is_elem_in_range(elem, next);
+	int r = sl->sl_bnd_elem(elem, next->s_min, next->s_max);
 
 	return (r);
 }
@@ -669,7 +634,7 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, subslab_t **found)
 	SLABLIST_SUB_LINEAR_SCAN_BEGIN(sl);
 	uint64_t i = 0;
 	subslab_t *s = sl->sl_head;
-	int r = sub_is_elem_in_range(elem, s);
+	int r = sl->sl_bnd_elem(elem, s->ss_min, s->ss_max);
 
 	/*
 	 * Logically, this conditional is redundant, and can be removed.
@@ -684,7 +649,7 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, subslab_t **found)
 
 	while (i < sl->sl_slabs) {
 		SLABLIST_SUB_LINEAR_SCAN(sl, s);
-		r = sub_is_elem_in_range(elem, s);
+		r = sl->sl_bnd_elem(elem, s->ss_min, s->ss_max);
 		if (r != FS_OVER_RANGE) {
 			goto end;
 		} else {
@@ -709,7 +674,7 @@ find_linear_scan(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 	SLABLIST_LINEAR_SCAN_BEGIN(sl);
 	uint64_t i = 0;
 	slab_t *s = sl->sl_head;
-	int r = is_elem_in_range(elem, s);
+	int r = sl->sl_bnd_elem(elem, s->s_min, s->s_max);
 
 	/*
 	 * Logically, this conditional is redundant, and can be removed.
@@ -724,7 +689,7 @@ find_linear_scan(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 
 	while (i < sl->sl_slabs) {
 		SLABLIST_LINEAR_SCAN(sl, s);
-		r = is_elem_in_range(elem, s);
+		r = sl->sl_bnd_elem(elem, s->s_min, s->s_max);
 		if (r != FS_OVER_RANGE) {
 			goto end;
 		} else {

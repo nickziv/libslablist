@@ -64,6 +64,7 @@ slablist_create(
 	char *name,		/* descriptive name */
 	size_t obj_size,	/* size of elem */
 	slablist_cmp_t cmpfun,	/* comparison function callback */
+	slablist_bnd_t bndfun,	/* bounds function callback */
 	uint16_t sublayer_req,	/* slabs needed to attach sublayer */
 	uint64_t mslabs,	/* minimum number of slabs to reap */
 	uint8_t mpslabs,	/* minimum percentage of slabs to reap */
@@ -85,6 +86,7 @@ slablist_create(
 	list->sl_name = mk_buf(namesize);
 	strcpy(list->sl_name, name);
 	list->sl_cmp_elem = cmpfun;
+	list->sl_bnd_elem = bndfun;
 	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
 	/*

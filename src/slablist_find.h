@@ -35,5 +35,3 @@ extern int subslab_lin_srch(slablist_elem_t, subslab_t *);
 extern int subslab_lin_srch_top(slablist_elem_t, subslab_t *);
 extern int find_bubble_up(slablist_t *, slablist_elem_t, slab_t **);
 extern int find_linear_scan(slablist_t *, slablist_elem_t, slab_t **);
-extern int is_elem_in_range(slablist_elem_t, slab_t *);
-extern int sub_is_elem_in_range(slablist_elem_t, subslab_t *);

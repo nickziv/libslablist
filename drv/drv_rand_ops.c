@@ -42,6 +42,19 @@ cmpfun(slablist_elem_t v1, slablist_elem_t v2)
 	return (0);
 }
 
+int
+bndfun(slablist_elem_t e, slablist_elem_t min, slablist_elem_t max)
+{
+	if (e.sle_u > max.sle_u) {
+		return (1);
+	}
+
+	if (e.sle_u < min.sle_u) {
+		return (-1);
+	}
+	return (0);
+}
+
 slablist_elem_t
 add_foldr(slablist_elem_t accumulator, slablist_elem_t *arr, uint64_t elems)
 {
@@ -94,6 +107,20 @@ cmpfun_str(slablist_elem_t v1, slablist_elem_t v2)
 		return (1);
 	}
 	return (ret);
+}
+
+int
+bndfun_str(slablist_elem_t e, slablist_elem_t min, slablist_elem_t max)
+{
+	int cmax = strcmp(e.sle_p, max.sle_p);
+	int cmin = strcmp(e.sle_p, min.sle_p);
+	if (cmax > 0) {
+		return (1);
+	}
+	if (cmin < 0) {
+		return (-1);
+	}
+	return (0);
 }
 
 uint64_t
@@ -278,24 +305,24 @@ main(int ac, char *av[])
 
 	if (strsrt) {
 		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
-					10, 30, 30, 8, SL_SORTED);
+					bndfun_str, 10, 30, 30, 8, SL_SORTED);
 		do_ops(sl_str_s, maxops, STR, SRT);
 		do_free_remaining(sl_str_s, STR, SRT);
 	}
 	if (intsrt) {
-		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, 10, 30, 30, 8,
+		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, bndfun, 10, 30, 30, 8,
 					SL_SORTED);
 		do_ops(sl_int_s, maxops, INT, SRT);
 		do_free_remaining(sl_int_s, INT, SRT);
 	}
 	if (strord) {
 		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
-					10, 30, 30, 8, SL_ORDERED);
+					bndfun_str, 10, 30, 30, 8, SL_ORDERED);
 		do_ops(sl_str_o, maxops, STR, ORD);
 		do_free_remaining(sl_str_o, STR, ORD);
 	}
 	if (intord) {
-		sl_int_o = slablist_create("intlistord", 8, cmpfun, 10, 30, 30,
+		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun, 10, 30, 30,
 					8, SL_ORDERED);
 		do_ops(sl_int_o, maxops, INT, ORD);
 		do_free_remaining(sl_int_o, INT, ORD);

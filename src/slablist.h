@@ -53,6 +53,7 @@ struct slablist;
 typedef struct slablist slablist_t;
 
 typedef int slablist_cmp_t(slablist_elem_t, slablist_elem_t);
+typedef int slablist_bnd_t(slablist_elem_t, slablist_elem_t, slablist_elem_t);
 typedef slablist_elem_t slablist_fold_t(slablist_elem_t, slablist_elem_t *, uint64_t);
 typedef void slablist_map_t(slablist_elem_t *, uint64_t);
 
@@ -61,7 +62,7 @@ extern void slablist_map(slablist_t *, slablist_map_t);
 extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t, slablist_elem_t zero);
 extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t, slablist_elem_t zero);
 
-slablist_t *slablist_create(char *, size_t, slablist_cmp_t, uint16_t, uint64_t,
+slablist_t *slablist_create(char *, size_t, slablist_cmp_t, slablist_bnd_t, uint16_t, uint64_t,
 		uint8_t, uint8_t, uint8_t);
 extern void slablist_destroy(slablist_t *);
 extern void slablist_setmpslabs(slablist_t *, uint8_t);

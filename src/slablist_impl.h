@@ -503,6 +503,8 @@ struct slablist {
 	uint64_t		sl_elems;
 	uint8_t			sl_flags;
 	int			(*sl_cmp_elem)(slablist_elem_t, slablist_elem_t);
+	int			(*sl_bnd_elem)(slablist_elem_t, slablist_elem_t,
+					slablist_elem_t);
 };
 
 

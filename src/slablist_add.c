@@ -680,12 +680,14 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 	int status;
 	int broke = 0;
 	int skip_loop = 1;
+	slablist_t *sl = s->s_list;
 	/*
 	 * We update the extrema.
 	 */
 	ripple_update_extrema(s->s_list, p);
 	if (n->s_below != NULL) {
-		status = sub_is_elem_in_range(n->s_min, n->s_below);
+		status = sl->sl_bnd_elem(n->s_min, n->s_below->ss_min,
+				n->s_below->ss_max);
 		t = subslab_gen_add(status, n, nn, n->s_below);
 		while (t->ac_subslab_new != NULL) {
 			skip_loop = 0;
@@ -699,7 +701,8 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 				broke = 1;
 				break;
 			}
-			status = sub_is_elem_in_range(nn->ss_min, nn->ss_below);
+			status = sl->sl_bnd_elem(nn->ss_min, nn->ss_below->ss_min,
+					nn->ss_below->ss_max);
 			t = subslab_gen_add(status, NULL, nn, nn->ss_below);
 		}
 		/*
