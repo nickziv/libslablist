@@ -573,13 +573,13 @@ sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 	return (p);
 }
 
-void
+static void
 subslab_update_extrema(subslab_t *p)
 {
 	int last = p->ss_elems - 1;
 	subslab_t *ssf;
 	subslab_t *ssl;
-	/* update extrema of `p` and `q` */
+	/* update extrema of `p` */
 	if (p->ss_list->sl_layer == 1) {
 		slab_t *f = GET_SUBSLAB_ELEM(p, 0);
 		slab_t *l = GET_SUBSLAB_ELEM(p, last);
@@ -597,7 +597,7 @@ subslab_update_extrema(subslab_t *p)
 	}
 }
 
-static void
+void
 ripple_update_extrema(slablist_t *sl, subslab_t *p)
 {
 	while (p != NULL) {
@@ -1306,7 +1306,7 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 		}
 	}
 
-	// try_reap_all(sl);
+	try_reap_all(sl);
 
 	if (edup != SL_SUCCESS) {
 		ret = SL_EDUP;

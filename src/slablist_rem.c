@@ -151,6 +151,8 @@ end:;
 	return (ret);
 }
 
+extern void ripple_update_extrema(slablist_t *, subslab_t *);
+
 static void
 sub_move_to_next(subslab_t *s, subslab_t *sn)
 {
@@ -256,7 +258,6 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 		SLABLIST_SET_USR_ELEMS(q);
 		q = q->ss_below;
 	}
-	/* at this point p = q, and so no update is neccessary */
 
 	sn->ss_elems = sn->ss_elems + cpelems;
 	s->ss_elems = s->ss_elems - cpelems;
@@ -310,6 +311,12 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 	SLABLIST_SUBSLAB_DEC_ELEMS(s);
 	SLABLIST_SUBSLAB_SET_MAX(s);
 	SLABLIST_SUBSLAB_SET_MIN(sn);
+	if (sn->ss_below != NULL) {
+		if (s->ss_elems > 0) {
+			ripple_update_extrema(s->ss_list, s->ss_below);
+		}
+		ripple_update_extrema(sn->ss_list, sn->ss_below);
+	}
 }
 
 static void
@@ -403,7 +410,6 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 		SLABLIST_SET_USR_ELEMS(q);
 		q = q->ss_below;
 	}
-	/* at this point p = q, and so no update is neccessary */
 	sp->ss_elems = sp->ss_elems + cpelems;
 	s->ss_elems = s->ss_elems - cpelems;
 	/* bwd shift */
@@ -454,6 +460,12 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 			ss1 = (subslab_t *)GET_SUBSLAB_ELEM(sp, last);
 			sp->ss_max = ss1->ss_max;
 		}
+	}
+	if (sp->ss_below != NULL) {
+		if (s->ss_elems > 0) {
+			ripple_update_extrema(s->ss_list, s->ss_below);
+		}
+		ripple_update_extrema(sp->ss_list, sp->ss_below);
 	}
 	SLABLIST_SUBSLAB_INC_ELEMS(sp);
 	SLABLIST_SUBSLAB_DEC_ELEMS(s);
@@ -561,6 +573,8 @@ move_to_next(slab_t *s, slab_t *sn)
 	SLABLIST_SLAB_DEC_ELEMS(s);
 	SLABLIST_SLAB_SET_MAX(s);
 	SLABLIST_SLAB_SET_MIN(sn);
+	ripple_update_extrema(s->s_list, s->s_below);
+	ripple_update_extrema(sn->s_list, sn->s_below);
 }
 
 /*
@@ -656,6 +670,8 @@ move_to_prev(slab_t *s, slab_t *sp)
 	SLABLIST_SLAB_DEC_ELEMS(s);
 	SLABLIST_SLAB_SET_MAX(sp);
 	SLABLIST_SLAB_SET_MIN(s);
+	ripple_update_extrema(s->s_list, s->s_below);
+	ripple_update_extrema(sp->s_list, sp->s_below);
 }
 
 /*
@@ -1069,14 +1085,13 @@ slablist_reap(slablist_t *sl)
 				rm_slab(sn);
 				rmd = sn;
 				SLABLIST_SLAB_RM(sl);
-
-			}
-			if (sl->sl_sublayers) {
-				/*
-				 * If we have sublayers, we ripple the changes
-				 * down.
-				 */
-				ripple_rem_to_sublayers(sl, rmd, below);
+				if (sl->sl_sublayers) {
+					/*
+					 * If we have sublayers, we ripple the changes
+					 * down.
+					 */
+					ripple_rem_to_sublayers(sl, rmd, below);
+				}
 			}
 		}
 		s = s->s_next;
@@ -1187,7 +1202,7 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 	}
 
 
-	// try_reap_all(sl);
+	try_reap_all(sl);
 
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
