@@ -4,40 +4,40 @@
 
 cmplr=gcc
 c_flags="-m64"
+c_inc="-I /opt/libslablist/include"
 ld_flags="-R /opt/libslablist/lib/64:/opt/libslablist/lib"
-libs="-lslablist -lc -lumem"
+#ld_flags=""
+libs="-lc -lumem -L /opt/libslablist/lib/64 -lslablist"
+#libs="-lc -lumem -lslablist"
 src_dir="../src"
 
-csrc_file[0]=../drv/drv_inc.c
-csrc_file[1]=../drv/drv_dec.c
+csrc_file[2]=../drv/drv_ranged_ops.c
 csrc_file[3]=../drv/drv_rand_ops.c
 
-cobj_file[0]=drv_inc.o
-cobj_file[1]=drv_dec.o
+cobj_file[2]=drv_ranged_ops.o
 cobj_file[3]=drv_rand_ops.o
 
-cout_file[0]=drv_inc
-cout_file[1]=drv_dec
+cout_file[2]=drv_ranged_ops
 cout_file[3]=drv_rand_ops
 
 #Here we compile all the files
 print "Compiling All Files"
-for i in 0 1 3
+for i in 2 3
 do
-	$cmplr -c $c_flags ${csrc_file[$i]} #$libs
+	$cmplr -c $c_inc $c_flags ${csrc_file[$i]} #$libs
 done
 
 # Probably useless
 #Here we concat all the obj-file names for the cli...
 obj_line=""
-for i in 0 1 3
+for i in 2 3
 do
 	obj_line=$obj_line${cobj_file[$i]}" "
 done
 
 
 print "Generating Executable"
-for i in 0 1 3
+for i in 2 3
 do
-	$cmplr $c_flags -o ${cout_file[$i]} ${cobj_file[$i]} $libs $ld_flags
+	$cmplr $c_flags -o ${cout_file[$i]} ${cobj_file[$i]} $ld_flags $libs 
 done

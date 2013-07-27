@@ -56,8 +56,39 @@ pid$target::rm_subslab:entry
 	subslabs[arg0] = 2;
 }
 
-pid$target::is_elem_in_range:entry,
-pid$target::insert_slab:entry
+pid$target::slab_bin_srch:entry
+/slabs[arg1] == 2/
+{
+	printf("[%s] freed slab %p!\n", probefunc, arg1);
+	ustack();
+	exit(0);
+}
+
+slablist$target:::bubble_up_top
+/slabs[arg1] == 0/
+{
+	printf("[%s] unallocated slab %p\n", probefunc, arg1);
+	ustack();
+	exit(0);
+}
+
+slablist$target:::bubble_up_top
+/slabs[arg1] == 2/
+{
+	printf("[%s] freed slab %p\n", probefunc, arg1);
+	ustack();
+	exit(0);
+}
+
+pid$target::slab_bin_srch:entry
+/slabs[arg1] == 0/
+{
+	printf("[%s] unallocated slab %p!\n", probefunc, arg1);
+	ustack();
+	exit(0);
+}
+
+pid$target::add_slab:entry
 /slabs[arg1] == 2/
 {
 	printf("[%s] freed slab %p!\n", probefunc, arg1);
@@ -66,8 +97,8 @@ pid$target::insert_slab:entry
 	exit(0);
 }
 
-pid$target::subslab_lin_srch:entry,
-pid$target::sub_is_elem_in_range:entry
+
+pid$target::subslab_lin_srch:entry
 /slabs[arg1] == 1/
 {
 	printf("[%s] slab %p instead of subslab\n", probefunc, arg1);
@@ -75,8 +106,7 @@ pid$target::sub_is_elem_in_range:entry
 	exit(0);
 }
 
-pid$target::subslab_lin_srch:entry,
-pid$target::sub_is_elem_in_range:entry
+pid$target::subslab_lin_srch:entry
 /slabs[arg1] == 2/
 {
 	printf("[%s] freed slab %p instead of subslab\n", probefunc, arg1);
@@ -84,8 +114,7 @@ pid$target::sub_is_elem_in_range:entry
 	exit(0);
 }
 
-pid$target::subslab_lin_srch:entry,
-pid$target::sub_is_elem_in_range:entry
+pid$target::subslab_lin_srch:entry
 /subslabs[arg1] == 2/
 {
 	printf("[%s] freed %p subslab\n", probefunc, arg1);
@@ -93,8 +122,7 @@ pid$target::sub_is_elem_in_range:entry
 	exit(0);
 }
 
-pid$target::subslab_lin_srch:entry,
-pid$target::sub_is_elem_in_range:entry
+pid$target::subslab_lin_srch:entry
 /subslabs[arg1] == 0/
 {
 	printf("[%s] unallocated %p subslab\n", probefunc, arg1);
@@ -102,8 +130,7 @@ pid$target::sub_is_elem_in_range:entry
 	exit(0);
 }
 
-pid$target::is_elem_in_range:entry,
-pid$target::insert_slab:entry
+pid$target::add_slab:entry
 /subslabs[arg1] == 1/
 {
 	printf("[%s] subslab %p instead of a slab!\n", probefunc, arg1);
@@ -111,10 +138,3 @@ pid$target::insert_slab:entry
 	exit(0);
 }
 
-pid$target::is_elem_in_range:entry
-/slabs[arg1] == 0/
-{
-	printf("[%s] unallocated slab %p!\n", probefunc, arg1);
-	ustack();
-	exit(0);
-}

@@ -56,11 +56,19 @@ typedef int slablist_cmp_t(slablist_elem_t, slablist_elem_t);
 typedef int slablist_bnd_t(slablist_elem_t, slablist_elem_t, slablist_elem_t);
 typedef slablist_elem_t slablist_fold_t(slablist_elem_t, slablist_elem_t *, uint64_t);
 typedef void slablist_map_t(slablist_elem_t *, uint64_t);
+typedef void slablist_rem_cb_t(slablist_elem_t);
 
 
 extern void slablist_map(slablist_t *, slablist_map_t);
-extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t, slablist_elem_t zero);
-extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t, slablist_elem_t zero);
+extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t,
+slablist_elem_t zero);
+extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t,
+slablist_elem_t zero);
+
+extern slablist_elem_t slablist_foldl_range(slablist_t *, slablist_fold_t,
+slablist_elem_t, slablist_elem_t, slablist_elem_t zero);
+extern slablist_elem_t slablist_foldr_range(slablist_t *, slablist_fold_t,
+slablist_elem_t, slablist_elem_t, slablist_elem_t zero);
 
 slablist_t *slablist_create(char *, size_t, slablist_cmp_t, slablist_bnd_t, uint8_t);
 extern void slablist_destroy(slablist_t *);
@@ -74,7 +82,8 @@ extern uint64_t slablist_get_elems(slablist_t *);
 extern uint64_t slablist_get_type(slablist_t *);
 extern char *slablist_get_name(slablist_t *);
 extern int slablist_add(slablist_t *, slablist_elem_t, int);
-extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_elem_t *);
+extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_rem_cb_t);
+extern int slablist_rem_range(slablist_t *, slablist_elem_t, slablist_elem_t, slablist_rem_cb_t);
 extern void slablist_reap(slablist_t *);
 extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
 extern slablist_elem_t slablist_get_rand(slablist_t *);

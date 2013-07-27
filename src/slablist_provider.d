@@ -144,11 +144,22 @@ provider slablist {
 		(slinfo_t *sl, slablist_elem_t e, uint64_t p);
 	probe rem_head(slablist_t *sl) : (slinfo_t *sl);
 	probe rem_end(int);
+	probe rem_range_begin(slablist_t *sl, slablist_elem_t min, slablist_elem_t max) :
+		(slinfo_t *sl, slablist_elem_t min, slablist_elem_t max);
+	probe rem_range_end(int);
 	probe find_begin(slablist_t *sl, slablist_elem_t k) :
 		(slinfo_t *sl, slablist_elem_t k);
 	probe find_end(int, slablist_elem_t);
 	probe get_rand(slablist_t *sl, slablist_elem_t f) :
 		(slinfo_t *sl, slablist_elem_t f);
+	probe get_pos_begin(slablist_t *sl, uint64_t p) :
+		(slinfo_t *sl, uint64_t p);
+	probe get_pos_end(slab_t *s) :
+		(slabinfo_t *s);
+	probe get_pos_shallow();
+	probe get_pos_top_walk(slab_t *s) : (slabinfo_t *s);
+	probe get_pos_base_walk(subslab_t *s) : (subslabinfo_t *s);
+	probe get_pos_sub_walk(subslab_t *s) : (subslabinfo_t *s);
 	probe ripple_rem_slab(slablist_t *sl, slab_t *s, subslab_t *b) :
 		(slinfo_t *sl, slabinfo_t *s, subslabinfo_t *b);
 	probe ripple_rem_subslab(slablist_t *sl, subslab_t *s, subslab_t *b) :
@@ -373,6 +384,8 @@ provider slablist {
 		(int e, slabinfo_t *s, int i);
 	probe test_remove_slab(int e, subslab_t *s, int i) :
 		(int e, subslabinfo_t *s, int i);
+	probe test_rem_range(int e, slab_t *s, subslab_t *ss) :
+		(int e, slabinfo_t *s, subslabinfo_t *ss);
 	/*
 	 * This probe tests that the search functions used on a slab will all
 	 * return the same result. Fires whenever we search a slab.

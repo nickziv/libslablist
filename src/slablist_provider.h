@@ -211,6 +211,60 @@ extern "C" {
 #define	SLABLIST_FWDSHIFT_END_ENABLED() \
 	__dtraceenabled_slablist___fwdshift_end(0)
 #endif
+#define	SLABLIST_GET_POS_BASE_WALK(arg0) \
+	__dtrace_slablist___get_pos_base_walk(arg0)
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_BASE_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_base_walk()
+#else
+#define	SLABLIST_GET_POS_BASE_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_base_walk(0)
+#endif
+#define	SLABLIST_GET_POS_BEGIN(arg0, arg1) \
+	__dtrace_slablist___get_pos_begin(arg0, arg1)
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___get_pos_begin()
+#else
+#define	SLABLIST_GET_POS_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___get_pos_begin(0)
+#endif
+#define	SLABLIST_GET_POS_END(arg0) \
+	__dtrace_slablist___get_pos_end(arg0)
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_END_ENABLED() \
+	__dtraceenabled_slablist___get_pos_end()
+#else
+#define	SLABLIST_GET_POS_END_ENABLED() \
+	__dtraceenabled_slablist___get_pos_end(0)
+#endif
+#define	SLABLIST_GET_POS_SHALLOW() \
+	__dtrace_slablist___get_pos_shallow()
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_SHALLOW_ENABLED() \
+	__dtraceenabled_slablist___get_pos_shallow()
+#else
+#define	SLABLIST_GET_POS_SHALLOW_ENABLED() \
+	__dtraceenabled_slablist___get_pos_shallow(0)
+#endif
+#define	SLABLIST_GET_POS_SUB_WALK(arg0) \
+	__dtrace_slablist___get_pos_sub_walk(arg0)
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_SUB_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_sub_walk()
+#else
+#define	SLABLIST_GET_POS_SUB_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_sub_walk(0)
+#endif
+#define	SLABLIST_GET_POS_TOP_WALK(arg0) \
+	__dtrace_slablist___get_pos_top_walk(arg0)
+#ifndef	__sparc
+#define	SLABLIST_GET_POS_TOP_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_top_walk()
+#else
+#define	SLABLIST_GET_POS_TOP_WALK_ENABLED() \
+	__dtraceenabled_slablist___get_pos_top_walk(0)
+#endif
 #define	SLABLIST_GET_RAND(arg0, arg1) \
 	__dtrace_slablist___get_rand(arg0, arg1)
 #ifndef	__sparc
@@ -345,6 +399,33 @@ extern "C" {
 #else
 #define	SLABLIST_REM_HEAD_ENABLED() \
 	__dtraceenabled_slablist___rem_head(0)
+#endif
+#define	SLABLIST_REM_RANGE_BEGIN(arg0, arg1, arg2) \
+	__dtrace_slablist___rem_range_begin(arg0, arg1, arg2)
+#ifndef	__sparc
+#define	SLABLIST_REM_RANGE_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___rem_range_begin()
+#else
+#define	SLABLIST_REM_RANGE_BEGIN_ENABLED() \
+	__dtraceenabled_slablist___rem_range_begin(0)
+#endif
+#define	SLABLIST_REM_RANGE_END(arg0) \
+	__dtrace_slablist___rem_range_end(arg0)
+#ifndef	__sparc
+#define	SLABLIST_REM_RANGE_END_ENABLED() \
+	__dtraceenabled_slablist___rem_range_end()
+#else
+#define	SLABLIST_REM_RANGE_END_ENABLED() \
+	__dtraceenabled_slablist___rem_range_end(0)
+#endif
+#define	SLABLIST_REMD_INC(arg0) \
+	__dtrace_slablist___remd_inc(arg0)
+#ifndef	__sparc
+#define	SLABLIST_REMD_INC_ENABLED() \
+	__dtraceenabled_slablist___remd_inc()
+#else
+#define	SLABLIST_REMD_INC_ENABLED() \
+	__dtraceenabled_slablist___remd_inc(0)
 #endif
 #define	SLABLIST_RIPPLE_ADD_SLAB(arg0, arg1, arg2) \
 	__dtrace_slablist___ripple_add_slab(arg0, arg1, arg2)
@@ -1003,6 +1084,15 @@ extern "C" {
 #define	SLABLIST_TEST_IS_SML_LIST_ENABLED() \
 	__dtraceenabled_slablist___test_is_sml_list(0)
 #endif
+#define	SLABLIST_TEST_REM_RANGE(arg0, arg1, arg2) \
+	__dtrace_slablist___test_rem_range(arg0, arg1, arg2)
+#ifndef	__sparc
+#define	SLABLIST_TEST_REM_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_rem_range()
+#else
+#define	SLABLIST_TEST_REM_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_rem_range(0)
+#endif
 #define	SLABLIST_TEST_REMOVE_ELEM(arg0, arg1, arg2) \
 	__dtrace_slablist___test_remove_elem(arg0, arg1, arg2)
 #ifndef	__sparc
@@ -1317,6 +1407,42 @@ extern int __dtraceenabled_slablist___fwdshift_end(void);
 #else
 extern int __dtraceenabled_slablist___fwdshift_end(long);
 #endif
+extern void __dtrace_slablist___get_pos_base_walk(subslab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_base_walk(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_base_walk(long);
+#endif
+extern void __dtrace_slablist___get_pos_begin(slablist_t *, uint64_t);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_begin(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_begin(long);
+#endif
+extern void __dtrace_slablist___get_pos_end(slab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_end(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_end(long);
+#endif
+extern void __dtrace_slablist___get_pos_shallow(void);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_shallow(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_shallow(long);
+#endif
+extern void __dtrace_slablist___get_pos_sub_walk(subslab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_sub_walk(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_sub_walk(long);
+#endif
+extern void __dtrace_slablist___get_pos_top_walk(slab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___get_pos_top_walk(void);
+#else
+extern int __dtraceenabled_slablist___get_pos_top_walk(long);
+#endif
 extern void __dtrace_slablist___get_rand(slablist_t *, slablist_elem_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___get_rand(void);
@@ -1406,6 +1532,24 @@ extern void __dtrace_slablist___rem_head(slablist_t *);
 extern int __dtraceenabled_slablist___rem_head(void);
 #else
 extern int __dtraceenabled_slablist___rem_head(long);
+#endif
+extern void __dtrace_slablist___rem_range_begin(slablist_t *, slablist_elem_t, slablist_elem_t);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___rem_range_begin(void);
+#else
+extern int __dtraceenabled_slablist___rem_range_begin(long);
+#endif
+extern void __dtrace_slablist___rem_range_end(int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___rem_range_end(void);
+#else
+extern int __dtraceenabled_slablist___rem_range_end(long);
+#endif
+extern void __dtrace_slablist___remd_inc(uint64_t);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___remd_inc(void);
+#else
+extern int __dtraceenabled_slablist___remd_inc(long);
 #endif
 extern void __dtrace_slablist___ripple_add_slab(slablist_t *, slab_t *, subslab_t *);
 #ifndef	__sparc
@@ -1845,6 +1989,12 @@ extern int __dtraceenabled_slablist___test_is_sml_list(void);
 #else
 extern int __dtraceenabled_slablist___test_is_sml_list(long);
 #endif
+extern void __dtrace_slablist___test_rem_range(int, slab_t *, subslab_t *);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_rem_range(void);
+#else
+extern int __dtraceenabled_slablist___test_rem_range(long);
+#endif
 extern void __dtrace_slablist___test_remove_elem(int, slab_t *, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_remove_elem(void);
@@ -2012,6 +2162,18 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_FWDSHIFT_BEGIN_ENABLED() (0)
 #define	SLABLIST_FWDSHIFT_END()
 #define	SLABLIST_FWDSHIFT_END_ENABLED() (0)
+#define	SLABLIST_GET_POS_BASE_WALK(arg0)
+#define	SLABLIST_GET_POS_BASE_WALK_ENABLED() (0)
+#define	SLABLIST_GET_POS_BEGIN(arg0, arg1)
+#define	SLABLIST_GET_POS_BEGIN_ENABLED() (0)
+#define	SLABLIST_GET_POS_END(arg0)
+#define	SLABLIST_GET_POS_END_ENABLED() (0)
+#define	SLABLIST_GET_POS_SHALLOW()
+#define	SLABLIST_GET_POS_SHALLOW_ENABLED() (0)
+#define	SLABLIST_GET_POS_SUB_WALK(arg0)
+#define	SLABLIST_GET_POS_SUB_WALK_ENABLED() (0)
+#define	SLABLIST_GET_POS_TOP_WALK(arg0)
+#define	SLABLIST_GET_POS_TOP_WALK_ENABLED() (0)
 #define	SLABLIST_GET_RAND(arg0, arg1)
 #define	SLABLIST_GET_RAND_ENABLED() (0)
 #define	SLABLIST_GOT_HERE(arg0)
@@ -2042,6 +2204,12 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_REM_END_ENABLED() (0)
 #define	SLABLIST_REM_HEAD(arg0)
 #define	SLABLIST_REM_HEAD_ENABLED() (0)
+#define	SLABLIST_REM_RANGE_BEGIN(arg0, arg1, arg2)
+#define	SLABLIST_REM_RANGE_BEGIN_ENABLED() (0)
+#define	SLABLIST_REM_RANGE_END(arg0)
+#define	SLABLIST_REM_RANGE_END_ENABLED() (0)
+#define	SLABLIST_REMD_INC(arg0)
+#define	SLABLIST_REMD_INC_ENABLED() (0)
 #define	SLABLIST_RIPPLE_ADD_SLAB(arg0, arg1, arg2)
 #define	SLABLIST_RIPPLE_ADD_SLAB_ENABLED() (0)
 #define	SLABLIST_RIPPLE_ADD_SUBSLAB(arg0, arg1, arg2)
@@ -2188,6 +2356,8 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_TEST_IS_SLAB_LIST_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SML_LIST(arg0)
 #define	SLABLIST_TEST_IS_SML_LIST_ENABLED() (0)
+#define	SLABLIST_TEST_REM_RANGE(arg0, arg1, arg2)
+#define	SLABLIST_TEST_REM_RANGE_ENABLED() (0)
 #define	SLABLIST_TEST_REMOVE_ELEM(arg0, arg1, arg2)
 #define	SLABLIST_TEST_REMOVE_ELEM_ENABLED() (0)
 #define	SLABLIST_TEST_REMOVE_SLAB(arg0, arg1, arg2)

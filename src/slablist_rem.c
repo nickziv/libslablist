@@ -1100,16 +1100,391 @@ slablist_reap(slablist_t *sl)
 	SLABLIST_REAP_END(sl);
 }
 
+void
+update_below_usr_elems(subslab_t *s, uint64_t minus)
+{
+	while (s != NULL) {
+		s->ss_usr_elems -= minus;
+		SLABLIST_SET_USR_ELEMS(s);
+		if (SLABLIST_TEST_REM_RANGE_ENABLED()) {
+			int f = test_rem_range_sub_slim(s);
+			SLABLIST_TEST_REM_RANGE(f, NULL, s);
+		}
+		s = s->ss_below;
+	}
+}
+
+
 /*
- * Remove the pos'th element in this slablist. Or remove the element that is ==
- * to `elem`. Note that this function does _not_ deallocate the memory that
- * backs large objects.
+ * Forward declaration of slablist_rem_impl.
+ */
+int slablist_rem_impl(slablist_t *, slablist_elem_t, uint64_t,
+    slablist_rem_cb_t);
+
+void
+rem_subslabs_between(subslab_t *start, subslab_t *stop)
+{
+	if (start == stop) {
+		return;
+	}
+	subslab_t *s = start->ss_next;
+	subslab_t *nx;
+	slablist_t *sl = start->ss_list;
+	while (s != stop) {
+		nx = s->ss_next;
+		sl->sl_elems -= s->ss_elems;
+		if (s->ss_below != NULL) {
+			int j = sublayer_slab_ptr_srch(s, s->ss_below);
+			remove_slab(j, s->ss_below);
+		}
+		unlink_subslab(s);
+		rm_subarr(s->ss_arr);
+		rm_subslab(s);
+		s = nx;
+	}
+}
+
+void
+rem_slabs_between(slab_t *start, slab_t *stop)
+{
+	if (start == stop) {
+		return;
+	}
+	slab_t *s = start->s_next;
+	slab_t *nx;
+	slablist_t *sl = start->s_list;
+	uint64_t elems;
+	while (s != stop) {
+		nx = s->s_next;
+		sl->sl_elems -= s->s_elems;
+		elems = s->s_elems;
+		s->s_elems = 0;
+		update_below_usr_elems(s->s_below, elems);
+		if (s->s_below != NULL) {
+			int j = sublayer_slab_ptr_srch(s, s->s_below);
+			remove_slab(j, s->s_below);
+		}
+		unlink_slab(s);
+		rm_slab(s);
+		s = nx;
+	}
+}
+
+int
+is_subslab_range(subslab_t *ss, slablist_elem_t min, slablist_elem_t max)
+{
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) <= 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) >= 0) {
+		return (1);
+	}
+	return (0);
+}
+
+int
+is_slab_range(slab_t *s, slablist_elem_t min, slablist_elem_t max)
+{
+	if (s->s_list->sl_cmp_elem(min, s->s_min) <= 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) >= 0) {
+		return (1);
+	}
+	return (0);
+}
+
+int
+is_subslab_part_range(subslab_t *ss, slablist_elem_t min, slablist_elem_t max)
+{
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) > 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) < 0) {
+		return (1);
+	}
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) > 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) == 0) {
+		return (1);
+	}
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) == 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) < 0) {
+		return (1);
+	}
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) < 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) < 0) {
+		return (1);
+	}
+	if (ss->ss_list->sl_cmp_elem(min, ss->ss_min) > 0 &&
+	    ss->ss_list->sl_cmp_elem(max, ss->ss_max) > 0) {
+		return (1);
+	}
+	return (0);
+}
+
+int
+is_slab_part_range(slab_t *s, slablist_elem_t min, slablist_elem_t max)
+{
+	if (s->s_list->sl_cmp_elem(min, s->s_min) > 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) < 0) {
+		return (1);
+	}
+	if (s->s_list->sl_cmp_elem(min, s->s_min) > 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) == 0) {
+		return (1);
+	}
+	if (s->s_list->sl_cmp_elem(min, s->s_min) == 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) < 0) {
+		return (1);
+	}
+	if (s->s_list->sl_cmp_elem(min, s->s_min) < 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) < 0) {
+		return (1);
+	}
+	if (s->s_list->sl_cmp_elem(min, s->s_min) > 0 &&
+	    s->s_list->sl_cmp_elem(max, s->s_max) > 0) {
+		return (1);
+	}
+	return (0);
+}
+
+
+void
+remove_range_elems(slab_t *s, slablist_elem_t min, slablist_elem_t max,
+    slablist_rem_cb_t f)
+{
+	int i = slab_bin_srch(min, s);
+	int j = slab_bin_srch(max, s);
+	slablist_t *sl = s->s_list;
+	if (j == s->s_elems) {
+		j--;
+	} else if (sl->sl_cmp_elem(max, s->s_arr[j]) < 0) {
+		j--;
+	}
+	uint64_t tail = s->s_elems - 1 - j;
+	int k = i;
+	if (f == NULL) {
+		goto skip_cb;
+	}
+	while (k <= j) {
+		f(s->s_arr[k]);
+		k++;
+	}
+skip_cb:;
+	s->s_elems -= j - i + 1;
+	if (tail > 0) {
+		bcopy(s->s_arr + j + 1, s->s_arr + i, tail * 8);
+	}
+	s->s_min = s->s_arr[0];
+	s->s_max = s->s_arr[(s->s_elems - 1)];
+	update_below_usr_elems(s->s_below, j - i + 1);
+	if (s->s_below != NULL && s->s_below->ss_elems > 0) {
+		ripple_update_extrema(s->s_list, s->s_below);
+	}
+	if (SLABLIST_TEST_REM_RANGE_ENABLED()) {
+		int fail = test_rem_range(s);
+		SLABLIST_TEST_REM_RANGE(fail, s, NULL);
+		
+	}
+}
+
+void
+decruftify_slab(slab_t *s, slablist_elem_t min, slablist_elem_t max,
+    slablist_rem_cb_t f)
+{
+	int i; 
+	int j;
+	if (is_slab_range(s, min, max)) {
+		if (s->s_below != NULL) {
+			j = sublayer_slab_ptr_srch(s, s->s_below);
+			remove_slab(j, s->s_below);
+		}
+		if (f == NULL) {
+			goto skip_cb;
+		}
+		while (i < s->s_elems) {
+			f(s->s_arr[i]);
+			i++;
+		}
+skip_cb:;
+		update_below_usr_elems(s->s_below, s->s_elems);
+		ripple_update_extrema(s->s_list, s->s_below);
+		s->s_list->sl_elems -= s->s_elems;
+		unlink_slab(s);
+		rm_slab(s);
+	} else if (is_slab_part_range(s, min, max)) {
+		remove_range_elems(s, min, max, f);
+	}
+}
+
+void
+decruftify_subslab(subslab_t *s, slablist_elem_t min, slablist_elem_t max)
+{
+	if (s == NULL) {
+		return;
+	}
+	int j;
+	if (is_subslab_range(s, min, max)) {
+		if (s->ss_below != NULL) {
+			j = sublayer_slab_ptr_srch(s, s->ss_below);
+			remove_slab(j, s->ss_below);
+		}
+		s->ss_list->sl_elems -= s->ss_elems;
+		unlink_subslab(s);
+		rm_subarr(s->ss_arr);
+		rm_subslab(s);
+	}
+}
+
+void
+decruftify_edge_slabs(slab_t *start, slab_t *stop, slablist_elem_t min,
+    slablist_elem_t max, slablist_rem_cb_t f)
+{
+	/*
+	 * We only have to decruftify one downward sequence of slabs.
+	 */
+	subslab_t *bstart;
+	subslab_t *bstop;
+	subslab_t *p;
+	if (start == stop) {
+		bstart = start->s_below;
+		decruftify_slab(start, min, max, f);
+		while (bstart != NULL) {
+			p = bstart->ss_below;
+			decruftify_subslab(bstart, min, max);
+			bstart = p;
+		}
+	} else {
+		bstart = start->s_below;
+		bstop = stop->s_below;
+		decruftify_slab(start, min, max, f);
+		decruftify_slab(stop, min, max, f);
+		while (bstart != NULL) {
+			if (bstart == bstop) {
+				p = bstart->ss_below;
+				decruftify_subslab(bstart, min, max);
+				bstart = p;
+			} else {
+				p = bstart->ss_below;
+				decruftify_subslab(bstart, min, max);
+				bstart = p;
+				p = bstop->ss_below;
+				decruftify_subslab(bstop, min, max);
+				bstop = p;
+			}
+		}
+	}
+}
+
+int
+slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
+    slablist_rem_cb_t f)
+{
+	SLABLIST_REM_RANGE_BEGIN(sl, min, max);
+	lock_list(sl);
+	if (!SLIST_SORTED(sl->sl_flags)) {
+		unlock_list(sl);
+		SLABLIST_REM_RANGE_END(SL_ARGORD);
+		return (SL_ARGORD);
+	}
+
+	int ret;
+	if (sl->sl_cmp_elem(min, max) == 0) {
+		ret = slablist_rem_impl(sl, min, 0, f);
+		unlock_list(sl);
+		SLABLIST_REM_RANGE_END(ret);
+		return (ret);
+	}
+
+	if (sl->sl_is_small_list) {
+		small_list_t *node = sl->sl_head;
+		small_list_t *prev = NULL;
+		/* we find the first node */
+		while (sl->sl_cmp_elem(min, node->sml_data) > 0) {
+			prev = node;
+			node = node->sml_next;
+		}
+		/* we got here so node is >= min */
+		small_list_t *to_rm = NULL;
+		int remd_head = 0;
+		/* we remove the nodes from [min, max] */
+		while (node != NULL &&
+		    sl->sl_cmp_elem(max, node->sml_data) >= 0) {
+			to_rm = node;
+			node = node->sml_next;
+			rm_sml_node(to_rm);
+			if (to_rm == sl->sl_head) {
+				remd_head = 1;
+			}
+			sl->sl_elems--;
+			SLABLIST_SL_DEC_ELEMS(sl);
+		}
+		if (prev != NULL) {
+			prev->sml_next = node;
+		}
+		if (remd_head) {
+			sl->sl_head = node;
+		}
+		unlock_list(sl);
+		SLABLIST_REM_RANGE_END(SL_SUCCESS);
+		return (SL_SUCCESS);
+	}
+
+	slablist_t *bl;
+	slab_t *smin;
+	slab_t *smax;
+	if (sl->sl_sublayers) {
+		find_bubble_up(sl, min, &smin);
+		find_bubble_up(sl, max, &smax);
+	} else {
+		find_linear_scan(sl, min, &smin);
+		find_linear_scan(sl, max, &smax);
+	}
+
+	subslab_t *below_f = smin->s_below;
+	subslab_t *below_l = smax->s_below;
+	rem_slabs_between(smin, smax);
+	while (below_f != NULL) {
+		rem_subslabs_between(below_f, below_l);
+		below_f = below_f->ss_below;
+		below_l = below_l->ss_below;
+	}
+
+	/*
+	 * Now, all we have to do is handle the left over edge-slabs.
+	 */
+	decruftify_edge_slabs(smin, smax, min, max, f);
+
+	/*
+	 * Remove uneccessary sublayers.
+	 */
+	bl = sl->sl_baselayer;
+	slablist_t *sup = bl->sl_superlayer;
+	uint8_t layer = bl->sl_layer;
+	while (layer > 0) {
+		if (sup->sl_slabs < sl->sl_req_sublayer) {
+			detach_sublayer(sup);
+		}
+		sup = sup->sl_superlayer;
+		layer--;
+	}
+	if (!(sl->sl_is_small_list) && sl->sl_elems == SMELEM_MAX) {
+		/*
+		 * If we have lowered the number of elems to 1/2 a slab, we
+		 * turn the slab into a small linked list.
+		 */
+		slab_to_small_list(sl);
+	}
+	unlock_list(sl);
+	SLABLIST_REM_RANGE_END(SL_SUCCESS);
+	return (SL_SUCCESS);
+}
+
+/*
+ * Implements the removal logic for `slablist_rem()` and for some calls of
+ * `slablist_rem_range()`.
  */
 int
-slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t *rdl)
+slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
+    slablist_rem_cb_t *rcb)
 {
 	lock_list(sl);
 
+	slablist_elem_t rdl;
 	uint64_t off_pos;
 	slab_t *s = NULL;
 	int i;
@@ -1131,7 +1506,7 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 		 * element.
 		 */
 		SLABLIST_REM_BEGIN(sl, elem, pos);
-		ret = small_list_rem(sl, elem, pos, rdl);
+		ret = small_list_rem(sl, elem, pos, &rdl);
 		goto end;
 	}
 
@@ -1163,9 +1538,7 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 			 * If the element was not found, we have nothing to
 			 * remove, and return.
 			 */
-			if (rdl != NULL) {
-				rdl->sle_u = NULL;
-			}
+			rdl.sle_u = NULL;
 
 			ret = SL_ENFOUND;
 			goto end;
@@ -1179,9 +1552,7 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 		i = off_pos;
 	}
 
-	if (rdl != NULL) {
-		*rdl = s->s_arr[i];
-	}
+	rdl = s->s_arr[i];
 
 	remove_elem(i, s);
 
@@ -1207,9 +1578,32 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
 end:;
+	if (rcb != NULL) {
+		rcb(rdl);
+	}
 	unlock_list(sl);
 
 	SLABLIST_REM_END(ret);
 
+	return (ret);
+}
+
+/*
+ * Public function that removes the pos'th element in this slablist. Or remove
+ * the element that is == to `elem`. Note that this function does _not_
+ * deallocate the memory that backs large objects. This function wraps around
+ * `slablist_rem_impl()` which is also used in ranged removals. We do this
+ * wrapping in order to separate the locking of `sl` from the removal logic
+ * itself. This allows other functions, that lock at a higher level (like this
+ * one or like `slablist_rem_range()`) to call `slablist_rem_impl()` without
+ * unlocking the list first.
+ */
+int
+slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
+    slablist_rem_cb_t *rcb)
+{
+	lock_list(sl);
+	int ret = slablist_rem_impl(sl, elem, pos, rcb);
+	unlock_list(sl);
 	return (ret);
 }

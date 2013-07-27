@@ -31,12 +31,6 @@
 #include "slablist_test.h"
 #include "slablist_cons.h"
 
-void marker1(){};
-void marker2(){};
-void marker3(){};
-void marker4(){};
-void marker5(){};
-
 slab_t *
 slab_get_elem_pos_old(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 {
@@ -82,7 +76,7 @@ slab_get_elem_pos_old(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		ecnt += slab->s_elems;
 
 		if (ecnt >= mod) {
-			*off_pos = ecnt - slab->s_elems;
+			*off_pos = ecnt - mod - 1;
 			return (slab);
 		}
 
@@ -101,6 +95,7 @@ slab_get_elem_pos_old(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 slab_t *
 slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 {
+	SLABLIST_GET_POS_BEGIN(sl, pos);
 	slab_t *slab = sl->sl_head;
 	/* get the slab that contains the value at this position */
 	uint64_t act_pos;
@@ -121,9 +116,15 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		act_pos = pos;
 	}
 
-	marker1();
+	if (act_pos == 0) {
+		*off_pos = 0;
+		return (sl->sl_head);
+	}
+
+	uint64_t sum_usr_elems = 0;
+	uint64_t elems_skipped = 0;
 	if (!(sl->sl_sublayers)) {
-		uint64_t ecnt = sl->sl_elems;
+		SLABLIST_GET_POS_SHALLOW();
 		uint64_t i = 0;
 		/*
 		 * We keep updating `ecnt` with the number of elements
@@ -134,30 +135,32 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		 * `ecnt` _before_ we visited the current slab.
 		 */
 		while (i < sl->sl_slabs) {
-			ecnt += slab->s_elems;
+			sum_usr_elems += slab->s_elems;
 
-			if (ecnt >= act_pos) {
-				*off_pos = ecnt - slab->s_elems;
+			if (sum_usr_elems >= act_pos) {
+				elems_skipped = sum_usr_elems - slab->s_elems;
+				//*off_pos = ecnt - act_pos - 1;
+				*off_pos = act_pos - elems_skipped - 1;
 				return (slab);
 			}
 
+			SLABLIST_GET_POS_TOP_WALK(slab);
 			slab = slab->s_next;
 			i++;
 		}
 	}
 
-	marker2();
 	slablist_t *bl = sl->sl_baselayer;
 	subslab_t *b = bl->sl_head;
 	uint16_t layers = bl->sl_layer;
 	uint16_t layer = 0;
-	uint64_t sum_usr_elems = 0;
 	/*
 	 * We visit the subslabs in the baselayer, adding up their ss_usr_elems
 	 * members, until this sum exceeds the position we are looking for.
 	 */
 	while (b != NULL) {
 		sum_usr_elems += b->ss_usr_elems;
+		SLABLIST_GET_POS_BASE_WALK(b);
 		if (sum_usr_elems >= act_pos) {
 			break;
 		}
@@ -169,9 +172,8 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	 * reachable from subslab `b`. In `elems_skipped` we store the number
 	 * of elements we had to skip before we got subslab `b`.
 	 */
-	uint64_t elems_skipped = sum_usr_elems - b->ss_usr_elems;
+	elems_skipped = sum_usr_elems - b->ss_usr_elems;
 
-	marker3();
 	/*
 	 * We reset `sum_usr_elems` to `elems_skipped`, so that we can now work
 	 * our way up the layers, using the same basic algorithm we used in the
@@ -184,6 +186,7 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		subslab_t *c = GET_SUBSLAB_ELEM(b, 0);
 		while (c != NULL) {
 			sum_usr_elems += c->ss_usr_elems;
+			SLABLIST_GET_POS_SUB_WALK(c);
 			if (sum_usr_elems >= act_pos) {
 				break;
 			}
@@ -194,7 +197,6 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		layer++;
 	}
 
-	marker4();
 	/*
 	 * We have reached the toplayer, and we now employ the same basic
 	 * algorithm as in the above inner-loop but for slab_t's instead.
@@ -203,6 +205,7 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	sum_usr_elems = elems_skipped;
 	while (s != NULL) {
 		sum_usr_elems += s->s_elems;
+		SLABLIST_GET_POS_TOP_WALK(s);
 		if (sum_usr_elems >= act_pos) {
 			break;
 		}
@@ -219,6 +222,7 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		uint64_t deriv = pos - obptr - 1;
 		SLABLIST_TEST_GET_ELEM_POS(f, s, old_slab, *off_pos, deriv);
 	}
+	SLABLIST_GET_POS_END(s);
 	return (s);
 }
 
@@ -337,6 +341,7 @@ sublayer_slab_ptr_srch(void *elem, subslab_t *s)
 	}
 	return ((int)-1);
 }
+
 
 /*
  * Binary search for `elem` in slab `s`.
@@ -707,6 +712,8 @@ end:;
 	return (r);
 }
 
+
+
 /*
  * Finds the slab into which `elem` could fit, by using the base-layer as a
  * starting point. Records all subslabs that were walked over into the `crumbs`.
@@ -720,6 +727,11 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 	int layers = 1;
 	int f = 0;
 	subslab_t *found = NULL;
+#define E_TEST_FBU_NOT_LAYERED 48
+	if (sl->sl_sublayers == 0) {
+		SLABLIST_TEST_FIND_BUBBLE_UP(E_TEST_FBU_NOT_LAYERED, NULL,
+		    NULL, elem, 0);
+	}
 	if (sl->sl_sublayers > 1) {
 
 		/* find the baseslab from which to start bubbling up */

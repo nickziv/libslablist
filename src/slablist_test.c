@@ -76,6 +76,8 @@
 #define E_TEST_SUBSLAB_USR_ELEMS_OVER	44
 #define E_TEST_SUBSLAB_USR_ELEMS_UNDER	45
 #define E_TEST_ELEM_POS			46
+#define E_TEST_SLAB_BELOW		47
+#define E_TEST_FBU_NOT_LAYERED		48
 
 int
 test_slab_get_elem_pos(slablist_t *sl, slab_t *s, slab_t **f, uint64_t pos,
@@ -292,6 +294,11 @@ test_slab(slab_t *s)
 	/* test that the slab is at the top layer */
 	if (sl->sl_layer != 0) {
 		return (E_TEST_SLAB_SUBLAYER);
+	}
+
+	/* test that this slab has a pointer to its subslab */
+	if (sl->sl_sublayers && s->s_below == NULL) {
+		return (E_TEST_SLAB_BELOW);
 	}
 
 	int f = test_slab_extrema(s);
@@ -674,9 +681,6 @@ test_remove_elem(uint64_t i, slab_t *s)
 	if (f != 0) {
 		return (f);
 	}
-	if (s->s_elems == 0) {
-		return (E_TEST_REM_ELEM_EMPTY);
-	}
 	if (i > SELEM_MAX - 1) {
 		return (E_TEST_REM_ELEM_BEYOND);
 	}
@@ -689,9 +693,6 @@ test_remove_slab(uint64_t i, subslab_t *s)
 	int f = test_subslab(s);
 	if (f != 0) {
 		return (f);
-	}
-	if (s->ss_elems == 0) {
-		return (E_TEST_REM_SLAB_EMPTY);
 	}
 	if (i > SUBELEM_MAX - 1) {
 		return (E_TEST_REM_SLAB_BEYOND);
@@ -752,6 +753,45 @@ test_ripple_add_slab(slab_t *new, slab_t *modified, int bc)
 	}
 	return (0);
 }
+
+int
+test_rem_range(slab_t *s)
+{
+	int f;
+	f = test_slab(s);
+	return (f);
+}
+
+int
+test_rem_range_sub_slim(subslab_t *s)
+{
+	int f;
+	f = test_subslab_usr_elems(s);
+	if (f != 0) {
+		return (f);
+	}
+	return (0);
+}
+
+int
+test_rem_range_sub(subslab_t *s)
+{
+	int f;
+	f = test_subslab(s);
+	if (f != 0) {
+		return (f);
+	}
+	f = test_subslab_extrema(s);
+	if (f != 0) {
+		return (f);
+	}
+	f = test_subslab_usr_elems(s);
+	if (f != 0) {
+		return (f);
+	}
+	return (0);
+}
+
 
 int
 test_find_bubble_up(subslab_t *found, slab_t *sbptr, slablist_elem_t elem)

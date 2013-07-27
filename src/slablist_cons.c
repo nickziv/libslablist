@@ -737,6 +737,33 @@ slablist_map(slablist_t *sl, slablist_map_t f)
 	}
 }
 
+void
+slablist_map_range(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
+slablist_elem_t max)
+{
+	slab_t *smin = NULL;
+	slab_t *smax = NULL;
+	find_bubble_up(sl, min, &smin);
+	find_bubble_up(sl, max, &smax);
+	int i;
+	int j;
+	if (smin == smax) {
+		i = slab_bin_srch(min, smin);
+		j = slab_bin_srch(max, smin);
+		f((smin->s_arr)+i, j-i);
+	}
+	slab_t *slab = smin;
+	i = slab_bin_srch(min, smin);
+	f((slab->s_arr)+i, (slab->s_elems)-i);
+	slab = slab->s_next;
+	while (slab != smax) {
+		f(slab->s_arr, slab->s_elems);
+		slab = slab->s_next;
+	}
+	i = slab_bin_srch(max, slab);
+	f(slab->s_arr, i+1);
+}
+
 /*
  * Folds a function from start to end of a slab list. The function itself folds
  * from the start to the end of _slab_. This function expects an accumulator,
@@ -782,5 +809,65 @@ slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 		s = s->s_prev;
 		slab++;
 	}
+	return (accumulator);
+}
+
+slablist_elem_t
+slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
+    slablist_elem_t max, slablist_elem_t zero)
+{
+	slablist_elem_t accumulator = zero;
+	slab_t *smin = NULL;
+	slab_t *smax = NULL;
+	find_bubble_up(sl, min, &smin);
+	find_bubble_up(sl, max, &smax);
+	int i;
+	int j;
+	if (smin == smax) {
+		i = slab_bin_srch(min, smin);
+		j = slab_bin_srch(max, smin);
+		accumulator = f(accumulator, (smin->s_arr)+i, j-i);
+		return (accumulator);
+	}
+	slab_t *slab = smin;
+	i = slab_bin_srch(min, smin);
+	accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+	slab = slab->s_next;
+	while (slab != smax) {
+		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
+		slab = slab->s_next;
+	}
+	i = slab_bin_srch(max, slab);
+	accumulator = f(accumulator, slab->s_arr, i+1);
+	return (accumulator);
+}
+
+slablist_elem_t
+slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
+    slablist_elem_t max, slablist_elem_t zero)
+{
+	slablist_elem_t accumulator = zero;
+	slab_t *smin = NULL;
+	slab_t *smax = NULL;
+	find_bubble_up(sl, min, &smin);
+	find_bubble_up(sl, max, &smax);
+	int i;
+	int j;
+	if (smin == smax) {
+		i = slab_bin_srch(min, smin);
+		j = slab_bin_srch(max, smin);
+		accumulator = f(accumulator, (smin->s_arr)+i, j-i);
+		return (accumulator);
+	}
+	slab_t *slab = smax;
+	i = slab_bin_srch(max, smax);
+	accumulator = f(accumulator, slab->s_arr, i+1);
+	slab = slab->s_prev;
+	while (slab != smin) {
+		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
+		slab = slab->s_prev;
+	}
+	i = slab_bin_srch(min, slab);
+	accumulator = f(accumulator, slab->s_arr+i, slab->s_elems - i);
 	return (accumulator);
 }

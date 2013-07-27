@@ -481,7 +481,6 @@ typedef struct rem_ctx {
 	subslab_t		*rc_below;
 } rem_ctx_t;
 
-
 struct slablist {
 	pthread_mutex_t		sl_mutex;
 	slablist_t		*sl_prev;

@@ -576,6 +576,14 @@ sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 static void
 subslab_update_extrema(subslab_t *p)
 {
+	/*
+	 * Sometimes, when calling `ripple_update_extrema` from the
+	 * range-removal code, we pass an empty subslab to this function. We
+	 * proceed with the extrema-update only if the subslab is not empty.
+	 */
+	if (p->ss_elems == 0) {
+		return;
+	}
 	int last = p->ss_elems - 1;
 	subslab_t *ssf;
 	subslab_t *ssl;

@@ -1,4 +1,4 @@
-#pragma D option quiet
+/* #pragma D option quiet */
 
 dtrace:::BEGIN
 {
@@ -161,6 +161,50 @@ slablist$target:::test_remove_elem
 {
 	fail = arg0;
 	printf("Slab provided to remove_elem() is NULL.\n");
+	exit(0);
+}
+
+
+slablist$target:::test_rem_range
+/arg0/
+{
+	printf("ERROR: %d  %s\n", arg0, e_test_descr[arg0]);
+}
+
+slablist$target:::test_rem_range
+/arg0 && arg1 != NULL/
+{
+	printf("\nSlab Details:\n");
+	printf("----------------\n");
+	printf("\tmin: %u\n", args[1]->si_min.sle_u);
+	printf("\tmax: %u\n", args[1]->si_max.sle_u);
+	printf("\telems: %u\n", args[1]->si_elems);
+	printf("\tnext: %p\n", args[1]->si_next);
+	printf("\tprev: %p\n\n", args[1]->si_prev);
+	printf("Arr:\n");
+	printf("----\n");
+	trace(args[1]->si_arr);
+	printf("Stack:\n");
+	ustack();
+	exit(0);
+}
+
+slablist$target:::test_rem_range
+/arg0 && arg2 != NULL/
+{
+	printf("\nSubslab Details:\n");
+	printf("-------------------\n");
+	printf("\tmin: %u\n", args[2]->ssi_min.sle_u);
+	printf("\tmax: %u\n", args[2]->ssi_max.sle_u);
+	printf("\telems: %u\n", args[2]->ssi_elems);
+	printf("\tnext: %p\n", args[2]->ssi_next);
+	printf("\tprev: %p\n\n", args[2]->ssi_prev);
+	printf("Arr:\n");
+	printf("----\n");
+	self->sa = args[2]->ssi_arr;
+	trace(subarrinfo[self->sa]->sai_data);
+	printf("Stack:\n");
+	ustack();
 	exit(0);
 }
 

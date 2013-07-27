@@ -44,6 +44,8 @@ inline int E_TEST_SUBSLAB_ARR_MAX = 43;
 inline int E_TEST_SUBSLAB_USR_ELEMS_OVER = 44;
 inline int E_TEST_SUBSLAB_USR_ELEMS_UNDER = 45;
 inline int E_TEST_ELEM_POS = 46;
+inline int E_TEST_SLAB_BELOW = 47;
+inline int E_TEST_FBU_NOT_LAYERED = 48;
 
 inline string e_test_descr[int err] =
 	err == 0 ? "[ PASS ]" :
@@ -94,6 +96,8 @@ inline string e_test_descr[int err] =
 	err == E_TEST_SUBSLAB_USR_ELEMS_OVER ? "[subslab usrelems too large]" :
 	err == E_TEST_SUBSLAB_USR_ELEMS_UNDER ? "[subslab usrelems too small]" :
 	err == E_TEST_ELEM_POS ? "[get_elem_pos != get_elem_pos_old]" :
+	err == E_TEST_SLAB_BELOW ? "[slab->s_below == NULL]" :
+	err == E_TEST_FBU_NOT_LAYERED ? "[bubbling up on non-layered SL]" :
 	"[[BAD ERROR CODE]]";
 
 

@@ -202,6 +202,7 @@ void
 do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 {
 	uint64_t ops = 0;
+	static uint64_t rd = 0;
 	slablist_elem_t elem;
 	slablist_elem_t randrem;
 	slablist_elem_t remd;
@@ -210,7 +211,7 @@ do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 		if (str) {
 			elem.sle_p = get_str(fd);
 		} else {
-			uint64_t rd = get_data(fd);
+			rd++;
 			elem.sle_u = rd;
 		}
 
@@ -239,34 +240,36 @@ do_ops(slablist_t *sl, uint64_t maxops, int str, int ord)
 }
 
 
+/*
+ * We know that the elems are sequential and incrementally increasing in value.
+ */
 void
-do_free_remaining(slablist_t *sl, int str, int ord)
+do_free_remaining(slablist_t *sl, uint64_t range_sz, int str, int ord)
 {
+	if (range_sz < 1) {
+		return;
+	}
 	uint64_t remaining = slablist_get_elems(sl);
+	uint64_t ops = remaining/range_sz;
 	uint64_t type = slablist_get_type(sl);
 	char *name = slablist_get_name(sl);
 	printf("%s: %d\n", name, type);
-	slablist_elem_t elem;
-	slablist_elem_t randrem;
-	slablist_elem_t zero_rem;
-	zero_rem.sle_u = 0;
+	slablist_elem_t min;
+	slablist_elem_t max;
 	int ret;
-	while (remaining > 0) {
+	int i = 0;
+	uint64_t pos = 0;
+	while (i < ops) {
+		min = slablist_get(sl, pos);
+		max = slablist_get(sl, pos + range_sz);
 		if (type == SL_SORTED) {
-			randrem = slablist_get_rand(sl);
 			if (str) {
-				ret = slablist_rem(sl, randrem, 0, rm_cb_str);
+				ret = slablist_rem_range(sl, min, max, rm_cb_str);
 			} else {
-				ret = slablist_rem(sl, randrem, 0, NULL);
-			}
-		} else {
-			if (str) {
-				ret = slablist_rem(sl, zero_rem, 0, rm_cb_str);
-			} else {
-				ret = slablist_rem(sl, zero_rem, 0, NULL);
+				ret = slablist_rem_range(sl, min, max, NULL);
 			}
 		}
-		remaining--;
+		i++;
 	}
 
 	slablist_destroy(sl);
@@ -283,9 +286,13 @@ main(int ac, char *av[])
 {
 	fd = open("/dev/urandom", O_RDONLY);
 	uintptr_t times = 1;
+	uint64_t range_sz = 5;
 
 	if (ac > 1) {
 		times = (uintptr_t) atoi(av[1]);
+	}
+	if (ac > 3) {
+		range_sz = (uint64_t)atoi(av[3]);
 	}
 
 	int intsrt = 0;
@@ -297,46 +304,26 @@ main(int ac, char *av[])
 		if (strcmp("intsrt", av[aci]) == 0) {
 			intsrt++;
 		}
-		if (strcmp("intord", av[aci]) == 0) {
-			intord++;
-		}
 		if (strcmp("strsrt", av[aci]) == 0) {
 			strsrt++;
-		}
-		if (strcmp("strord", av[aci]) == 0) {
-			strord++;
 		}
 		aci++;
 	}
 	uint64_t maxops = times;
 	slablist_t *sl_str_s = NULL;
 	slablist_t *sl_int_s = NULL;
-	slablist_t *sl_str_o = NULL;
-	slablist_t *sl_int_o = NULL;
 
 	if (strsrt) {
 		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
 					bndfun_str, SL_SORTED);
 		do_ops(sl_str_s, maxops, STR, SRT);
-		do_free_remaining(sl_str_s, STR, SRT);
+		do_free_remaining(sl_str_s, range_sz, STR, SRT);
 	}
 	if (intsrt) {
 		sl_int_s = slablist_create("intlistsrt", 8, cmpfun, bndfun,
 					SL_SORTED);
 		do_ops(sl_int_s, maxops, INT, SRT);
-		do_free_remaining(sl_int_s, INT, SRT);
-	}
-	if (strord) {
-		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
-					bndfun_str, SL_ORDERED);
-		do_ops(sl_str_o, maxops, STR, ORD);
-		do_free_remaining(sl_str_o, STR, ORD);
-	}
-	if (intord) {
-		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun,
-					SL_ORDERED);
-		do_ops(sl_int_o, maxops, INT, ORD);
-		do_free_remaining(sl_int_o, INT, ORD);
+		do_free_remaining(sl_int_s, range_sz, INT, SRT);
 	}
 	end();
 	close(fd);
