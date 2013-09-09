@@ -1,0 +1,130 @@
+#!/bin/ksh
+
+source ../main/impls
+
+pbm_base[0]=heap_growth_vs_time_
+pbm_base[1]=elements_rate_vs_time_
+pbm_base[2]=elements_vs_time_
+
+in_pa[0]=rand
+in_pa[1]=seqinc
+
+in_sz[0]=100000
+in_sz[1]=1000000
+in_sz[2]=5000000
+
+scale[0]=log
+scale[1]=lin
+
+data_type[0]=intsrt
+data_type[1]=intord
+data_type[2]=strord
+data_type[3]=strsrt
+
+
+#input[0]=heap_growth
+input[1]=throughput_post
+#input[2]=throughput
+input[3]=throughput_plus_heap
+
+for w in 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
+	for s in 0 ; do  #data type
+	for x in 1 3; do #input
+		for y in 1 2; do #size
+			for z in 0 1 ; do #pattern
+				M=${impl[$w]}
+				echo SWAG 
+				echo $M
+				N=${input[$x]}
+				Z=${in_sz[$y]}
+				P=${in_pa[$z]}
+				D=${data_type[$s]}
+				INF="../$M/"$N"_"$D"_"$P"_"$Z
+				OU=$M"_"$N"_"$D"_"$P"_"$Z
+				TRI_E=$M"_""throughput""_"$D"_"$P"_"$Z
+				TRI_H=$M"_""heap_growth""_"$D"_"$P"_"$Z
+				BI_ER=$M"_""throughput_post""_"$D"_"$P"_"$Z
+				OUF=$OU".pbm"
+				BL="../uuavl/"$N"_"$D"_"$P"_"$Z
+				#gnuplot -e "inputfile='$INF'" \
+				# -e "outputfile='$OUF'" plotscript_big_indiv
+
+				if [[ x -eq 3 ]]; then
+
+					echo $TRI_E
+					echo $TRI_H
+					echo "$BL v. $INF"
+					gnuplot -e "inputfile1='$BL'" \
+						-e "inputfile2='$INF'" \
+						-e "elems_v_time_out='$TRI_E.pbm'" \
+						-e "heap_v_time_out='$TRI_H.pbm'" \
+						 plotscript_tri_pair
+					pnmtops -height 2.8 -width 3.7 $TRI_E.pbm \
+						> $TRI_E.eps;
+					pnmtops -height 2.8 -width 3.7 $TRI_H.pbm \
+						> $TRI_H.eps;
+					pnmtojpeg $TRI_E.pbm \
+						> $TRI_E.jpeg
+					pnmtojpeg $TRI_H.pbm \
+						> $TRI_H.jpeg
+					chmod a+rw $TRI_E.pbm
+					chmod a+rw $TRI_H.pbm
+					./gen_tex $TRI_E throughput $D $P $Z $M
+					./gen_tex $TRI_H heap_growth $D $P $Z $M
+				fi;
+
+				if [[ x -eq 1 ]]; then
+					echo $BI_ER
+					echo "$BL v. $INF"
+					gnuplot -e "inputfile1='$BL'" \
+						-e "inputfile2='$INF'" \
+						-e "outputfile='$BI_ER.pbm'"  plotscript_big_pair
+					pnmtops -height 2.8 -width 3.7 $BI_ER.pbm \
+						> $BI_ER.eps;
+					pnmtojpeg $BI_ER.pbm \
+						> $BI_ER.jpeg
+					chmod a+rw $BI_ER.pbm
+					chmod a+rw $BI_ER.eps
+					chmod a+rw $BI_ER.jpeg
+					./gen_tex $BI_ER throughput_post $D $P $Z $M
+				fi
+
+				#if [[ 0 ]]; then
+					#chmod a+rw $OUF
+					#pnmtops -height 2.8 -width 3.7 $OUF \
+						#> $OU".eps";
+					#chmod a+rw $OU".eps";
+					#pnmtojpeg $OUF \
+						#> $OU".jpeg";
+					#chmod a+rw $OU".jpeg";
+					#./gen_tex $OU $N $D $P $Z $M
+				#fi
+			done
+		done
+	done
+	done
+done
+
+
+#gnuplot plotscript_small;
+#gnuplot plotscript_big_rand;
+#gnuplot plotscript_big_seq;
+
+
+for i in 0 1; do #input pattern
+	for j in 0 1; do #scale
+		for k in 0 1 2; do #base
+			for l in 1; do #size
+				b=${pbm_base[$k]}
+				p=${in_pa[$i]}
+				z=${in_sz[$l]}
+				s=${scale[$j]}
+				#pnmtops -height 2.8 -width 3.7 $b$p$z$s".pbm" \
+				#pnmtops -height 1.512 -width 2 $b$p$z$s".pbm" \
+				#	> $b$p$z$s".ps";
+				#pnmtojpeg $b$p$z$s".pbm" \
+				#	> $b$p$z$s".jpeg";
+			done
+		done
+	done
+done

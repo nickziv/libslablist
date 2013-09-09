@@ -8,7 +8,9 @@ rm stacks 2> /dev/null
 rm stacks.folded 2> /dev/null
 rm stacks.svg 2> /dev/null
 
-dtrace -x ustackframes=100 -c "./drv_rand_ops $1 $2" -n 'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o stacks
+drv=../build/drv_gen
+
+dtrace -x ustackframes=100 -c "$drv sl $1 $2 $3" -n 'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o stacks
 
 $fg_loc/stackcollapse.pl stacks > stacks.folded
 $fg_loc/flamegraph.pl stacks.folded > stacks.svg

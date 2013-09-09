@@ -11,5 +11,25 @@ The `libslablist` API is not yet stable. It is volatile and may change.
 All of the code in the library follows the Illumos kernel coding style,
 sometimes referred to as BJNF (Bill Joy Normal Form).
 
-To install go to /build, and run ./build_install_all. This only works for
-Illumos and only if you have gcc. Sun Studio is no longer supported.
+To install go to /build, and run ./build_install_unix (for non-illumos systems)
+or ./build_install_illumos. You need GCC and dtrace to build.
+
+Here are some comparisons, so that you can get an idea of how Slab Lists
+perform. First we will compare to `uuavl`. `uuavl` is the AVL Tree
+implementation used in the Illumos kernel. It is among the most
+memory-efficient and cpu-efficient implementations in the world.
+
+`uuavl` uses 10% _less_ time than `libslablist` on sequential input.
+`uuavl` uses 365% _more_ memory than `libslablist` on sequential input.
+`uuavl` uses 7% _less_ time than `libslablist` on random input.
+`uuavl` uses 271% _more_ memory than `libslablist` on random input.
+
+Other AVL Tree implementations, such as those found in GNU libavl use 50% to
+100% more memory than `uuavl`. Which makes them half as competitive as `uuavl`.
+GNU libavl implementations also perform as well as `libslablist`.
+
+We have a bunch of foreign data structure implementations that we use to
+evaluate Slab List performance. Most of these are self-contained and can be
+built from this tree. Others are simply too large to be included, or were
+designed as shared objects. These include: libuutil, libredblack, and myskl.
+You'll have to fetch them and install them manually.

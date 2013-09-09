@@ -7,14 +7,12 @@ dtrace:::BEGIN
 	e = 0;
 }
 
-slablist$target:::add_end
+struc$target:::add_begin
 {
-	/*e = args[0]->sli_elems;
-	*/
 	e += 1;
 }
 
-slablist$target:::rem_begin
+pid$target::end:entry
 {
 	exit(0);
 }

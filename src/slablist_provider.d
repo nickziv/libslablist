@@ -147,6 +147,12 @@ provider slablist {
 	probe rem_range_begin(slablist_t *sl, slablist_elem_t min, slablist_elem_t max) :
 		(slinfo_t *sl, slablist_elem_t min, slablist_elem_t max);
 	probe rem_range_end(int);
+	probe foldr_begin(slablist_t *sl);
+	probe foldr_end(int);
+	probe foldl_begin(slablist_t *sl);
+	probe foldl_end(int);
+	probe map_begin(slablist_t *sl);
+	probe map_end(int);
 	probe find_begin(slablist_t *sl, slablist_elem_t k) :
 		(slinfo_t *sl, slablist_elem_t k);
 	probe find_end(int, slablist_elem_t);

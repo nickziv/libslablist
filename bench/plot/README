@@ -1,0 +1,7 @@
+Most of the plots are generated as PBM images, and are then converted to EPS
+and JPEG via the commandline (using tools from the netpbm library). Gnuplot
+_can_ output to EPS directly, but that can result in images that take much
+longer to load.
+
+The EPS files are neccessary for inclusion into TeX-generated PDF documents.
+The JPEG files are neccessary for inclusion into web pages. 

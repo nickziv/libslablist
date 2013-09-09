@@ -1,0 +1,6 @@
+#!/usr/bin/ksh
+
+sudo ./remove_lib
+./build_lib unix
+sudo ./install_lib
+./build_drv

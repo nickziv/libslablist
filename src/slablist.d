@@ -280,11 +280,6 @@ translator subarrinfo_t < subarr_t *s >
 };
 
 
-
-inline slabinfo_t slabinfo[slab_t *s] = xlate <slabinfo_t *>(s);
-inline subslabinfo_t subslabinfo[subslab_t *s] = xlate <subslabinfo_t *>(s);
-inline subarrinfo_t subarrinfo[subarr_t *s] = xlate <subarrinfo_t *>(s);
-
 #pragma D binding "1.6.1" translator
 translator slinfo_t < slablist_t *sl >
 {
@@ -322,3 +317,8 @@ translator slinfo_t < slablist_t *sl >
 	sli_is_sublayer = (*(uint8_t *)copyin((uintptr_t)&sl->sl_flags,
 				sizeof (sl->sl_flags))) & 0x04;
 };
+
+inline slinfo_t slinfo[slablist_t *s] = xlate <slinfo_t *>(s);
+inline slabinfo_t slabinfo[slab_t *s] = xlate <slabinfo_t *>(s);
+inline subslabinfo_t subslabinfo[subslab_t *s] = xlate <subslabinfo_t *>(s);
+inline subarrinfo_t subarrinfo[subarr_t *s] = xlate <subarrinfo_t *>(s);

@@ -1,0 +1,23 @@
+#!/bin/ksh
+#
+# This script runs all of the benchmarks and creates all of the plots.
+#
+# example:
+#
+#	run_all <num elems> <type of list> <add/rem sequence> 
+#
+#		types of lists:
+#			intsrt (integers sorted)
+#			strsrt (string sorted)
+#
+#
+#		add/rem sequence:
+#			rand
+#			seq
+#
+#			(both adds and rems are either sequential or random)
+
+#./bench_throughput $1 $2 $3 $4
+#./bench_heap_growth $1 $2 $3 $4
+#./bench_stats $1 $2 $3 $4
+./bench_thr_plus_heap $1 $2 $3 $4

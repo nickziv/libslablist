@@ -1,0 +1,6 @@
+#!/bin/ksh
+
+rm `ls | grep "\.eps$"`
+rm `ls | grep "\.pbm$"`
+rm `ls | grep "\.jpeg$"`
+rm `ls | grep "\.jepg$"`

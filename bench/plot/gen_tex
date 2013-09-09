@@ -1,0 +1,48 @@
+#!/bin/ksh
+
+epsfile=$1".eps"
+texfile=$1".tex"
+if [[ $2 == "add_trace" ]]; then
+	plot_type="Latency vs. Elements (Lower is Better); Log Y Scale"
+fi
+if [[ $2 == "throughput" ]]; then
+	plot_type="Elements vs. Time (Higher is Better)"
+fi
+if [[ $2 == "throughput_post" ]]; then
+	plot_type="Elements-per-millisecond vs. Time (Higher is Better)"
+fi
+if [[ $2 == "heap_growth" ]]; then
+	plot_type="Heap Size vs. Time (Lower is Better)"
+fi
+if [[ $3 == "intsrt" || $3 == "intord" ]]; then
+	data_type="8-byte Integers"
+fi
+if [[ $3 == "strsrt" || $3 == "strord" ]]; then
+	data_type="Unix Strings"
+fi
+if [[ $4 == "seqinc" ]]; then
+	pattern="Sequential Increasing"
+fi
+if [[ $4 == "rand" ]]; then
+	pattern="Random"
+fi
+insz=$5
+impl=$6
+
+print -r '\smallskip' > $texfile
+#print -r '{\bf Implementation:} '"$impl" >> $texfile
+#print -r '\smallskip' >> $texfile
+#print -r '{\bf Input Size:} '"$insz" >> $texfile
+#print -r '\smallskip' >> $texfile
+#print -r '{\bf Input Source:} RAM' >> $texfile
+#print -r '\smallskip' >> $texfile
+#print -r '{\bf Input Pattern:} '"$pattern" >> $texfile
+print -r "\\centerline {{\\bf \\color{red}uuavl} vs. {\\bf \\color{green}$impl} for {\\bf $insz $data_type} with {\\bf $pattern} input from {\\bf RAM}}" >> $texfile
+print -r '\nobreak' >> $texfile
+print -r '\smallskip' >> $texfile
+print -r '\centerline{\epsfbox{'"$epsfile"'}}' >> $texfile
+print -r '\smallskip' >> $texfile
+print -r '\nobreak' >> $texfile
+print -r '\centerline{ '"$plot_type"'}' >> $texfile
+print -r '% \input '"$1""_comments" >> $texfile
+chmod a+rw $texfile

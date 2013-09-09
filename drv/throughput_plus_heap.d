@@ -1,13 +1,12 @@
-#!/usr/sbin/dtrace -s
-
 #pragma D option quiet
 
-self int endds;
+self int endss;
 
 dtrace:::BEGIN
 {
 	allocated = 0;
-	sec = 0;
+	inter = 0;
+	e = 0;
 }
 
 syscall::brk:entry
@@ -24,8 +23,18 @@ syscall::brk:entry
 	self->endds = arg0;
 }
 
+struc$target:::add_begin
+{
+	e += 1;
+}
+
+pid$target::end:entry
+{
+	exit(0);
+}
+
 tick-1ms
 {
-	sec++;
-	printf("%d\t%d\n", sec, allocated);
+	inter += 1;
+	printf("%d\t%d\t%d\n", inter, e, allocated);
 }

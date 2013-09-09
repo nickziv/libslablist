@@ -3,12 +3,12 @@
  * This gives us non-segregated output, and reduces the overhead of copying the
  * names, number of elements, and type of the list.
  */
-slablist$target:::add_begin
+struc$target:::add_begin
 {
 	self->ts = timestamp;
 }
 
-slablist$target:::add_end
+struc$target:::add_end
 {
 	self->tsdif = timestamp - self->ts;
 	@avgt["avg"] = avg(self->tsdif);

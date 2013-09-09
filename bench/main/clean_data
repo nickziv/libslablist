@@ -1,0 +1,25 @@
+#!/bin/ksh
+#
+# This script runs all of the benchmarks and creates all of the plots.
+#
+# example:
+#
+#	run_all <num elems> <type of list> <add/rem sequence> 
+#
+#		types of lists:
+#			intsrt (integers sorted)
+#			strsrt (string sorted)
+#
+#
+#		add/rem sequence:
+#			rand
+#			seq
+#
+#			(both adds and rems are either sequential or random)
+
+source ./impls
+
+for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do
+	cd ../${impl[$i]}/
+	rm `ls`
+done
