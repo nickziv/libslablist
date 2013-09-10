@@ -1,12 +1,15 @@
 #!/bin/ksh
 #
-# This script uses ../tools/throughput.d and ../avl/throughput.d to generate
-# data about slablists and avl trees, respectively. ../tools/throughput.awk is
-# to post process both of the outputs.
+#
+# arg1 = structure implementation
+# arg2 = elements to insert
+# arg3 = data type and storage method (intsrt, strord, etc)
+# arg4 = input pattern (rand or seqinc)
+# arg5 = machine name
 #
 
 drv=../../build/drv_gen
-rm ../$1/throughput_plus_heap_$3_$4_$2 2> /dev/null
+rm ../$1/throughput_plus_heap_$3_$4_$2_$5 2> /dev/null
 
 if [[ $1 == "sl" ]]; then
 	throughput_plus="../../tools/throughput_plus_heap.d"
@@ -18,6 +21,6 @@ postproc=../../tools/throughput.awk
 
 echo $drv
 echo $1
-dtrace -c "$drv $1 $2 $3 $4" -s $throughput_plus -o ../$1/throughput_plus_heap_$3_$4_$2
+dtrace -c "$drv $1 $2 $3 $4" -s $throughput_plus -o ../$1/throughput_plus_heap_$3_$4_$2_$5
 
-awk -f $postproc ../$1/throughput_plus_heap_$3_$4_$2 > ../$1/throughput_post_$3_$4_$2
+awk -f $postproc ../$1/throughput_plus_heap_$3_$4_$2_$5 > ../$1/throughput_post_$3_$4_$2_$5

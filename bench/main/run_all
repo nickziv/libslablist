@@ -20,4 +20,4 @@
 #./bench_throughput $1 $2 $3 $4
 #./bench_heap_growth $1 $2 $3 $4
 #./bench_stats $1 $2 $3 $4
-./bench_thr_plus_heap $1 $2 $3 $4
+./bench_thr_plus_heap $1 $2 $3 $4 $5
