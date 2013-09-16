@@ -1,6 +1,9 @@
 #!/bin/ksh
+# arg1  = machine-number 0 .. N, N = 1
 
 source ../main/impls
+source ../main/input_sizes
+source ../main/machines
 
 pbm_base[0]=heap_growth_vs_time_
 pbm_base[1]=elements_rate_vs_time_
@@ -8,10 +11,6 @@ pbm_base[2]=elements_vs_time_
 
 in_pa[0]=rand
 in_pa[1]=seqinc
-
-in_sz[0]=100000
-in_sz[1]=1000000
-in_sz[2]=5000000
 
 scale[0]=log
 scale[1]=lin
@@ -27,29 +26,34 @@ input[1]=throughput_post
 #input[2]=throughput
 input[3]=throughput_plus_heap
 
-for w in 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
+#output files' filenames are formatted like so:
+#
+# machine-name_implementation_measurement_data-type_input-pattern_input-size.extension
+
+base_impl=0;
+
+for w in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
 	for s in 0 ; do  #data type
 	for x in 1 3; do #input
-		for y in 1 2; do #size
+		for y in 0 1 2 3 4; do #size
 			for z in 0 1 ; do #pattern
 				M=${impl[$w]}
+				Mnm=${machine[$1]}
 				echo SWAG 
 				echo $M
+				echo name is $Mnm
 				N=${input[$x]}
 				Z=${in_sz[$y]}
 				P=${in_pa[$z]}
 				D=${data_type[$s]}
-				INF="../$M/"$N"_"$D"_"$P"_"$Z
-				OU=$M"_"$N"_"$D"_"$P"_"$Z
-				TRI_E=$M"_""throughput""_"$D"_"$P"_"$Z
-				TRI_H=$M"_""heap_growth""_"$D"_"$P"_"$Z
-				BI_ER=$M"_""throughput_post""_"$D"_"$P"_"$Z
-				OUF=$OU".pbm"
-				BL="../uuavl/"$N"_"$D"_"$P"_"$Z
-				#gnuplot -e "inputfile='$INF'" \
-				# -e "outputfile='$OUF'" plotscript_big_indiv
+				#INF="../$M/"$Mnm"_"$N"_"$D"_"$P"_"$y"_"$Z
+				INF="../$M/"$Mnm"_"$N"_"$D"_"$P"_"$Z
+				TRI_E=$Mnm"_"$M"_""throughput""_"$D"_"$P"_"$y"_"$Z
+				TRI_H=$Mnm"_"$M"_""heap_growth""_"$D"_"$P"_"$y"_"$Z
+				BI_ER=$Mnm"_"$M"_""throughput_post""_"$D"_"$P"_"$y"_"$Z
+				BL="../${impl[$base_impl]}/"$Mnm"_"$N"_"$D"_"$P"_"$Z
 
-				if [[ x -eq 3 ]]; then
+				if [[ x -eq 3 &&  -f $INF ]]; then
 
 					echo $TRI_E
 					echo $TRI_H
@@ -69,11 +73,11 @@ for w in 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
 						> $TRI_H.jpeg
 					chmod a+rw $TRI_E.pbm
 					chmod a+rw $TRI_H.pbm
-					./gen_tex $TRI_E throughput $D $P $Z $M
-					./gen_tex $TRI_H heap_growth $D $P $Z $M
+					./gen_tex $TRI_E throughput $D $P $Z $M $y ${impl[$base_impl]}
+					./gen_tex $TRI_H heap_growth $D $P $Z $M $y ${impl[$base_impl]}
 				fi;
 
-				if [[ x -eq 1 ]]; then
+				if [[ x -eq 1  && -f  $INF ]]; then
 					echo $BI_ER
 					echo "$BL v. $INF"
 					gnuplot -e "inputfile1='$BL'" \
@@ -86,19 +90,9 @@ for w in 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
 					chmod a+rw $BI_ER.pbm
 					chmod a+rw $BI_ER.eps
 					chmod a+rw $BI_ER.jpeg
-					./gen_tex $BI_ER throughput_post $D $P $Z $M
-				fi
+					./gen_tex $BI_ER throughput_post $D $P $Z $M $y ${impl[$base_impl]}
+				fi;
 
-				#if [[ 0 ]]; then
-					#chmod a+rw $OUF
-					#pnmtops -height 2.8 -width 3.7 $OUF \
-						#> $OU".eps";
-					#chmod a+rw $OU".eps";
-					#pnmtojpeg $OUF \
-						#> $OU".jpeg";
-					#chmod a+rw $OU".jpeg";
-					#./gen_tex $OU $N $D $P $Z $M
-				#fi
 			done
 		done
 	done

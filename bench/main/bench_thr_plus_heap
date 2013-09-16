@@ -9,7 +9,7 @@
 #
 
 drv=../../build/drv_gen
-rm ../$1/throughput_plus_heap_$3_$4_$2_$5 2> /dev/null
+rm ../$1/$5_throughput_plus_heap_$3_$4_$2 2> /dev/null
 
 if [[ $1 == "sl" ]]; then
 	throughput_plus="../../tools/throughput_plus_heap.d"
@@ -19,8 +19,7 @@ fi
 
 postproc=../../tools/throughput.awk
 
-echo $drv
-echo $1
-dtrace -c "$drv $1 $2 $3 $4" -s $throughput_plus -o ../$1/throughput_plus_heap_$3_$4_$2_$5
+echo $1 $2 $3 $4 $5
+dtrace -c "$drv $1 $2 $3 $4" -s $throughput_plus -o ../$1/$5_throughput_plus_heap_$3_$4_$2
 
-awk -f $postproc ../$1/throughput_plus_heap_$3_$4_$2_$5 > ../$1/throughput_post_$3_$4_$2_$5
+awk -f $postproc ../$1/$5_throughput_plus_heap_$3_$4_$2 > ../$1/$5_throughput_post_$3_$4_$2

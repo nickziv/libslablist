@@ -29,6 +29,8 @@ fi
 insz=$5
 impl=$6
 
+base=$8
+
 print -r '\smallskip' > $texfile
 #print -r '{\bf Implementation:} '"$impl" >> $texfile
 #print -r '\smallskip' >> $texfile
@@ -37,7 +39,8 @@ print -r '\smallskip' > $texfile
 #print -r '{\bf Input Source:} RAM' >> $texfile
 #print -r '\smallskip' >> $texfile
 #print -r '{\bf Input Pattern:} '"$pattern" >> $texfile
-print -r "\\centerline {{\\bf \\color{red}uuavl} vs. {\\bf \\color{green}$impl} for {\\bf $insz $data_type} with {\\bf $pattern} input from {\\bf RAM}}" >> $texfile
+print -r "\\centerline {{\\bf \\color{red}$base} vs. {\\bf \\color{green}$impl} for {\\bf $insz $data_type} with {\\bf $pattern} input from {\\bf RAM}}" >> $texfile
+print -r "\\xrdef{$1}" >> $texfile
 print -r '\nobreak' >> $texfile
 print -r '\smallskip' >> $texfile
 print -r '\centerline{\epsfbox{'"$epsfile"'}}' >> $texfile
