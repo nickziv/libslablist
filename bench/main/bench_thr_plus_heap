@@ -20,6 +20,7 @@ fi
 postproc=../../tools/throughput.awk
 
 echo $1 $2 $3 $4 $5
+mkdir ../$1
 dtrace -c "$drv $1 $2 $3 $4" -s $throughput_plus -o ../$1/$5_throughput_plus_heap_$3_$4_$2
 
 awk -f $postproc ../$1/$5_throughput_plus_heap_$3_$4_$2 > ../$1/$5_throughput_post_$3_$4_$2
