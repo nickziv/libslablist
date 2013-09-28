@@ -3,6 +3,16 @@
 Slab lists are a memory efficient data structure, that can optionally keep data
 sorted in logarithmic time.
 
+I designed slab lists with quality and performance in mind. I had a lot of code
+using ad-hoc linked lists and pre-canned AVL Trees at the same time. While
+these are good solutions to well-known problems, I was tired of (a) using two
+different structures for the same data and (b) not being able to hold all of my
+data in memory --- I had to search it by chunks. So slab lists address both of
+those problems. They can be used for sorted and unsorted data, which allows us
+to use the same umem caches for both. They are also 4x to 5x more memory
+efficient than AVL Trees, allowing me to reduce the number of times I go to
+disk.
+
 See the block comment at the top of src/slablist_impl.h for implementation
 overview.
 
