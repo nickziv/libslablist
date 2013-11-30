@@ -8,7 +8,7 @@
 #
 #
 
-set terminal pbm small color size 640,480
+set terminal png nocrop small size 640,480
 set output elems_v_time_out
 set format x "%10.1e"
 plot inputfile1 using 1:2 notitle ,\

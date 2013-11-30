@@ -60,17 +60,13 @@ for w in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
 					echo "$BL v. $INF"
 					gnuplot -e "inputfile1='$BL'" \
 						-e "inputfile2='$INF'" \
-						-e "elems_v_time_out='$TRI_E.pbm'" \
-						-e "heap_v_time_out='$TRI_H.pbm'" \
+						-e "elems_v_time_out='$TRI_E.png'" \
+						-e "heap_v_time_out='$TRI_H.png'" \
 						 plotscript_tri_pair
-					pnmtops -height 2.8 -width 3.7 $TRI_E.pbm \
+					pngtopnm $TRI_E.png | pnmtops -height 2.8 -width 3.7 \
 						> $TRI_E.eps;
-					pnmtops -height 2.8 -width 3.7 $TRI_H.pbm \
+					pngtopnm $TRI_E.png | pnmtops -height 2.8 -width 3.7 \
 						> $TRI_H.eps;
-					pnmtojpeg $TRI_E.pbm \
-						> $TRI_E.jpeg
-					pnmtojpeg $TRI_H.pbm \
-						> $TRI_H.jpeg
 					chmod a+rw $TRI_E.pbm
 					chmod a+rw $TRI_H.pbm
 					./gen_tex $TRI_E throughput $D $P $Z $M $y ${impl[$base_impl]}
@@ -82,14 +78,11 @@ for w in 0 1 2 3 4 5 6 7 8 9 10 11 12 13; do #impl
 					echo "$BL v. $INF"
 					gnuplot -e "inputfile1='$BL'" \
 						-e "inputfile2='$INF'" \
-						-e "outputfile='$BI_ER.pbm'"  plotscript_big_pair
-					pnmtops -height 2.8 -width 3.7 $BI_ER.pbm \
+						-e "outputfile='$BI_ER.png'"  plotscript_big_pair
+					pngtopnm $BI_ER.png | pnmtops -height 2.8 -width 3.7 \
 						> $BI_ER.eps;
-					pnmtojpeg $BI_ER.pbm \
-						> $BI_ER.jpeg
-					chmod a+rw $BI_ER.pbm
+					chmod a+rw $BI_ER.png
 					chmod a+rw $BI_ER.eps
-					chmod a+rw $BI_ER.jpeg
 					./gen_tex $BI_ER throughput_post $D $P $Z $M $y ${impl[$base_impl]}
 				fi;
 

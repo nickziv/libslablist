@@ -386,11 +386,11 @@ do_free_remaining(slablist_t *sl, int str, int ord)
 int
 main(int ac, char *av[])
 {
-	fd = open("/dev/urandom", O_RDONLY);
-	uintptr_t times = 1;
+	fd = 0;
+	uint64_t times = 1;
 
 	if (ac > 1) {
-		times = (uintptr_t) atoi(av[2]);
+		times = (uint64_t) atoi(av[2]);
 	}
 
 	int intsrt = 0;
@@ -566,6 +566,5 @@ main(int ac, char *av[])
 */
 	}
 	end();
-	close(fd);
 	return (0);
 }

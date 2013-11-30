@@ -22,7 +22,8 @@ All of the code in the library follows the Illumos kernel coding style,
 sometimes referred to as BJNF (Bill Joy Normal Form).
 
 To install go to /build, and run ./build_install_unix (for non-illumos systems)
-or ./build_install_illumos. You need GCC and dtrace to build.
+or ./build_install_illumos. You need GCC and dtrace to build. You'll probably
+need special privileges to create /opt/libslablist and subdirs.
 
 Here are some comparisons, so that you can get an idea of how Slab Lists
 perform. First we will compare to `uuavl`. `uuavl` is the AVL Tree
@@ -43,3 +44,12 @@ evaluate Slab List performance. Most of these are self-contained and can be
 built from this tree. Others are simply too large to be included, or were
 designed as shared objects. These include: libuutil, libredblack, and myskl.
 You'll have to fetch them and install them manually.
+
+We also have a test suite that uses DTrace to verify the consistency of
+libslablist's internal state. These tests are located in the `tests` directory.
+They are usable like so:
+
+	dtrace -c 'build/drv_gen ...' -L <libpath> -s tests/<script-name>.d
+
+By default, libslablist uses the following library path for DTrace libraries:
+/opt/libslablist/include/dtrace.

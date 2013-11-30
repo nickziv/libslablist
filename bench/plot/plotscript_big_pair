@@ -8,7 +8,10 @@
 #
 #
 
-set terminal pbm small color size 640,480
+# gnuplot no longer support pbm :(
+# so we'll write to png instead
+#set terminal netpbm small size 640,480
+set terminal png nocrop small size 640,480
 set output outputfile
 set format x "%10.1e"
 plot inputfile1 using 1:2 notitle ,\

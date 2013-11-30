@@ -13,10 +13,11 @@ mkdir /opt/libslablist/bin/amd64 2> /dev/null
 mkdir /opt/libslablist/lib 2> /dev/null
 mkdir /opt/libslablist/lib/64 2> /dev/null
 mkdir /opt/libslablist/include 2> /dev/null
+mkdir /opt/libslablist/include/dtrace 2> /dev/null
 
 cp $libfname $libdir$libfname
 ln -s $libdir$libfname $libdir$libfnamebase
 
 cp ../src/slablist.h /opt/libslablist/include/slablist.h
 
-cp ../src/$libxlator /usr/lib/dtrace/$libxlator
+cp ../src/$libxlator /opt/libslablist/include/dtrace/$libxlator
