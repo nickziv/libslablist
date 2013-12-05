@@ -1,0 +1,18 @@
+To build and install libslablist, you'll need to do the following.
+
+On Illumos[1] based systems:
+	cd build/
+	./build_install_illumos
+
+On Unix[2] systems (i.e. those without umem):
+	cd build/
+	./build_install_unix
+
+To uninstall:
+	./remove_lib
+
+To clean the build directory
+	./clean_lib; ./clean_drv;
+
+[1]: So far has only been tested on OpenIndiana and SmartOS.
+[2]: Hasn't been tested recently

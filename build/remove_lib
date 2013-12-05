@@ -3,8 +3,8 @@
 libfname=libslablist.so.1
 libxlator=slablist.d
 
-rm /opt/libslablist/lib/64/$libfname
+pfexec rm /opt/libslablist/lib/64/$libfname
 
-rm /opt/libslablist/include/slablist.h
+pfexec rm /opt/libslablist/include/slablist.h
 
-rm /usr/lib/dtrace/$libxlator
+pfexec rm /opt/libslablist/include/dtrace/$libxlator
