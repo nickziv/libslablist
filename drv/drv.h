@@ -14,8 +14,12 @@
 #include <strings.h>
 #include <umem.h>
 #include <slablist.h>
+#ifdef MYSKL
 #include <myskl.h>
+#endif
+#ifdef LIBREDBLACK
 #include <redblack.h>
+#endif
 #include "avl.h"
 #include "pavl.h"
 #include "tavl.h"

@@ -4,11 +4,13 @@
 
 cmplr=gcc
 c_flags="-m64"
+c_flag_myskl="-D MYSKL"
+c_flag_librb="-D LIBREDBLACK"
 c_inc="-I /opt/libslablist/include -I /opt/myskl/include -I /opt/libredblack/include"
 ld_flags="-R /opt/libslablist/lib/64:/opt/libslablist/lib:/opt/libredblack/lib:/opt/myskl/lib"
 #ld_flags=""
 libs1="-ldtrace -lc -lumem -luutil -L /opt/libslablist/lib/64 -lslablist"
-libs2=" -L /opt/myskl/lib/ -lmyskl -L /opt/libredblack/lib/ -lredblack"
+#libs2=" -L /opt/myskl/lib/ -lmyskl -L /opt/libredblack/lib/ -lredblack"
 libs=$libs1$libs2
 #libs="-lc -lumem -lslablist"
 src_dir="../src"

@@ -7,10 +7,12 @@ typedef struct node {
 	slablist_elem_t e;
 } node_t;
 
+#ifdef MYSKL
 typedef struct myskl_node {
 	MySKL_ns	mn_node;
 	slablist_elem_t	mn_e;
 } myskl_node_t;
+#endif
 
 typedef struct avl_table avl_table_t;
 typedef struct pavl_table pavl_table_t;
@@ -37,8 +39,12 @@ typedef union container {
 	prb_table_t	*gnuprb;
 	btree_t		*jmpc_btree;
 	skiplist_t	*jmpc_skl;
+#ifdef LIBREDBLACK
 	redblack_t	*redblack;
+#endif
+#ifdef MYSKL
 	MySKL_t		*myskl;
+#endif
 } container_t;
 
 
@@ -148,7 +154,9 @@ cmpfun_str(slablist_elem_t *v1, slablist_elem_t *v2)
 
 
 umem_cache_t *cache_node;
+#ifdef MYSKL
 umem_cache_t *cache_myskl_node;
+#endif
 
 int
 node_ctor(void *buf, void *ignored, int flags)
@@ -158,6 +166,7 @@ node_ctor(void *buf, void *ignored, int flags)
 	return (0);
 }
 
+#ifdef MYSKL
 int
 myskl_node_ctor(void *buf, void *ignored, int flags)
 {
@@ -165,6 +174,7 @@ myskl_node_ctor(void *buf, void *ignored, int flags)
 	bzero(n, sizeof (myskl_node_t));
 	return (0);
 }
+#endif
 
 void
 uuavl_umem_init()
@@ -180,6 +190,7 @@ uuavl_umem_init()
 		0);
 }
 
+#ifdef MYSKL
 void
 myskl_umem_init()
 {
@@ -193,6 +204,7 @@ myskl_umem_init()
 		NULL,
 		0);
 }
+#endif
 
 node_t *
 mk_node()
@@ -201,12 +213,14 @@ mk_node()
 	return (r);
 }
 
+#ifdef MYSKL
 myskl_node_t *
 mk_myskl_node()
 {
 	myskl_node_t *r = umem_cache_alloc(cache_myskl_node, UMEM_NOFAIL);
 	return (r);
 }
+#endif
 
 void
 uuavl_op(container_t *c, slablist_elem_t elem)
@@ -276,6 +290,7 @@ jmpcskl_op(container_t *c, slablist_elem_t elem)
 	insertkey(c->jmpc_skl, elem.sle_p);
 }
 
+#ifdef MYSKL
 void
 myskl_op(container_t *c, slablist_elem_t elem)
 {
@@ -284,12 +299,15 @@ myskl_op(container_t *c, slablist_elem_t elem)
 	node->mn_e = elem;
 	MySKLinsertND(c->myskl, node);
 }
+#endif
 
+#ifdef LIBREDBLACK
 void
 redblack_op(container_t *c, slablist_elem_t elem)
 {
 	rbsearch(elem.sle_p, c->redblack);
 }
+#endif
 
 typedef void (*struct_subr_t)(container_t *, slablist_elem_t);
 
@@ -298,6 +316,17 @@ struct_subr_t sadd_f[12];
 void
 do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 {
+
+#ifndef MYSKL
+	if (t == ST_MYSKL) {
+		return;
+	}
+#endif
+#ifndef LIBREDBACK
+	if (t == ST_REDBLACK) {
+		return;
+	}
+#endif
 	sadd_f[ST_SL] = &sl_op;
 	sadd_f[ST_UUAVL] = &uuavl_op;
 	sadd_f[ST_GNUAVL] = &gnuavl_op;
@@ -308,8 +337,16 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 	sadd_f[ST_GNUPRB] = &gnuprb_op;
 	sadd_f[ST_JMPCBT] = &jmpcbt_op;
 	sadd_f[ST_JMPCSKL] = &jmpcskl_op;
+#ifdef MYSKL
 	sadd_f[ST_MYSKL] = &myskl_op;
+#else
+	sadd_f[ST_MYSKL] = NULL;
+#endif
+#ifdef LIBREDBLACK
 	sadd_f[ST_REDBLACK] = &redblack_op;
+#else
+	sadd_f[ST_REDBLACK] = NULL;
+#endif
 	uint64_t ops = 0;
 	slablist_elem_t elem;
 	while (ops < maxops) {
@@ -463,7 +500,9 @@ main(int ac, char *av[])
 		aci++;
 	}
 	uuavl_umem_init();
+#ifdef MYSKL
 	myskl_umem_init();
+#endif
 	uint64_t maxops = times;
 	uu_avl_pool_t *lp = uu_avl_pool_create("lsp", sizeof (node_t), 0,
 		cmpfun, 0);
@@ -530,10 +569,14 @@ main(int ac, char *av[])
 				(void *)UINT64_MAX);
 		break;
 	case ST_MYSKL:
+#ifdef MYSKL
 		cis.myskl = MySKLinit(maxlvl, bt_cmpfun, NULL, NULL);
+#endif
 		break;
 	case ST_REDBLACK:
+#ifdef LIBREDBLACK
 		cis.redblack = rbinit(bt_cmpfun, NULL);
+#endif
 		break;
 	}
 
