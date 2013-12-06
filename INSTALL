@@ -16,3 +16,5 @@ To clean the build directory
 
 [1]: So far has only been tested on OpenIndiana and SmartOS.
 [2]: Hasn't been tested recently
+
+A Linux port is on the way.
