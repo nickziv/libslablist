@@ -20,16 +20,16 @@
 cmplr=gcc
 c_flags="-m64 -fPIC -W -Wall"
 umem_c_flags=$c_flags" -Wno-unused-parameter"
-ld_flags="-shared"
+ld_flags="-h libslablist.so.1 -shared"
 
-libs="-ldtrace -lumem -lc"
+libs="-lumem -lc"
 
 if [[ $1 == "illumos" ]]; then
-	libs="-ldtrace -lumem -lc"
+	libs="-lumem -lc"
 fi
 
 if [[ $1 == "unix" ]]; then
-	libs="-ldtrace -lc"
+	libs="-lc"
 fi
 
 

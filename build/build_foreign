@@ -22,7 +22,7 @@ c_flags="-m64 -W -Wall"
 umem_c_flags=$c_flags" -Wno-unused-parameter"
 ld_flags="-shared"
 
-libs="-ldtrace -lc"
+libs="-lc"
 
 #COMMON
 struc_prov="../common/struc_provider.d"
