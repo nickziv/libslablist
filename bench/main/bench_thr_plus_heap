@@ -12,9 +12,7 @@ drv=../../build/drv_gen
 rm ../$1/$5_throughput_plus_heap_$3_$4_$2 2> /dev/null
 
 if [[ $1 == "sl" ]]; then
-	# doing this to work-around DTrace/SmartOS problem
-	#throughput_plus="../../tools/throughput_plus_heap.d"
-	throughput_plus="../../drv/throughput_plus_heap.d"
+	throughput_plus="../../tools/throughput_plus_heap.d"
 else 
 	throughput_plus="../../drv/throughput_plus_heap.d"
 fi
