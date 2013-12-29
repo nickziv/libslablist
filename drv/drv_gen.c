@@ -279,6 +279,13 @@ sl_op(container_t *c, slablist_elem_t elem)
 }
 
 void
+sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
+    slablist_rem_cb_t *rcb)
+{
+	slablist_rem(c->sl, elem, pos, rcb);
+}
+
+void
 jmpcbt_op(container_t *c, slablist_elem_t elem)
 {
 	bt_insert(c->jmpc_btree, elem.sle_p);
@@ -310,23 +317,14 @@ redblack_op(container_t *c, slablist_elem_t elem)
 #endif
 
 typedef void (*struct_subr_t)(container_t *, slablist_elem_t);
+typedef void (*struct_subr_rem_t)(container_t *, slablist_elem_t);
 
 struct_subr_t sadd_f[12];
+struct_subr_rem_t srem_f[12];
 
 void
-do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
+set_add_callbacks(void)
 {
-
-#ifndef MYSKL
-	if (t == ST_MYSKL) {
-		return;
-	}
-#endif
-#ifndef LIBREDBACK
-	if (t == ST_REDBLACK) {
-		return;
-	}
-#endif
 	sadd_f[ST_SL] = &sl_op;
 	sadd_f[ST_UUAVL] = &uuavl_op;
 	sadd_f[ST_GNUAVL] = &gnuavl_op;
@@ -347,6 +345,61 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 #else
 	sadd_f[ST_REDBLACK] = NULL;
 #endif
+
+}
+void
+set_rem_callbacks(void)
+{
+/*
+	srem_f[ST_SL] = &sl_rem;
+	srem_f[ST_UUAVL] = &uuavl_rem;
+	srem_f[ST_GNUAVL] = &gnuavl_rem;
+	srem_f[ST_GNUPAVL] = &gnupavl_rem;
+	srem_f[ST_GNURTAVL] = &gnurtavl_rem;
+	srem_f[ST_GNUTAVL] = &gnutavl_rem;
+	srem_f[ST_GNURB] = &gnurb_rem;
+	srem_f[ST_GNUPRB] = &gnuprb_rem;
+	srem_f[ST_JMPCBT] = &jmpcbt_rem;
+	srem_f[ST_JMPCSKL] = &jmpcskl_rem;
+#ifdef MYSKL
+	srem_f[ST_MYSKL] = &myskl_rem;
+#else
+	srem_f[ST_MYSKL] = NULL;
+#endif
+#ifdef LIBREDBLACK
+	srem_f[ST_REDBLACK] = &redblack_rem;
+#else
+	srem_f[ST_REDBLACK] = NULL;
+#endif
+
+*/
+}
+
+void
+do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
+    int do_dups)
+{
+
+#ifndef MYSKL
+	if (t == ST_MYSKL) {
+		return;
+	}
+#endif
+#ifndef LIBREDBACK
+	if (t == ST_REDBLACK) {
+		return;
+	}
+#endif
+	/*
+	 * Currently slab lists are the only structure that can support
+	 * _either_ sorted or ordered data.
+	 */
+	if (t != ST_SL && ord == ORD) {
+		return;
+	}
+
+	set_add_callbacks();
+	set_rem_callbacks();
 	uint64_t ops = 0;
 	slablist_elem_t elem;
 	while (ops < maxops) {
@@ -359,9 +412,8 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 			} else if (is_seq_inc) {
 				/*
 				 * We use get_data here in order to induce
-				 * syscall overhead. This way sequential
-				 * insertions can be compared to random
-				 * insertions.
+				 * overhead. This way sequential insertions can
+				 * be compared to random insertions.
 				 */
 				rd = get_data(fd);
 				rd = ops + 1;
@@ -377,6 +429,19 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 		STRUC_ADD_BEGIN(NULL, elem.sle_u, 0);
 
 		(*sadd_f[t])(ls, elem);
+		if (do_dups && ops % 2) {
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+			(*sadd_f[t])(ls, elem);
+		}
 
 		STRUC_ADD_END(0);
 		ops++;
@@ -385,9 +450,9 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord)
 
 
 void
-do_free_remaining(slablist_t *sl, int str, int ord)
+do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord)
 {
-/*
+/* TODO: MAKE THIS GENERIC
 	uint64_t remaining = slablist_get_elems(sl);
 	uint64_t type = slablist_get_type(sl);
 	char *name = slablist_get_name(sl);
@@ -437,6 +502,12 @@ main(int ac, char *av[])
 	int nodesize;
 	int maxlvl;
 	struct_type_t struct_type = ST_SL;
+	int do_rem = 0;
+	int do_post_sort = 0;
+	int do_map = 0;
+	int do_foldr = 0;
+	int do_foldl = 0;
+	int do_dups = 0;
 	is_rand = 0;
 	is_seq_inc = 0;
 	is_seq_dec = 0;
@@ -492,12 +563,46 @@ main(int ac, char *av[])
 			is_rand = 1;
 		}
 		if (strcmp("seqinc", av[aci]) == 0) {
-			is_seq_inc = 1;
+			is_seq_inc++;
 		}
 		if (strcmp("seqdec", av[aci]) == 0) {
-			is_seq_dec = 1;
+			is_seq_dec++;
+		}
+		if (strcmp("rem", av[aci]) == 0) {
+			do_rem++;
+		}
+		if (strcmp("sort", av[aci]) == 0) {
+			do_post_sort++;
+		}
+		if (strcmp("map", av[aci]) == 0) {
+			do_map++;
+		}
+		if (strcmp("foldr", av[aci]) == 0) {
+			do_foldr++;
+		}
+		if (strcmp("foldl", av[aci]) == 0) {
+			do_foldl++;
+		}
+		if (strcmp("dup", av[aci]) == 0) {
+			do_dups++;
 		}
 		aci++;
+	}
+
+	if (!(is_rand || is_seq_inc || is_seq_dec)) {
+		printf("ERROR: Must specify insertion pattern");
+		exit(0);
+	}
+	if (is_rand + is_seq_inc + is_seq_dec > 1) {
+		printf("ERROR: Must specifiy ONLY ONE insertion pattern");
+		exit(0);
+	}
+	int sl_flag = 0;
+	if (intsrt || strsrt) {
+		sl_flag = SL_SORTED;
+	}
+	if (intord || strord) {
+		sl_flag = SL_ORDERED;
 	}
 	uuavl_umem_init();
 #ifdef MYSKL
@@ -526,7 +631,7 @@ main(int ac, char *av[])
 
 
 	case ST_SL:
-		cis.sl = slablist_create("intlistsrt", 8, sl_cmpfun, bndfun, SL_SORTED);
+		cis.sl = slablist_create("intlistsrt", 8, sl_cmpfun, bndfun, sl_flag);
 		break;
 	case ST_UUAVL:
 		cis.uuavl.uuc_avl_pool = uu_avl_pool_create("lsp", sizeof (node_t), 0,
@@ -589,8 +694,10 @@ main(int ac, char *av[])
 */
 	}
 	if (intsrt) {
-		do_ops(&cis, struct_type, maxops, INT, SRT);
-		//do_free_remaining(sl_int_s, INT, SRT);
+		do_ops(&cis, struct_type, maxops, INT, SRT, do_dups);
+		if (do_rem) {
+			do_free_remaining(&cis, struct_type, INT, SRT);
+		}
 	}
 	if (strord) {
 /*
@@ -601,6 +708,10 @@ main(int ac, char *av[])
 */
 	}
 	if (intord) {
+		do_ops(&cis, struct_type, maxops, INT, ORD, do_dups);
+		if (struct_type == ST_SL && do_post_sort) {
+			slablist_sort(cis.sl, sl_cmpfun, bndfun);
+		}
 /*
 		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun,
 					SL_ORDERED);

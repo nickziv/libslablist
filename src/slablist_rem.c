@@ -48,7 +48,8 @@
  * key or position, if the slablist is sorted or ordered, respectively.
  */
 static int
-small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem_t *rdl)
+small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
+    slablist_elem_t *rdl)
 {
 	lock_list(sl);
 
@@ -128,7 +129,7 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos, slablist_elem
 end:;
 	/*
 	 * We run tests, if DTrace test-probes are enabled.
- 	 */
+	 */
 	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
 		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
 	}
@@ -325,7 +326,7 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	uint64_t pelems = sp->ss_elems;		/* elems in prev slab */
 	uint64_t melems = s->ss_elems;		/* elems in middle slab */
 	uint64_t cpelems = 0;			/* elems to cp */
-	uint64_t from = s->ss_elems - 1;	/* we copy from the end to front */
+	uint64_t from = s->ss_elems - 1;	/* we copy from end to front */
 	size_t sz = sizeof (slablist_elem_t);
 	slablist_t *sl = s->ss_list;
 
@@ -588,7 +589,7 @@ move_to_prev(slab_t *s, slab_t *sp)
 	uint64_t pelems = sp->s_elems;		/* elems in prev slab */
 	uint64_t melems = s->s_elems;		/* elems in middle slab */
 	uint64_t cpelems = 0;			/* elems to cp */
-	uint64_t from = s->s_elems - 1;		/* we copy from the end to front */
+	uint64_t from = s->s_elems - 1;		/* we copy from end to front */
 	size_t sz = sizeof (slablist_elem_t);
 
 	if (!melems) {
@@ -734,8 +735,8 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 		uls = sm;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sm->s_elems <= (SLAB_FREE_SPACE(sp) + SLAB_FREE_SPACE(sn))) {
+	if (sp != NULL && sn != NULL &&
+	    sm->s_elems <= (SLAB_FREE_SPACE(sp) + SLAB_FREE_SPACE(sn))) {
 		SLABLIST_SLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		move_to_next(sm, sn);
 		SLABLIST_SLAB_MOVE_MID_TO_PREV(sl, sm, sp);
@@ -743,8 +744,8 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 		uls = sm;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sn->s_elems <= (SLAB_FREE_SPACE(sm) + SLAB_FREE_SPACE(sp))) {
+	if (sp != NULL && sn != NULL &&
+	    sn->s_elems <= (SLAB_FREE_SPACE(sm) + SLAB_FREE_SPACE(sp))) {
 		SLABLIST_SLAB_MOVE_MID_TO_PREV(sl, sm, sp);
 		move_to_prev(sm, sp);
 		SLABLIST_SLAB_MOVE_NEXT_TO_MID(sl, sn, sm);
@@ -752,8 +753,8 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 		uls = sn;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sp->s_elems <= (SLAB_FREE_SPACE(sm) + SLAB_FREE_SPACE(sn))) {
+	if (sp != NULL && sn != NULL &&
+	    sp->s_elems <= (SLAB_FREE_SPACE(sm) + SLAB_FREE_SPACE(sn))) {
 		SLABLIST_SLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		move_to_next(sm, sn);
 		SLABLIST_SLAB_MOVE_PREV_TO_MID(sl, sm, sp);
@@ -784,7 +785,7 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 {
 	subslab_t *sn = sm->ss_next;
 	subslab_t *sp = sm->ss_prev;
-	subslab_t *uls = NULL; /* this is ptr to slab we have to unlink + free */
+	subslab_t *uls = NULL; /* this is ptr to slab we must unlink + free */
 	slablist_t *sl = sm->ss_list;
 	*below = sm->ss_below;
 
@@ -819,8 +820,8 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 		uls = sm;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sm->ss_elems <= (SUBSLAB_FREE_SPACE(sp) + SUBSLAB_FREE_SPACE(sn))) {
+	if (sp != NULL && sn != NULL &&
+	    sm->ss_elems <= (SUBSLAB_FREE_SPACE(sp) + SUBSLAB_FREE_SPACE(sn))) {
 		SLABLIST_SUBSLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		sub_move_to_next(sm, sn);
 		SLABLIST_SUBSLAB_MOVE_MID_TO_PREV(sl, sm, sp);
@@ -828,8 +829,8 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 		uls = sm;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sn->ss_elems <= (SUBSLAB_FREE_SPACE(sm) + SUBSLAB_FREE_SPACE(sp))) {
+	if (sp != NULL && sn != NULL &&
+	    sn->ss_elems <= (SUBSLAB_FREE_SPACE(sm) + SUBSLAB_FREE_SPACE(sp))) {
 		SLABLIST_SUBSLAB_MOVE_MID_TO_PREV(sl, sm, sp);
 		sub_move_to_prev(sm, sp);
 		SLABLIST_SUBSLAB_MOVE_NEXT_TO_MID(sl, sn, sm);
@@ -837,8 +838,8 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 		uls = sn;
 		goto end;
 	}
-	if (sp != NULL && sn != NULL
-	    && sp->ss_elems <= (SUBSLAB_FREE_SPACE(sm) + SUBSLAB_FREE_SPACE(sn))) {
+	if (sp != NULL && sn != NULL &&
+	    sp->ss_elems <= (SUBSLAB_FREE_SPACE(sm) + SUBSLAB_FREE_SPACE(sn))) {
 		SLABLIST_SUBSLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		sub_move_to_next(sm, sn);
 		SLABLIST_SUBSLAB_MOVE_PREV_TO_MID(sl, sm, sp);
@@ -1087,8 +1088,8 @@ slablist_reap(slablist_t *sl)
 				SLABLIST_SLAB_RM(sl);
 				if (sl->sl_sublayers) {
 					/*
-					 * If we have sublayers, we ripple the changes
-					 * down.
+					 * If we have sublayers, we ripple the
+					 * changes down.
 					 */
 					ripple_rem_to_sublayers(sl, rmd, below);
 				}
@@ -1278,7 +1279,6 @@ skip_cb:;
 	if (SLABLIST_TEST_REM_RANGE_ENABLED()) {
 		int fail = test_rem_range(s);
 		SLABLIST_TEST_REM_RANGE(fail, s, NULL);
-		
 	}
 }
 
@@ -1286,7 +1286,7 @@ void
 decruftify_slab(slab_t *s, slablist_elem_t min, slablist_elem_t max,
     slablist_rem_cb_t f)
 {
-	int i; 
+	int i;
 	int j;
 	if (is_slab_range(s, min, max)) {
 		if (s->s_below != NULL) {

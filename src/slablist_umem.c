@@ -196,7 +196,7 @@ rm_subslab(subslab_t *s)
 add_ctx_t *
 mk_add_ctx()
 {
-	add_ctx_t *ctx= umem_cache_alloc(cache_add_ctx, UMEM_NOFAIL);
+	add_ctx_t *ctx = umem_cache_alloc(cache_add_ctx, UMEM_NOFAIL);
 	return (ctx);
 }
 

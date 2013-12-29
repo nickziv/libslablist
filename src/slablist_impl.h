@@ -215,7 +215,7 @@
  *                               +.....+     +--+--+--+--+--+--+--+--+......+
  *    a slab from sublayer ----> |.....|---> | * |* |* |* |* |* |* |*|......|
  *                               +.....+     +--+--+--+--+--+--+--+--+......+
- *                           metadata   	   slab ptrs
+ *                           metadata            slab ptrs
  *
  *
  * This sublayering of slabs gives us a structure that looks like an inverted
@@ -246,11 +246,11 @@
  * to.
  *
  * The subslab that has been found at the baselayer, contains pointers to slabs
- * in the superlayer. We use binary search find the subslab in the superlayer into
- * which `E` could belong to. We keep doing this repeatedly until we get to the
- * toplayer. We then do binary search on the slab, to find the index at which
- * `E` would be located. The toplayer is the layer that contains data that the
- * _user_ gave it.
+ * in the superlayer. We use binary search find the subslab in the superlayer
+ * into which `E` could belong to. We keep doing this repeatedly until we get
+ * to the toplayer. We then do binary search on the slab, to find the index at
+ * which `E` would be located. The toplayer is the layer that contains data
+ * that the _user_ gave it.
  *
  * The use of sublayers of slab lists, and binary search gives a search time
  * comparable to balanced binary trees (that is, logarithmic time).
@@ -356,11 +356,11 @@
 #include "slablist.h"
 
 
-#define NOT_ON_EDGE		0
-#define ON_RIGHT_EDGE		1
-#define ON_LEFT_EDGE		2
-#define ALMOST_ON_RIGHT_EDGE	3
-#define ALMOST_ON_LEFT_EDGE	4
+#define	NOT_ON_EDGE		0
+#define	ON_RIGHT_EDGE		1
+#define	ON_LEFT_EDGE		2
+#define	ALMOST_ON_RIGHT_EDGE	3
+#define	ALMOST_ON_LEFT_EDGE	4
 
 #define	SLADD_BEFORE		0
 #define	SLADD_AFTER		1
@@ -394,19 +394,16 @@
 #define	SLIST_SET_SUBLAYER(x)\
 	(x |= 0x04)
 
-#define	SLIST_ALWAYS_VACUUMED(x)\
-	(x & 0x40)
-
-#define	SLIST_IS_SPARSE_SLAB(x)\
-	(x & 0x20)
-
-#define	SLIST_SET_SPARSE_SLAB(x)\
-	(x |= 0x20)
-
 #define	SLIST_IS_CIRCULAR(x)\
 	(x & 0x10)
 
 #define	SLIST_SET_CIRCULAR(x)\
+	(x |= 0x10)
+
+#define	SLIST_IS_SORTING_TEMP(x)\
+	(x & 0x10)
+
+#define	SLIST_SET_SORTING_TEMP(x)\
 	(x |= 0x10)
 
 #define	FS_IN_RANGE	0
@@ -420,8 +417,8 @@
 #define	SLAB_FREE_SPACE(s)	((uint64_t)(SELEM_MAX - s->s_elems))
 #define	SUBSLAB_FREE_SPACE(s)	((uint64_t)(SUBELEM_MAX - s->ss_elems))
 
-#define GET_SUBSLAB_ELEM(s, e)		(s->ss_arr->sa_data[e])
-#define SET_SUBSLAB_ELEM(s, e, i)	(s->ss_arr->sa_data[i] = e)
+#define	GET_SUBSLAB_ELEM(s, e)		(s->ss_arr->sa_data[e])
+#define	SET_SUBSLAB_ELEM(s, e, i)	(s->ss_arr->sa_data[i] = e)
 
 typedef struct slab slab_t;
 typedef struct subslab subslab_t;
@@ -459,12 +456,12 @@ struct subslab {
 	subarr_t		*ss_arr;
 };
 
-#define AC_HOW_INTO		0
-#define AC_HOW_SP_NX		1
-#define AC_HOW_SP_PV		2
-#define AC_HOW_BEFORE		3
-#define AC_HOW_AFTER		4
-#define AC_HOW_EDUP		5
+#define	AC_HOW_INTO		0
+#define	AC_HOW_SP_NX		1
+#define	AC_HOW_SP_PV		2
+#define	AC_HOW_BEFORE		3
+#define	AC_HOW_AFTER		4
+#define	AC_HOW_EDUP		5
 
 typedef struct add_ctx {
 	int			ac_how;
@@ -502,7 +499,8 @@ struct slablist {
 	uint64_t		sl_slabs;
 	uint64_t		sl_elems;
 	uint8_t			sl_flags;
-	int			(*sl_cmp_elem)(slablist_elem_t, slablist_elem_t);
+	int			(*sl_cmp_elem)(slablist_elem_t,
+					slablist_elem_t);
 	int			(*sl_bnd_elem)(slablist_elem_t, slablist_elem_t,
 					slablist_elem_t);
 };

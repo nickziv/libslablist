@@ -55,7 +55,7 @@ inline string e_test_descr[int err] =
 	err == E_TEST_SLAB_EXTREMA ? "[slab extrema/array mismatch]" :
 	err == E_TEST_SLAB_UNSORTED ? "[slab elems unsorted]" :
 	err == E_TEST_INS_ELEM_INDEX ? "[slab non zero index]" :
-	err == E_TEST_INS_ELEM_OUT_ORD ? "[slab disordered index]" :
+	err == E_TEST_INS_ELEM_OUT_ORD ? "[slab ins elem wrong index]" :
 	err == E_TEST_SLAB_BSRCH ? "[slab bsrch != slab lsrch]" :
 	err == E_TEST_REM_ELEM_EMPTY ? "[rem from empty slab]" :
 	err == E_TEST_REM_ELEM_BEYOND ? "[rem index > slab-elems - 1]" :
@@ -70,7 +70,7 @@ inline string e_test_descr[int err] =
 	err == E_TEST_SUBSLAB_MIN ? "[subslab min != top slab min]" :
 	err == E_TEST_SUBSLAB_MAX ? "[subslab max != top slab max]" :
 	err == E_TEST_INS_SLAB_INDEX ? "[subslab non-zero index]" :
-	err == E_TEST_INS_SLAB_OUT_ORD ? "[subslab disordered index]" :
+	err == E_TEST_INS_SLAB_OUT_ORD ? "[subslab ins elem wrong index]" :
 	err == E_TEST_SUBSLAB_BSRCH ? "[subslab bsrch != subslab lsrch]" :
 	err == E_TEST_SUBSLAB_BSRCH_TOP ?
 		"[subslab bsrch top != subslab lsrch top]" :

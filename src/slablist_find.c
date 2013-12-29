@@ -139,7 +139,6 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 
 			if (sum_usr_elems >= act_pos) {
 				elems_skipped = sum_usr_elems - slab->s_elems;
-				//*off_pos = ecnt - act_pos - 1;
 				*off_pos = act_pos - elems_skipped - 1;
 				return (slab);
 			}
@@ -344,6 +343,110 @@ sublayer_slab_ptr_srch(void *elem, subslab_t *s)
 
 
 /*
+ * This function gets the last subslab in whose range `elem` fits. It is used
+ * to deal with potential duplicates, when sorting an ordered slab list.
+ */
+subslab_t *
+list_get_last_subslab(slablist_t *sl, slablist_elem_t elem, subslab_t *s)
+{
+	subslab_t *tmp = s;
+	while (tmp->ss_next != NULL &&
+	    sl->sl_bnd_elem(elem, tmp->ss_next->ss_min,
+	    tmp->ss_next->ss_max) >= 0) {
+		tmp = tmp->ss_next;
+	}
+	return (tmp);
+}
+
+/*
+ * Same as previous function but for slabs. Used on single-layer slab lists.
+ */
+slab_t *
+list_get_last_slab(slablist_t *sl, slablist_elem_t elem, slab_t *s)
+{
+	slab_t *tmp = s;
+	while (tmp->s_next != NULL &&
+	    sl->sl_bnd_elem(elem, tmp->s_next->s_min,
+	    tmp->s_next->s_max) >= 0) {
+		tmp = tmp->s_next;
+	}
+	return (tmp);
+}
+
+/*
+ * This function tries to find the last subslab into whose range `elem` falls
+ * into. It is typically used by the binary search functions that operate on
+ * subslabs. It is also typically used to deal with potential duplicates when
+ * sorting an ordered slab list. This function works fine when bubbling up, but
+ * when rippling new subslabs/slabs down, the returned value may have to be
+ * incremented (in order to turn it into an insertion point).
+ */
+int
+subslab_get_last_subslab(slablist_t *sl, slablist_elem_t elem, subslab_t *s,
+    int i)
+{
+	int j = i;
+	while (j < s->ss_elems) {
+		subslab_t *ss = GET_SUBSLAB_ELEM(s, j);
+		if (sl->sl_bnd_elem(elem, ss->ss_min, ss->ss_max) < 0) {
+			break;
+		}
+		j++;
+	}
+	/*
+	 * By the time we broke out of the loop, `j` was set to the index of
+	 * the subslab that couldn't possibly hold `elem`. We have to decrement
+	 * j, if possible. This must be so when used in the bubbling-up
+	 * context.
+	 */
+	if (j > 0) {
+		return (j - 1);
+	}
+	return (j);
+}
+
+/*
+ * Same as the previous function but for subslabs that reference slabs in the
+ * top layer.
+ */
+int
+subslab_get_last_slab(slablist_t *sl, slablist_elem_t elem, subslab_t *s,
+    int i)
+{
+	int j = i;
+	while (j < s->ss_elems) {
+		slab_t *ss = GET_SUBSLAB_ELEM(s, j);
+		if (sl->sl_bnd_elem(elem, ss->s_min, ss->s_max) < 0) {
+			break;
+		}
+		j++;
+	}
+	/*
+	 * Same as in above function.
+	 */
+	if (j > 0) {
+		return (j - 1);
+	}
+	return (j);
+}
+
+/*
+ * Same deal as some of the above functions. Handles duplicates. It gets the
+ * elem that is immediately after the last elem. This is because we expect to
+ * only use this function from an insertion context, not just a search context
+ * (unlike the above functions).
+ */
+int
+slab_get_last_elem(slablist_t *sl, slablist_elem_t elem, slab_t *s, int i)
+{
+	int j = i;
+	while (j < s->s_elems && sl->sl_cmp_elem(elem, s->s_arr[j]) >= 0) {
+		j++;
+	}
+	return (j);
+}
+
+/*
  * Binary search for `elem` in slab `s`.
  */
 int
@@ -353,6 +456,7 @@ slab_bin_srch(slablist_elem_t elem, slab_t *s)
 	int max = s->s_elems - 1;
 	int c = 0;
 	slablist_t *sl = s->s_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		slablist_elem_t mid_elem = s->s_arr[mid];
@@ -367,6 +471,9 @@ slab_bin_srch(slablist_elem_t elem, slab_t *s)
 			continue;
 		}
 		if (c == 0) {
+			if (sorting) {
+				return (slab_get_last_elem(sl, elem, s, mid));
+			}
 			return (mid);
 		}
 	}
@@ -388,12 +495,18 @@ slab_bin_srch(slablist_elem_t elem, slab_t *s)
 		 * insertion code assumes that we return the index that we
 		 * want to insert `elem` _at_.
 		 */
+		if (sorting) {
+			return (slab_get_last_elem(sl, elem, s, min + 1));
+		}
 		return (min + 1);
 	}
 
 	/*
 	 * Just in case.
 	 */
+	if (sorting) {
+		return (slab_get_last_elem(sl, elem, s, min));
+	}
 	return (min);
 }
 
@@ -401,10 +514,14 @@ int
 slab_lin_srch(slablist_elem_t elem, slab_t *s)
 {
 	slablist_t *sl = s->s_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 	int i = 0;
-	while (i < s->s_elems
-	    && sl->sl_cmp_elem(elem, s->s_arr[i]) > 0) {
+	while (i < s->s_elems &&
+	    sl->sl_cmp_elem(elem, s->s_arr[i]) > 0) {
 		i++;
+	}
+	if (sorting) {
+		return (slab_get_last_elem(sl, elem, s, i));
 	}
 	return (i);
 }
@@ -419,6 +536,7 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 	int max = s->ss_elems - 1;
 	int c = 0;
 	slablist_t *sl = s->ss_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
@@ -434,6 +552,10 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 			continue;
 		}
 		if (c == 0) {
+			if (sorting) {
+				return (subslab_get_last_subslab(sl, elem, s,
+				    mid));
+			}
 			return (mid);
 		}
 	}
@@ -457,12 +579,19 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 		 * insertion code assumes that we return the index that we
 		 * want to insert `elem` _at_.
 		 */
+		if (sorting) {
+			return (subslab_get_last_subslab(sl, elem, s,
+			    min + 1));
+		}
 		return (min + 1);
 	}
 
 	/*
 	 * Just in case.
 	 */
+	if (sorting) {
+		return (subslab_get_last_subslab(sl, elem, s, min));
+	}
 	return (min);
 }
 
@@ -474,11 +603,15 @@ subslab_lin_srch(slablist_elem_t elem, subslab_t *s)
 	e.sle_p = GET_SUBSLAB_ELEM(s, i);
 	subslab_t *eptr = e.sle_p;
 	slablist_t *sl = s->ss_list;
-	while (i < s->ss_elems
-	    && sl->sl_bnd_elem(elem, eptr->ss_min, eptr->ss_max) > 0) {
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	while (i < s->ss_elems &&
+	    sl->sl_bnd_elem(elem, eptr->ss_min, eptr->ss_max) > 0) {
 		e.sle_p = GET_SUBSLAB_ELEM(s, i);
 		eptr = e.sle_p;
 		i++;
+	}
+	if (sorting) {
+		i = subslab_get_last_subslab(sl, elem, s, i);
 	}
 	return (i);
 }
@@ -493,6 +626,7 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 	int max = s->ss_elems - 1;
 	int c = 0;
 	slablist_t *sl = s->ss_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
@@ -508,6 +642,10 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 			continue;
 		}
 		if (c == 0) {
+			if (sorting) {
+				return (subslab_get_last_slab(sl, elem, s,
+				    mid));
+			}
 			return (mid);
 		}
 	}
@@ -530,12 +668,18 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 		 * insertion code assumes that we return the index that we
 		 * want to insert `elem` _at_.
 		 */
+		if (sorting) {
+			return (subslab_get_last_slab(sl, elem, s, min + 1));
+		}
 		return (min + 1);
 	}
 
 	/*
 	 * Just in case.
 	 */
+	if (sorting) {
+		return (subslab_get_last_slab(sl, elem, s, min));
+	}
 	return (min);
 }
 
@@ -547,15 +691,18 @@ subslab_lin_srch_top(slablist_elem_t elem, subslab_t *s)
 	e.sle_p = GET_SUBSLAB_ELEM(s, i);
 	slab_t *eptr = e.sle_p;
 	slablist_t *sl = s->ss_list;
-	while (i < s->ss_elems
-	    && sl->sl_bnd_elem(elem, eptr->s_min, eptr->s_max) > 0) {
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	while (i < s->ss_elems &&
+	    sl->sl_bnd_elem(elem, eptr->s_min, eptr->s_max) > 0) {
 		e.sle_p = GET_SUBSLAB_ELEM(s, i);
 		eptr = e.sle_p;
 		i++;
 	}
+	if (sorting) {
+		i = subslab_get_last_slab(sl, elem, s, i);
+	}
 	return (i);
 }
-
 
 
 /*
@@ -569,7 +716,8 @@ find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 	int x = 0;
 	x = subslab_bin_srch(elem, s);
 	slablist_t *sl = s->ss_list;
-	if (x > s->ss_elems - 1) {
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	if (!sorting && x > s->ss_elems - 1) {
 		/*
 		 * If we get an index `x` that is larger than the index
 		 * of the last element, we set x to the index of the
@@ -591,6 +739,11 @@ find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 	subslab_t *found2 = GET_SUBSLAB_ELEM(s, x);
 
 	int r = sl->sl_bnd_elem(elem, found2->ss_min, found2->ss_max);
+	if (sorting && r == FS_IN_RANGE) {
+		if (sl->sl_cmp_elem(elem, found2->ss_max) == 0) {
+			r = FS_OVER_RANGE;
+		}
+	}
 
 	*found = found2;
 
@@ -603,7 +756,8 @@ find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 	int x = 0;
 	x = subslab_bin_srch_top(elem, s);
 	slablist_t *sl = s->ss_list;
-	if (x > s->ss_elems - 1) {
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	if (!sorting && x > s->ss_elems - 1) {
 		/*
 		 * If we get an index `x` that is larger than the index
 		 * of the last element, we set x to the index of the
@@ -627,6 +781,11 @@ find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 	*found = next;
 
 	int r = sl->sl_bnd_elem(elem, next->s_min, next->s_max);
+	if (sorting && r == FS_IN_RANGE) {
+		if (sl->sl_cmp_elem(elem, next->s_max) == 0) {
+			r = FS_OVER_RANGE;
+		}
+	}
 
 	return (r);
 }
@@ -640,13 +799,14 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, subslab_t **found)
 	uint64_t i = 0;
 	subslab_t *s = sl->sl_head;
 	int r = sl->sl_bnd_elem(elem, s->ss_min, s->ss_max);
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	/*
 	 * Logically, this conditional is redundant, and can be removed.
 	 * However, having it here makes average insertion performance
 	 * empirically faster.
 	 */
-	if (r != FS_OVER_RANGE) {
+	if (!sorting && r != FS_OVER_RANGE) {
 		*found = s;
 		SLABLIST_SUB_LINEAR_SCAN_END(r);
 		return (r);
@@ -667,6 +827,16 @@ sub_find_linear_scan(slablist_t *sl, slablist_elem_t elem, subslab_t **found)
 		i++;
 	}
 end:;
+	/*
+	 * If elem is in the range of s, we want to compensate for any
+	 * duplicate runs. If, for example, e = 5, and s is filled with only
+	 * 5's, we want to look ahead to make sure that  s->next is _not_
+	 * filled with any 5's too. If it is, we want to return s->next (or
+	 * s->next->next, or the last slab that has a five in it).
+	 */
+	if (sorting && r == FS_IN_RANGE) {
+		s = list_get_last_subslab(sl, elem, s);
+	}
 	*found = s;
 	SLABLIST_SUB_LINEAR_SCAN_END(r);
 	return (r);
@@ -680,13 +850,14 @@ find_linear_scan(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 	uint64_t i = 0;
 	slab_t *s = sl->sl_head;
 	int r = sl->sl_bnd_elem(elem, s->s_min, s->s_max);
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	/*
 	 * Logically, this conditional is redundant, and can be removed.
 	 * However, having it here makes average insertion performance
 	 * empirically faster.
 	 */
-	if (r != FS_OVER_RANGE) {
+	if (!sorting && r != FS_OVER_RANGE) {
 		*sbptr = s;
 		SLABLIST_LINEAR_SCAN_END(r);
 		return (r);
@@ -707,9 +878,24 @@ find_linear_scan(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 		i++;
 	}
 end:;
+	/*
+	 * If elem is in the range of s, we want to compensate for any
+	 * duplicate runs. If, for example, e = 5, and s is filled with only
+	 * 5's, we want to look ahead to make sure that  s->next is _not_
+	 * filled with any 5's too. If it is, we want to return s->next (or
+	 * s->next->next, or the last slab that has a five in it).
+	 */
+	if (sorting && r == FS_IN_RANGE) {
+		s = list_get_last_slab(sl, elem, s);
+		SLABLIST_LINEAR_SCAN(sl, s);
+		if (sl->sl_cmp_elem(elem, s->s_max) == 0) {
+			r = FS_OVER_RANGE;
+		}
+	}
 	*sbptr = s;
 	SLABLIST_LINEAR_SCAN_END(r);
 	return (r);
+
 }
 
 
@@ -727,7 +913,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 	int layers = 1;
 	int f = 0;
 	subslab_t *found = NULL;
-#define E_TEST_FBU_NOT_LAYERED 48
+#define	E_TEST_FBU_NOT_LAYERED 48
 	if (sl->sl_sublayers == 0) {
 		SLABLIST_TEST_FIND_BUBBLE_UP(E_TEST_FBU_NOT_LAYERED, NULL,
 		    NULL, elem, 0);
@@ -738,7 +924,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 		fs = sub_find_linear_scan(sl->sl_baselayer, elem, &found);
 		SLABLIST_BUBBLE_UP(sl, found);
 
-		/* Bubble up throught all of the sublayers */
+		/* Bubble up through all of the sublayers */
 		while (layers < sl->sl_sublayers) {
 
 			/* We test the last subslab we found */
@@ -761,7 +947,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 			SLABLIST_TEST_FIND_BUBBLE_UP(f, NULL, found, elem,
 			    layers);
 		}
-		
+
 		/* Find the target slab */
 		fs = find_slab_in_subslab(found, elem, sbptr);
 

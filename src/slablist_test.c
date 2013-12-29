@@ -34,13 +34,13 @@
 #define	E_TEST_SLAB_SUBLAYER		3
 #define	E_TEST_SLAB_EXTREMA		4
 #define	E_TEST_SLAB_UNSORTED		5
-#define E_TEST_INS_ELEM_INDEX		6
-#define E_TEST_INS_ELEM_OUT_ORD		7
+#define	E_TEST_INS_ELEM_INDEX		6
+#define	E_TEST_INS_ELEM_OUT_ORD		7
 #define	E_TEST_SLAB_BSRCH		8
-#define E_TEST_REM_ELEM_EMPTY		9
-#define E_TEST_REM_ELEM_BEYOND		10
-#define E_TEST_SLAB_PREV		11
-#define E_TEST_SLAB_NEXT		12
+#define	E_TEST_REM_ELEM_EMPTY		9
+#define	E_TEST_REM_ELEM_BEYOND		10
+#define	E_TEST_SLAB_PREV		11
+#define	E_TEST_SLAB_NEXT		12
 
 #define	E_TEST_SUBSLAB_NULL		13
 #define	E_TEST_SUBSLAB_LIST_NULL	14
@@ -48,36 +48,36 @@
 #define	E_TEST_SUBSLAB_TOPLAYER		16
 #define	E_TEST_SUBSLAB_UNSORTED		17
 #define	E_TEST_SUBSLAB_ELEM_NULL	18
-#define E_TEST_SUBSLAB_MIN		19
-#define E_TEST_SUBSLAB_MAX		20
+#define	E_TEST_SUBSLAB_MIN		19
+#define	E_TEST_SUBSLAB_MAX		20
 #define	E_TEST_INS_SLAB_INDEX		21
 #define	E_TEST_INS_SLAB_OUT_ORD		22
 #define	E_TEST_SUBSLAB_BSRCH		23
-#define E_TEST_SUBSLAB_BSRCH_TOP	24
+#define	E_TEST_SUBSLAB_BSRCH_TOP	24
 #define	E_TEST_REM_SLAB_EMPTY		25
 #define	E_TEST_REM_SLAB_BEYOND		26
-#define E_TEST_RPLA_SUBSLAB_HAS_NOT	27
-#define E_TEST_RPLA_SLAB_HAS_NOT	28
-#define E_TEST_SUBSLAB_REFERENCES	29
-#define E_TEST_SUBSLAB_PREV		30
-#define E_TEST_SUBSLAB_NEXT		31
-#define E_TEST_INS_SLAB_LAYER		32
-#define E_TEST_INS_SUBSLAB_LAYER	33
-#define E_TEST_SUBSLAB_MOVE_NEXT_SCP	34
-#define E_TEST_SUBSLAB_MOVE_NEXT_SNCP	35
-#define E_TEST_SUBSLAB_MOVE_PREV_SCP	36
-#define E_TEST_SUBSLAB_MOVE_PREV_SPCP	37
-#define E_TEST_SLAB_MOVE_NEXT_SCP	38
-#define E_TEST_SLAB_MOVE_NEXT_SNCP	39
-#define E_TEST_SLAB_MOVE_PREV_SCP	40
-#define E_TEST_SLAB_MOVE_PREV_SPCP	41
-#define E_TEST_SUBSLAB_ARR_MIN		42
-#define E_TEST_SUBSLAB_ARR_MAX		43
-#define E_TEST_SUBSLAB_USR_ELEMS_OVER	44
-#define E_TEST_SUBSLAB_USR_ELEMS_UNDER	45
-#define E_TEST_ELEM_POS			46
-#define E_TEST_SLAB_BELOW		47
-#define E_TEST_FBU_NOT_LAYERED		48
+#define	E_TEST_RPLA_SUBSLAB_HAS_NOT	27
+#define	E_TEST_RPLA_SLAB_HAS_NOT	28
+#define	E_TEST_SUBSLAB_REFERENCES	29
+#define	E_TEST_SUBSLAB_PREV		30
+#define	E_TEST_SUBSLAB_NEXT		31
+#define	E_TEST_INS_SLAB_LAYER		32
+#define	E_TEST_INS_SUBSLAB_LAYER	33
+#define	E_TEST_SUBSLAB_MOVE_NEXT_SCP	34
+#define	E_TEST_SUBSLAB_MOVE_NEXT_SNCP	35
+#define	E_TEST_SUBSLAB_MOVE_PREV_SCP	36
+#define	E_TEST_SUBSLAB_MOVE_PREV_SPCP	37
+#define	E_TEST_SLAB_MOVE_NEXT_SCP	38
+#define	E_TEST_SLAB_MOVE_NEXT_SNCP	39
+#define	E_TEST_SLAB_MOVE_PREV_SCP	40
+#define	E_TEST_SLAB_MOVE_PREV_SPCP	41
+#define	E_TEST_SUBSLAB_ARR_MIN		42
+#define	E_TEST_SUBSLAB_ARR_MAX		43
+#define	E_TEST_SUBSLAB_USR_ELEMS_OVER	44
+#define	E_TEST_SUBSLAB_USR_ELEMS_UNDER	45
+#define	E_TEST_ELEM_POS			46
+#define	E_TEST_SLAB_BELOW		47
+#define	E_TEST_FBU_NOT_LAYERED		48
 
 int
 test_slab_get_elem_pos(slablist_t *sl, slab_t *s, slab_t **f, uint64_t pos,
@@ -247,11 +247,11 @@ test_subslab_extrema(subslab_t *ss)
 	SLABLIST_EXTREME_SLAB(f);
 	slablist_t *top_lyr = f->s_list;
 
-	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_min) != 0 ) {
+	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_min) != 0) {
 		return (E_TEST_SUBSLAB_MIN);
 	}
 
-	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_arr[0]) != 0 ) {
+	if (top_lyr->sl_cmp_elem(ss->ss_min, f->s_arr[0]) != 0) {
 		return (E_TEST_SUBSLAB_ARR_MIN);
 	}
 
@@ -476,7 +476,6 @@ test_subslab_ref(subslab_t *s)
 
 	return (0);
 }
-	
 
 int
 test_slab_bin_srch(slablist_elem_t elem, slab_t *s)

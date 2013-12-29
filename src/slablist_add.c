@@ -53,7 +53,8 @@
  * elements.
  */
 int
-small_list_add(slablist_t *sl, slablist_elem_t elem, int rep, slablist_elem_t *repd_elem)
+small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
+    slablist_elem_t *repd_elem)
 {
 	lock_list(sl);
 
@@ -184,7 +185,7 @@ end:;
  * Inserts an `elem` to add into slab `s` at index `i`.
  */
 static void
-add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
+add_elem(slab_t *s, slablist_elem_t elem, int i)
 {
 	/*
 	 * Test the consistency of the slab before addition.
@@ -203,7 +204,7 @@ add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 	ip = i;
 
 	SLABLIST_FWDSHIFT_BEGIN(s->s_list, s, i);
-	size_t shiftsz = (s->s_elems - i) * 8;
+	size_t shiftsz = (s->s_elems - (size_t)i) * 8;
 	bcopy(&(s->s_arr[i]), &(s->s_arr[(i+1)]), shiftsz);
 	s->s_arr[i] = elem;
 	SLABLIST_FWDSHIFT_END();
@@ -264,6 +265,88 @@ add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 static void
 add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 {
+
+	slablist_t *sl;
+	sl = s->ss_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+
+	/*
+	 * If we are adding a sub/slab to a slab list that is used temporarily
+	 * for sorting, we _may_ have to incremement `i`. The reasoning for
+	 * this is that 'plain' slab lists don't support duplicates, which
+	 * means we can get away with a lot of short cuts --- like checking
+	 * where to insert a sub/slab S into a subslab_t SS by doing a bin_srch
+	 * for S->max in SS. This works because S->max is a unique,
+	 * non-duplicate element. It is not possible for S->max to be equal to
+	 * any other maximum or minimum, in a plain slab list. When we are
+	 * using non-plain slab lists, we may run into duplicates. This means
+	 * that doing a bin_srch for S->max can return an index that is too
+	 * small.
+	 *
+	 * To get around this, we check how the ranges of S and s[i] overlap,
+	 * and depending on how they overlap we either increment or do nothing.
+	 * If there is no overlap, S->max may still be over the range of s[i],
+	 * in which case we increment, just the same. Below are the 8 cases of
+	 * overlap, and whether an increment happens:
+	 *
+	 *	1: S->max == s[i]->min.
+	 *	2: S->max == s[i]->max == s[i]->min.
+	 *
+	 *	3: S->min == s[i]->max.
+	 *	4: S->min == s[i]->max == s[i]->min.
+	 *
+	 *	5: S->max == S->min == s[i]->max.
+	 *	6: S->max == S->min == s[i]->min.
+	 *	7: S->max == S->min == s[i]->max == s[i]->min.
+	 *
+	 *	8: S->max >= S->min > s[i]->max
+	 *
+	 *	1: No Inc
+	 *	2: No Inc
+	 *	3: Inc
+	 *	4: Inc
+	 *	5: Inc
+	 *	6: No Inc
+	 *	7: Inc
+	 *	8: Inc
+	 */
+	if (sorting && i < s->ss_elems) {
+		slablist_elem_t max_ck;
+		slablist_elem_t min_ck;
+		slablist_elem_t max_cmp;
+		slablist_elem_t min_cmp;
+		if (s1 != NULL) {
+			slab_t *si = GET_SUBSLAB_ELEM(s, i);
+			max_ck = s1->s_max;
+			min_ck = s1->s_min;
+			min_cmp = si->s_min;
+			max_cmp = si->s_max;
+		} else if (s2 != NULL) {
+			subslab_t *ssi = GET_SUBSLAB_ELEM(s, i);
+			max_ck = s2->ss_max;
+			min_ck = s2->ss_min;
+			min_cmp = ssi->ss_min;
+			max_cmp = ssi->ss_max;
+		}
+
+#define	EQ(x, y) (sl->sl_cmp_elem(x, y) == 0)
+
+		int eq_max_ck_min_ck = EQ(max_ck, min_ck);
+		int eq_min_ck_max_cmp = EQ(min_ck, max_cmp);
+		int eq_max_cmp_min_cmp = EQ(max_cmp, min_cmp);
+		/* cases 7, 5, 4, 3 and 8 */
+		if ((eq_max_ck_min_ck && eq_min_ck_max_cmp &&
+			eq_max_cmp_min_cmp) ||
+		    (eq_max_ck_min_ck && eq_min_ck_max_cmp) ||
+		    (eq_min_ck_max_cmp && eq_max_cmp_min_cmp) ||
+		    (eq_min_ck_max_cmp && eq_max_cmp_min_cmp) ||
+		    (eq_min_ck_max_cmp) ||
+		    (sl->sl_bnd_elem(max_ck, min_cmp, max_cmp) > 0)) {
+			i++;
+		}
+
+	}
+
 	/*
 	 * Test the consistency of the slab before addition.
 	 */
@@ -276,14 +359,13 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 
 
 	int ip = 0;		/* add-point */
-	slablist_t *sl;
-	sl = s->ss_list;
 	slab_t *stmp_lst;
 	slab_t *stmp_fst;
 	subslab_t *sstmp_lst;
 	subslab_t *sstmp_fst;
 
 	ip = i;
+
 
 	SLABLIST_SUBFWDSHIFT_BEGIN(s->ss_list, s, i);
 	size_t shiftsz = (s->ss_elems - i) * 8;
@@ -345,12 +427,14 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 		 * as a result.
 		 */
 		if (s1 != NULL) {
-			stmp_lst = (slab_t *)GET_SUBSLAB_ELEM(s, SUBELEM_MAX - 1);
+			stmp_lst = (slab_t *)GET_SUBSLAB_ELEM(s,
+			    SUBELEM_MAX - 1);
 			stmp_fst = (slab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = stmp_lst->s_max;
 			s->ss_min = stmp_lst->s_min;
 		} else {
-			sstmp_lst = (subslab_t *)GET_SUBSLAB_ELEM(s, SUBELEM_MAX - 1);
+			sstmp_lst = (subslab_t *)GET_SUBSLAB_ELEM(s,
+			    SUBELEM_MAX - 1);
 			sstmp_fst = (subslab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = sstmp_lst->ss_max;
 			s->ss_min = sstmp_lst->ss_min;
@@ -372,7 +456,7 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
  * into the slab next to `s`.
  */
 static void
-addsn(slab_t *s, slablist_elem_t elem)
+addsn(slab_t *s, slablist_elem_t elem, int q)
 {
 	slablist_elem_t lst_elem = s->s_arr[(s->s_elems - 1)];
 	slablist_elem_t b4_lst_elem = s->s_arr[(s->s_elems - 2)];
@@ -383,7 +467,13 @@ addsn(slab_t *s, slablist_elem_t elem)
 	s->s_max = b4_lst_elem;
 	SLABLIST_SLAB_SET_MAX(s);
 
-	int q = slab_bin_srch(elem, s);
+	/*
+	 * We have to adjust the value of `q` if it was originally set to be
+	 * `s->s_elems` (i.e. after the last elem).
+	 */
+	if (q > s->s_elems) {
+		q--;
+	}
 	add_elem(snx, lst_elem, 0);
 	add_elem(s, elem, q);
 }
@@ -445,11 +535,6 @@ sub_addsn(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 	add_slab(s, s1, s2, k);
 	subslab_t *p = s;
 	subslab_t *q = snx;
-	/* XXX this may be redundant with the last loop */
-	if (0 && p == q && s1 != NULL) {
-		ripple_inc_usr_elems(s1->s_below);
-		return (NULL);
-	}
 	while (p != q) {
 		p->ss_usr_elems -= diff;
 		SLABLIST_SET_USR_ELEMS(p);
@@ -466,7 +551,7 @@ sub_addsn(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
  * into the slab previous to `s`.
  */
 static void
-addsp(slab_t *s, slablist_elem_t elem)
+addsp(slab_t *s, slablist_elem_t elem, int q)
 {
 	/*
 	 * Whenever this function gets called we assume the `s` is FULL.
@@ -484,12 +569,17 @@ addsp(slab_t *s, slablist_elem_t elem)
 	SLABLIST_SLAB_SET_MIN(s);
 
 	int j = 0;
-	if (spv->s_elems) {
-		j = slab_bin_srch(fst_elem, spv);
-	}
-	int q = slab_bin_srch(elem, s);
+	j = spv->s_elems;
 
 	add_elem(spv, fst_elem, j);
+	/*
+	 * We calculated the position `q` before we did the bwdshift. To
+	 * compensate for the changes to the array, we insert at position `q -
+	 * 1` if `q` is not 0.
+	 */
+	if (q > 0) {
+		q -= 1;
+	}
 	add_elem(s, elem, q);
 }
 
@@ -518,10 +608,6 @@ sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 	SLABLIST_SUBBWDSHIFT_BEGIN(s->ss_list, s, 1);
 	bcopy(&(GET_SUBSLAB_ELEM(s, 1)), &(GET_SUBSLAB_ELEM(s, 0)),
 	    ((s->ss_elems - 1) * sizeof (void *)));
-	/*
-	bcopy(&(GET_SUBSLAB_ELEM(s, 1)), s->ss_arr->sa_data,
-	    ((s->ss_elems - 1) * sizeof (void *)));
-	*/
 	SLABLIST_SUBBWDSHIFT_END();
 
 	s->ss_elems--;
@@ -689,6 +775,7 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 	int broke = 0;
 	int skip_loop = 1;
 	slablist_t *sl = s->s_list;
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 	/*
 	 * We update the extrema.
 	 */
@@ -696,6 +783,12 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 	if (n->s_below != NULL) {
 		status = sl->sl_bnd_elem(n->s_min, n->s_below->ss_min,
 				n->s_below->ss_max);
+		if (sorting && status == FS_IN_RANGE) {
+			if (sl->sl_cmp_elem(n->s_min,
+			    n->s_below->ss_max) == 0) {
+				status  = FS_OVER_RANGE;
+			}
+		}
 		t = subslab_gen_add(status, n, nn, n->s_below);
 		while (t->ac_subslab_new != NULL) {
 			skip_loop = 0;
@@ -709,12 +802,13 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 				broke = 1;
 				break;
 			}
-			status = sl->sl_bnd_elem(nn->ss_min, nn->ss_below->ss_min,
-					nn->ss_below->ss_max);
+			status = sl->sl_bnd_elem(nn->ss_min,
+			    nn->ss_below->ss_min, nn->ss_below->ss_max);
 			t = subslab_gen_add(status, NULL, nn, nn->ss_below);
 		}
 		/*
-		 * We update the extrema again (who knows what may have changed).
+		 * We update the extrema again (who knows what may have
+		 * changed).
 		 */
 		ripple_update_extrema(s->s_list, p);
 		ripple_inc_usr_elems(n->s_below);
@@ -787,8 +881,14 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 	 */
 	slab_t *ns = NULL;
 	add_ctx_t *ctx = mk_add_ctx();
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
-	int i = 0;
+	int i = slab_bin_srch(elem, s);
+	if (!sorting && !rep && sl->sl_cmp_elem(elem, s->s_arr[i]) == 0) {
+		SLABLIST_SLAB_AR(sl, NULL, elem, 0);
+		ctx->ac_how = AC_HOW_EDUP;
+		return (ctx);
+	}
 	/*
 	 * If the slab `s` is not full, or if there is the possibility of
 	 * replacing an existing element we try to add into the slab. On the
@@ -796,44 +896,88 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 	 * into the slab `s` while moving elems between the adjacent slabs.
 	 */
 	if (s->s_elems < SELEM_MAX || rep) {
-		i = slab_bin_srch(elem, s);
+		/*
+		 * If this slablist is being used as an intermediary for
+		 * sorting an unsorted slab list, we have to adjust for the
+		 * possiblity of duplicates. The bin srch could have dumped us
+		 * in the middle of a run of duplicates. We try to get to the
+		 * end of the run of duplicates. We move i to the element that
+		 * is either _after_ the run or at the end of the slab. We know
+		 * for a fact that this slab is the _LAST_ slab that contains
+		 * the duplicates (see bubble up and linear scan code).
+		 */
+		if (sorting) {
+			goto skip_rep;
+		}
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) == 0) {
 			/*
 			 * We don't store dups, so we either bail or replace,
 			 * based on preference. Only if `elem` is in the slab's
 			 * range can it be a duplicate.
 			 */
-			if (rep) {
-				ctx->ac_repd_elem = s->s_arr[i];
-				ctx->ac_how = AC_HOW_INTO;
-				s->s_arr[i] = elem;
-				SLABLIST_SLAB_AR(sl, NULL, elem, 1);
-				return (ctx);
-			} else {
-				SLABLIST_SLAB_AR(sl, NULL, elem, 0);
-				ctx->ac_how = AC_HOW_EDUP;
-				return (ctx);
-			}
+			ctx->ac_repd_elem = s->s_arr[i];
+			ctx->ac_how = AC_HOW_INTO;
+			s->s_arr[i] = elem;
+			SLABLIST_SLAB_AR(sl, NULL, elem, 1);
+			return (ctx);
 		}
+skip_rep:;
 		SLABLIST_SLAB_AI(sl, s, elem);
 		add_elem(s, elem, i);
 		ripple_ai(s);
 		ctx->ac_how = AC_HOW_INTO;
 
 	} else {
-
+		/*
+		 * If we are inserting into a slablist that is temporarily used
+		 * for sorting, and if we are inserting an element that is a
+		 * duplicate of the _last_ element in the slab, we have to swap
+		 * `elem` with the last element in the slab, before we
+		 * continue. If we don't, the last element will be moved to
+		 * `s->s_next` and `elem` will go into `s`. This would make the
+		 * sort unstable, which is undesireable.
+		 *
+		 * For Illustration:
+		 *
+		 *	Insert E
+		 *	E = X
+		 *	[X X X X X Y Y Y] [Y Y Y ...
+		 *	[X X X X X E Y Y] [Y Y Y Y ...
+		 *	   No problems here
+		 *
+		 *	E = X
+		 *	[X X X X X X X X] [Y Y Y ...
+		 *	[X X X X X X X E] [X Y Y Y...
+		 *	   E comes before X, making the sort unstable.
+		 *
+		 * So we just have to do this:
+		 *	Insert E
+		 *	E = X
+		 *	[X X X X X X X X] [Y Y Y ...
+		 *	Swap E with the Last X
+		 *	Insert X
+		 *	[X X X X X X X E] [Y Y Y...
+		 *	[X X X X X X X X] [E Y Y Y...
+		 *	   E comes after X, making the sort stable.
+		 */
+		if (sorting &&
+		    sl->sl_cmp_elem(elem, s->s_arr[i]) == 0) {
+			slablist_elem_t tmp = elem;
+			elem = s->s_arr[i];
+			s->s_arr[i] = tmp;
+		}
 		slab_t *snx = s->s_next;
 		slab_t *spv = s->s_prev;
 		if (snx != NULL && snx->s_elems < SELEM_MAX) {
 			SLABLIST_SLAB_AISN(sl, s, elem);
-			addsn(s, elem);
+			addsn(s, elem, i);
 			ripple_aisn(s);
 			ctx->ac_how = AC_HOW_SP_NX;
 			return (ctx);
 		}
 		if (spv != NULL && spv->s_elems < SELEM_MAX) {
 			SLABLIST_SLAB_AISP(sl, s, elem);
-			addsp(s, elem);
+			addsp(s, elem, i);
 			ripple_aisp(s);
 			ctx->ac_how = AC_HOW_SP_PV;
 			return (ctx);
@@ -843,7 +987,7 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 			ns = mk_slab();
 			SLABLIST_SLAB_MK(sl);
 			link_slab(ns, s, SLAB_LINK_AFTER);
-			addsn(s, elem);
+			addsn(s, elem, i);
 			ripple_aisnm(s);
 			ctx->ac_how = AC_HOW_SP_NX;
 			ctx->ac_slab_new = ns;
@@ -854,7 +998,7 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 			ns = mk_slab();
 			SLABLIST_SLAB_MK(sl);
 			link_slab(ns, s, SLAB_LINK_BEFORE);
-			addsp(s, elem);
+			addsp(s, elem, i);
 			ripple_aispm(s);
 			ctx->ac_how = AC_HOW_SP_PV;
 			ctx->ac_slab_new = ns;
@@ -874,6 +1018,7 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	 */
 	subslab_t *ns = NULL;
 	add_ctx_t *ctx = mk_add_ctx();
+	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	int i = 0;
 	/*
@@ -978,7 +1123,7 @@ gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 	}
 	if (s->s_next != NULL && s->s_next->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AISN(sl, s, elem);
-		addsn(s, elem);
+		addsn(s, elem, i);
 		ripple_aisn(s);
 		ctx->ac_how = AC_HOW_SP_NX;
 		return (ctx);
@@ -1081,7 +1226,7 @@ gen_add_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 	}
 	if (s->s_prev != NULL && s->s_prev->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AISP(sl, s, elem);
-		addsp(s, elem);
+		addsp(s, elem, i);
 		ripple_aisp(s);
 		ctx->ac_how = AC_HOW_SP_PV;
 		return (ctx);
@@ -1209,7 +1354,7 @@ subslab_gen_add(int status, slab_t *s1, subslab_t *s2, subslab_t *s)
  * This function is an entry point into libslablist.
  */
 int
-slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
+slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 {
 	lock_list(sl);
 
@@ -1237,7 +1382,7 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 
 	slab_t *s;
 
-	int edup = SL_SUCCESS;
+	int edup = 0;
 
 	if (SLIST_SORTED(sl->sl_flags)) {
 		/*
@@ -1272,6 +1417,9 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 		}
 
 		add_ctx_t *ctx = slab_gen_add(fs, elem, s, rep);
+		if (ctx->ac_how == AC_HOW_EDUP) {
+			edup++;
+		}
 		rm_add_ctx(ctx);
 
 		slablist_t *usl = NULL;
@@ -1319,7 +1467,7 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 
 	try_reap_all(sl);
 
-	if (edup != SL_SUCCESS) {
+	if (edup) {
 		ret = SL_EDUP;
 	} else {
 		sl->sl_elems++;
@@ -1332,4 +1480,67 @@ slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
 	SLABLIST_ADD_END(ret);
 	return (ret);
 
+}
+
+/*
+ * This function is the interface function. We sometimes use the
+ * slablist_add_impl() internally, and would like to distinguish between
+ * user-induced calls and library-induced calls, when tracing.
+ */
+int
+slablist_add(slablist_t *sl, slablist_elem_t elem, int rep)
+{
+	int ret = slablist_add_impl(sl, elem, rep);
+	return (ret);
+}
+
+/*
+ * This function takes an unsorted slab list and sorts it. To do so, it uses
+ * the sorted slab list as its sorting algorithm. It drains elements from `sl`
+ * one by one and inserts them into `tmp`. When `sl` is empty, the function
+ * transplants the head slab/node from `tmp` to `sl`. Then it destroys the
+ * remains of `tmp`. `tmp` has a sepcial flag changes parts of the insertion
+ * path to tolerate duplicate elements.
+ */
+int
+slablist_sort(slablist_t *sl, slablist_cmp_t cmp, slablist_bnd_t bnd)
+{
+	/*
+	 * We create a special kind of sorted slab list that we will use to
+	 * sort the elements in `sl`.
+	 */
+	slablist_t *tmp = slablist_create("temp_sorting", sl->sl_obj_sz, cmp,
+	    bnd, SL_SORTED);
+	SLIST_SET_SORTING_TEMP(tmp->sl_flags);
+	uint64_t i = 0;
+	uint64_t j = 0;
+	if (sl->sl_is_small_list) {
+		small_list_t *prev_node = NULL;
+		small_list_t *node = sl->sl_head;
+		while (i < sl->sl_elems) {
+			slablist_add_impl(tmp, node->sml_data, 0);
+			prev_node = node;
+			node = node->sml_next;
+			rm_sml_node(prev_node);
+			i++;
+		}
+	} else {
+		slab_t *prev_slab = NULL;
+		slab_t *slab = sl->sl_head;
+		while (i < sl->sl_slabs) {
+			j = 0;
+			while (j < slab->s_elems) {
+				slablist_add_impl(tmp, slab->s_arr[j], 0);
+				j++;
+			}
+			prev_slab = slab;
+			slab = slab->s_next;
+			rm_slab(prev_slab);
+			i++;
+		}
+		sl->sl_head = tmp->sl_head;
+	}
+	tmp->sl_head = NULL;
+	slablist_destroy(tmp);
+	return (SL_SUCCESS);
 }

@@ -1,0 +1,50 @@
+#!/bin/ksh
+
+# The input size (we make it very large --- slab lists can handle it ;).
+
+insz=20000000
+
+## The following commands all act on integers.
+
+#The sorted slab list commands
+cmd[0]="./drv_gen sl $insz intsrt seqdec"
+cmd[1]="./drv_gen sl $insz intsrt seqinc"
+cmd[2]="./drv_gen sl $insz intsrt rand"
+
+#The plain ordered commands
+cmd[3]="./drv_gen sl $insz intord seqdec"
+cmd[4]="./drv_gen sl $insz intord seqinc"
+cmd[5]="./drv_gen sl $insz intord rand"
+
+#The plain sorting commands
+cmd[6]="./drv_gen sl $insz intord seqdec sort"
+cmd[7]="./drv_gen sl $insz intord seqinc sort"
+cmd[8]="./drv_gen sl $insz intord rand sort"
+
+#The sorting w/ duplicates commands
+cmd[9]="./drv_gen sl $insz intord seqdec sort dup"
+cmd[10]="./drv_gen sl $insz intord seqinc sort dup"
+cmd[11]="./drv_gen sl $insz intord rand sort dup"
+
+dtest[0]="../tests/insert.d"
+dtest[1]="../tests/find_bubble_up.d"
+
+# All tests execute asynchronously. Each job should, at peak, take up ~200M of
+# RAM. Which means the tests need ~5G of RAM minimum to run. We can tolerate
+# swapping, because we are not measuring performance. We are just checking
+# correctness.
+pfexec rm -r test_results 2> /dev/null
+pfexec mkdir test_results
+pfexec chmod go+rw test_results
+rifile=test_results/insert_
+rffile=test_results/find_
+for i in {0..11}; do;
+
+	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
+		-s ${dtest[0]} -o $rifile$i &;
+
+	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
+		-s ${dtest[1]} -o $rffile$i &;
+done;
+echo Waiting...
+wait;

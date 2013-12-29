@@ -87,7 +87,7 @@ slablist_create(
 	list->sl_flags = fl;
 
 	/* reap defaults */
-	list->sl_mpslabs = 30;	
+	list->sl_mpslabs = 30;
 	list->sl_mslabs = 30;
 
 	list->sl_req_sublayer = 10;
@@ -281,8 +281,8 @@ link_slab(slab_t *s1, slab_t *s2, int flag)
 }
 
 /*
- * We link subslab `s1` to subslab `s2`. `flag` indicates if we link to the left or
- * to the right of `s2`.
+ * We link subslab `s1` to subslab `s2`. `flag` indicates if we link to the
+ * left or to the right of `s2`.
  */
 void
 link_subslab(subslab_t *s1, subslab_t *s2, int flag)
@@ -436,19 +436,29 @@ slablist_destroy(slablist_t *sl)
 	slablist_t *p;
 	slablist_t *q;
 	p = sl->sl_sublayer;
+	/*
+	 * We remove all of the slabs in the top layer/
+	 */
 	if (!(sl->sl_is_small_list) && sl->sl_head != NULL) {
 		remove_slabs(sl);
 	}
 
+	/*
+	 * We remove all of the sublabs in the sublayers, one by one.
+	 */
 	if (!(sl->sl_is_small_list) && sl->sl_sublayer != NULL) {
 		while (p != NULL) {
 			q = p;
-			remove_slabs(p);
+			remove_subslabs(p);
 			p = q->sl_sublayer;
 			rm_slablist(q);
 		}
 	}
 
+	/*
+	 * If however, we are dealing with a non-empty small list, we remove
+	 * the individual linked list nodes.
+	 */
 	if (sl->sl_is_small_list && sl->sl_head != NULL) {
 		sml = sl->sl_head;
 		uint64_t i = 0;
@@ -691,7 +701,8 @@ void
 try_reap(slablist_t *sl)
 {
 	uint64_t slabs_saveable = sl->sl_slabs - (sl->sl_elems / SELEM_MAX);
-	float percntg_slabs_saveable = ((float)slabs_saveable) / ((float)sl->sl_slabs);
+	float percntg_slabs_saveable = ((float)slabs_saveable) /
+	    ((float)sl->sl_slabs);
 	float req_percntg = ((float)(sl->sl_mpslabs))/100.0;
 	if (slabs_saveable >= sl->sl_mslabs &&
 	    percntg_slabs_saveable >= req_percntg) {
@@ -709,14 +720,6 @@ try_reap_all(slablist_t *sl)
 	slablist_t *csl = sl;
 	/* TODO make reaps work for sublayers too */
 	try_reap(csl);
-	/*
-	int i = 0;
-	do {
-		try_reap(csl);
-		csl = csl->sl_sublayer;
-		i++;
-	} while (i < sl->sl_sublayers);
-	*/
 }
 
 /*
@@ -795,7 +798,7 @@ slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
  * function expects the same arguments, but has to fold _backward_ from the end
  * of the array to start of it. The array pointer that is passed, thought,
  * _still_ points to the start of the array (it is the function's
- * responsibility to jump to the end of the array, before folding backward). 
+ * responsibility to jump to the end of the array, before folding backward).
  */
 slablist_elem_t
 slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
