@@ -1,16 +1,29 @@
 #!/bin/ksh
 
-# change this path if flamegraphs are in a diff path on your box
-fg_loc="/rpool/projects/flamegraph/FlameGraph"
+source ./cmd_arr
+
+# We ship the FlameGraph tools
+fg_loc="../tools/"
+dir=fg_stacks
 
 #we remove any lingering output, from a previous run, and ignore errors
-rm stacks 2> /dev/null
-rm stacks.folded 2> /dev/null
-rm stacks.svg 2> /dev/null
+pfexec rm -r $dir 2> /dev/null
+mkdir $dir 
 
-drv=../build/drv_gen
 
-dtrace -x ustackframes=100 -c "$drv sl $1 $2 $3" -n 'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o stacks
 
-$fg_loc/stackcollapse.pl stacks > stacks.folded
-$fg_loc/flamegraph.pl stacks.folded > stacks.svg
+# We run all of these in serial, so that we get as little interference as
+# possible. We measure all stacks.
+#
+# TODO: Measure memory-allocation stacks.
+for i in {0..11}; do;
+
+	pfexec dtrace -x ustackframes=100 -c "${cmd[$i]}" -n\
+	    'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o $dir/stacks_$i
+
+done;
+
+for i in {0..11}; do;
+	$fg_loc/stackcollapse.pl $dir/stacks_$i > $dir/folded_stacks_$i
+	$fg_loc/flamegraph.pl $dir/folded_stacks_$i> $dir/svg_stacks_$i
+done;

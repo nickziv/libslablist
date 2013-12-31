@@ -1,0 +1,25 @@
+#!/usr/bin/ksh
+
+# All error messages are suppressed.
+
+# Clean drv_gen, and any other drivers.
+pfexec rm `ls | egrep -e '$drv'` 2> /dev/null
+
+# Clean all object code, and the shared object.
+rm `ls | egrep -e '\.o$'` 2> /dev/null
+pfexec rm libslablist.so.1 2> /dev/null
+
+# Clean the stack traces and flame-graphs.
+if [[ -d fg_stacks ]]; then;
+	pfexec rm -r fg_stacks;
+fi;
+
+# Clean any packed traces and flame graphs.
+if [[ -f fg_stacks.tar.gz ]]; then;
+	pfexec rm fg_stacks.tar.gz;
+fi;
+
+# Clean any test results.
+if [[ -d test_results ]]; then;
+	pfexec rm -r test_results;
+fi;

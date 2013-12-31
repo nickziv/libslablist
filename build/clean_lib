@@ -1,4 +1,0 @@
-#!/usr/bin/ksh
-
-rm `ls | egrep -e '\.o$'`
-rm libslablist.so.1
