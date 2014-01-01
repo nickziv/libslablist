@@ -90,4 +90,6 @@ extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
 extern slablist_elem_t slablist_get_rand(slablist_t *);
 extern uint64_t slablist_get_rand_pos(slablist_t *);
 extern int slablist_find(slablist_t *, slablist_elem_t, slablist_elem_t *);
+extern int slablist_has_subseq(slablist_t *, slablist_t *, void *, int);
 extern int slablist_rem_eq(slablist_t *, slablist_elem_t);
+extern void slablist_reverse(slablist_t *);

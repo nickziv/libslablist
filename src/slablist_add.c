@@ -1544,3 +1544,48 @@ slablist_sort(slablist_t *sl, slablist_cmp_t cmp, slablist_bnd_t bnd)
 	slablist_destroy(tmp);
 	return (SL_SUCCESS);
 }
+
+/*
+ * This function takes an ordered slablist and reverses the order of elements,
+ * in-place.
+ */
+void
+slablist_reverse(slablist_t *sl)
+{
+	if (SLIST_SORTED(sl->sl_flags)) {
+		return;
+	}
+	void *head = sl->sl_head;
+	sl->sl_head = sl->sl_end;
+	sl->sl_end = head;
+	if (sl->sl_is_small_list) {
+		small_list_t *n = head;
+		small_list_t *n_tmp;
+		small_list_t *n_prev = NULL;
+		while (n != NULL) {
+			n_tmp = n->sml_next;
+			n->sml_next = n_prev;
+			n_prev = n;
+			n = n_tmp;
+		}
+		return;
+	}
+	slab_t *s = head;
+	slab_t *tmp;
+	while (s != NULL) {
+		tmp = s->s_next;
+		s->s_next = s->s_prev;
+		s->s_prev = tmp;
+		uint8_t i = 0;
+		uint8_t j = s->s_elems - 1;
+		slablist_elem_t t;
+		while (i < j) {
+			t = s->s_arr[i];
+			s->s_arr[i] = s->s_arr[j];
+			s->s_arr[j] = t;
+			i++;
+			j--;
+		}
+		s = tmp;
+	}
+}

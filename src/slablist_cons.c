@@ -723,6 +723,61 @@ try_reap_all(slablist_t *sl)
 }
 
 /*
+ * Maps a singly linked list.
+ */
+void
+slablist_map_sml(slablist_t *sl, slablist_map_t f)
+{
+	uint64_t nodes = sl->sl_elems;
+	uint64_t node = 0;
+	small_list_t *s = (small_list_t *)sl->sl_head;
+	/* 
+	 * We place the elems in an array, to avoid calling `f` more than we
+	 * have to.
+	 */
+	slablist_elem_t elems[SMELEM_MAX];
+	while (node < nodes) {
+		elems[node] = s->sml_data;
+		s = s->sml_next;
+		node++;
+	}
+	f(elems, nodes);
+}
+
+void
+slablist_map_range_sml(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
+    slablist_elem_t max)
+{
+	uint64_t nodes = sl->sl_elems;
+	uint64_t node = 0;
+	small_list_t *s = (small_list_t *)sl->sl_head;
+	/* 
+	 * We place the elems in an array, to avoid calling `f` more than we
+	 * have to.
+	 */
+	slablist_elem_t elems[SMELEM_MAX];
+	while (node < nodes) {
+		elems[node] = s->sml_data;
+		s = s->sml_next;
+		node++;
+	}
+	node = 0;
+	int i = 0;
+	int j = nodes - 1;
+	while (sl->sl_cmp_elem(elems[i], min) < 0) {
+		i++;
+	}
+	while (sl->sl_cmp_elem(elems[j], max) > 0) {
+		j--;
+	}
+	if (j < i) {
+		return;
+	}
+	nodes = j - i + 1;
+	f(elems+i, nodes);
+}
+
+/*
  * Map a function to every element in the slab list. If this function is called
  * on a sorted slab list, and it invalidates the sorting of the elements in any
  * way, it _will_ have undefined results.
@@ -730,6 +785,10 @@ try_reap_all(slablist_t *sl)
 void
 slablist_map(slablist_t *sl, slablist_map_t f)
 {
+	if (sl->sl_is_small_list) {
+		slablist_map_sml(sl, f);
+		return;
+	}
 	uint64_t slabs = sl->sl_slabs;
 	uint64_t slab = 0;
 	slab_t *s = (slab_t *)sl->sl_head;
@@ -742,8 +801,12 @@ slablist_map(slablist_t *sl, slablist_map_t f)
 
 void
 slablist_map_range(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
-slablist_elem_t max)
+    slablist_elem_t max)
 {
+	if (sl->sl_is_small_list) {
+		slablist_map_range_sml(sl, f, min, max);
+		return;
+	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
 	find_bubble_up(sl, min, &smin);
@@ -767,6 +830,73 @@ slablist_elem_t max)
 	f(slab->s_arr, i+1);
 }
 
+
+/*
+ * Folds left or right on a singly linked list, depending on `f`.
+ */
+slablist_elem_t
+slablist_fold_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
+{
+	uint64_t nodes = sl->sl_elems;
+	uint64_t node = 0;
+	small_list_t *s = (small_list_t *)sl->sl_head;
+	slablist_elem_t accumulator = zero;
+	/* 
+	 * We place the elems in an array, to avoid calling `f` more than we
+	 * have to. This has the additional benefit of allowing us to use the
+	 * same code for both left and right folds.
+	 */
+	slablist_elem_t elems[SMELEM_MAX];
+	while (node < nodes) {
+		elems[node] = s->sml_data;
+		s = s->sml_next;
+		node++;
+	}
+	accumulator = f(accumulator, elems, nodes);
+	return (accumulator);
+}
+
+/*
+ * Folds left or right on a singly linked list, depending on `f`, on a range.
+ */
+slablist_elem_t
+slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
+    slablist_elem_t max, slablist_elem_t zero)
+{
+	uint64_t nodes = sl->sl_elems;
+	uint64_t node = 0;
+	small_list_t *s = (small_list_t *)sl->sl_head;
+	slablist_elem_t accumulator = zero;
+	/* 
+	 * We place the elems in an array, to avoid calling `f` more than we
+	 * have to. This has the additional benefit of allowing us to use the
+	 * same code for both left and right folds.
+	 */
+	slablist_elem_t elems[SMELEM_MAX];
+	while (node < nodes) {
+		elems[node] = s->sml_data;
+		s = s->sml_next;
+		node++;
+	}
+
+	node = 0;
+	int i = 0;
+	int j = nodes - 1;
+	while (sl->sl_cmp_elem(elems[i], min) < 0) {
+		i++;
+	}
+	while (sl->sl_cmp_elem(elems[j], max) > 0) {
+		j--;
+	}
+	if (j < i) {
+		return;
+	}
+	nodes = j - i + 1;
+	
+	accumulator = f(accumulator, elems+i, nodes);
+	return (accumulator);
+}
+
 /*
  * Folds a function from start to end of a slab list. The function itself folds
  * from the start to the end of _slab_. This function expects an accumulator,
@@ -780,6 +910,10 @@ slablist_elem_t max)
 slablist_elem_t
 slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
+	if (sl->sl_is_small_list) {
+		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
+		return (ret);
+	}
 	uint64_t slabs = sl->sl_slabs;
 	uint64_t slab = 0;
 	slab_t *s = (slab_t *)sl->sl_head;
@@ -796,13 +930,17 @@ slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
  * Folds a function from end to start of a slab list. All the caveates of
  * pointer vs value that apply to foldr apply here as well. The callback
  * function expects the same arguments, but has to fold _backward_ from the end
- * of the array to start of it. The array pointer that is passed, thought,
+ * of the array to start of it. The array pointer that is passed, though,
  * _still_ points to the start of the array (it is the function's
  * responsibility to jump to the end of the array, before folding backward).
  */
 slablist_elem_t
 slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
+	if (sl->sl_is_small_list) {
+		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
+		return (ret);
+	}
 	uint64_t slabs = sl->sl_slabs;
 	uint64_t slab = 0;
 	slab_t *s = (slab_t *)sl->sl_end;
@@ -820,6 +958,11 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
 	slablist_elem_t accumulator = zero;
+	if (sl->sl_is_small_list) {
+		slablist_elem_t ret = slablist_fold_range_sml(sl, f, min, max,
+		    zero);
+		return (ret);
+	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
 	find_bubble_up(sl, min, &smin);
@@ -850,6 +993,11 @@ slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
 	slablist_elem_t accumulator = zero;
+	if (sl->sl_is_small_list) {
+		slablist_elem_t ret = slablist_fold_range_sml(sl, f, min, max,
+		    zero);
+		return (ret);
+	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
 	find_bubble_up(sl, min, &smin);
