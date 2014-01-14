@@ -1,0 +1,56 @@
+insz=20000000
+sinsz=59
+
+## The following commands all act on integers.
+
+#The sorted slab list commands
+cmd[0]="./drv_gen sl $insz intsrt seqdec"
+cmd[1]="./drv_gen sl $insz intsrt seqinc"
+cmd[2]="./drv_gen sl $insz intsrt rand"
+
+#The plain ordered commands
+cmd[3]="./drv_gen sl $insz intord seqdec"
+cmd[4]="./drv_gen sl $insz intord seqinc"
+cmd[5]="./drv_gen sl $insz intord rand"
+
+#The plain sorting commands
+cmd[6]="./drv_gen sl $insz intord seqdec sort"
+cmd[7]="./drv_gen sl $insz intord seqinc sort"
+cmd[8]="./drv_gen sl $insz intord rand sort"
+
+#The sorting w/ duplicates commands
+cmd[9]="./drv_gen sl $insz intord seqdec sort dup"
+cmd[10]="./drv_gen sl $insz intord seqinc sort dup"
+cmd[11]="./drv_gen sl $insz intord rand sort dup"
+
+#Here we test the subseq finding
+cmd[12]="./drv_gen sl $insz intord seqdec subseqsl subseqarr"
+cmd[13]="./drv_gen sl $insz intord seqinc subseqsl subseqarr"
+cmd[14]="./drv_gen sl $insz intord rand subseqsl subseqarr"
+
+## The following are the same as above except they operate on small lists
+
+#The sorted slab list commands
+scmd[0]="./drv_gen sl $sinsz intsrt seqdec"
+scmd[1]="./drv_gen sl $sinsz intsrt seqinc"
+scmd[2]="./drv_gen sl $sinsz intsrt rand"
+
+#The plain ordered commands
+scmd[3]="./drv_gen sl $sinsz intord seqdec"
+scmd[4]="./drv_gen sl $sinsz intord seqinc"
+scmd[5]="./drv_gen sl $sinsz intord rand"
+
+#The plain sorting commands
+scmd[6]="./drv_gen sl $sinsz intord seqdec sort"
+scmd[7]="./drv_gen sl $sinsz intord seqinc sort"
+scmd[8]="./drv_gen sl $sinsz intord rand sort"
+
+#The sorting w/ duplicates commands
+scmd[9]="./drv_gen sl $sinsz intord seqdec sort dup"
+scmd[10]="./drv_gen sl $sinsz intord seqinc sort dup"
+scmd[11]="./drv_gen sl $sinsz intord rand sort dup"
+
+#Here we test the subseq finding
+scmd[12]="./drv_gen sl $sinsz intord seqdec subseqsl subseqarr"
+scmd[13]="./drv_gen sl $sinsz intord seqinc subseqsl subseqarr"
+scmd[14]="./drv_gen sl $sinsz intord rand subseqsl subseqarr"

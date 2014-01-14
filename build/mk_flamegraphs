@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-source ./cmd_arr
+source ./common_vars
 
 # We ship the FlameGraph tools
 fg_loc="../tools/"
@@ -19,6 +19,8 @@ mkdir $dir
 for i in {0..11}; do;
 
 	pfexec dtrace -x ustackframes=100 -c "${cmd[$i]}" -n\
+	    'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o $dir/stacks_$i
+	pfexec dtrace -x ustackframes=100 -c "${scmd[$i]}" -n\
 	    'profile-1234hz /pid == $target/ {@[ustack()] = count();}' -o $dir/stacks_$i
 
 done;

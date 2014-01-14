@@ -1025,6 +1025,123 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 	}
 }
 
+#define	NO_MATCH	0
+#define	PARTIAL_MATCH	1
+#define	FULL_MATCH	2
+typedef struct subseq {
+	char		sseq_match;
+	uint64_t	sseq_matched;
+	uint64_t	sseq_matchable;
+	slablist_t	*sseq_sub1;
+	slablist_elem_t	*sseq_sub2;
+} subseq_t;
+
+slablist_elem_t
+subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
+{
+	subseq_t *seq = acc.sle_p;
+	slablist_t *sl = seq->sseq_sub1;
+	slablist_elem_t *seq_arr = seq->sseq_sub2;
+	/*
+	 * If we have a full match already, we don't bother searching for more
+	 * matches, and just keep returning acc until the fold finishes.
+	 *
+	 * TODO: There should be some way of breaking out of a fold.
+	 */
+	if (seq->sseq_match == FULL_MATCH) {
+		return (acc);
+	}
+	uint64_t i = 0;
+	uint64_t j = 1;
+	if (seq->sseq_match == NO_MATCH) {
+		/* find head of sequence */
+		slablist_elem_t f;
+		if (sl != NULL) {
+			f = slablist_get(sl, 0);
+		} else {
+			f = seq_arr[0];
+		}
+		while (i < elems) {
+			if (sl->sl_cmp_elem(arr[i], f) == 0) {
+				seq->sseq_matched++;
+				seq->sseq_match = PARTIAL_MATCH;
+				break;
+			}
+			i++;
+		}
+	}
+	if (seq->sseq_match == PARTIAL_MATCH) {
+		j = seq->sseq_matched;
+		/* find the tail of the sequence */
+		if (sl != NULL) {
+			while (j < seq->sseq_matchable) {
+				slablist_elem_t c = slablist_get(sl, j);
+				if (sl->sl_cmp_elem(arr[i], c) == 0) {
+					seq->sseq_matched++;
+				} else {
+					break;
+				}
+				i++;
+				j++;
+			}
+		} else {
+			while (j < seq->sseq_matchable) {
+				slablist_elem_t c = seq_arr[j];
+				if (sl->sl_cmp_elem(arr[i], c) == 0) {
+					seq->sseq_matched++;
+				} else {
+					break;
+				}
+				i++;
+				j++;
+			}
+		}
+		if (seq->sseq_matched == seq->sseq_matchable) {
+			seq->sseq_match = FULL_MATCH;
+			return (acc);
+		}
+		if (seq->sseq_matched < seq->sseq_matchable &&
+		    i < elems) {
+			seq->sseq_match = NO_MATCH;
+		}
+	}
+	return (acc);
+}
+
+/*
+ * This function determines if `sl` has a subsequence, which is either stored
+ * in the slablist `sub1` or in the array `sub2` of length `len`.
+ */
+int
+slablist_subseq(slablist_t *sl, slablist_t *sub1, slablist_elem_t *sub2,
+    uint64_t len)
+{
+	if (sub1 == NULL && sub2 == NULL) {
+		return (0);
+	}
+	subseq_t seq;
+	if (sub1 != NULL) {
+		seq.sseq_match = 0;
+		seq.sseq_matched = 0;
+		seq.sseq_matchable = slablist_get_elems(sl);
+		seq.sseq_sub1 = sub1;
+		seq.sseq_sub2 = NULL;
+	} else {
+		seq.sseq_match = 0;
+		seq.sseq_matched = 0;
+		seq.sseq_matchable = len;
+		seq.sseq_sub1 = NULL;
+		seq.sseq_sub2 = sub2;
+	}
+	slablist_elem_t acc;
+	acc.sle_p = &seq;
+	(void) slablist_foldr(sl, subseq_cb, acc);
+	if (seq.sseq_match == FULL_MATCH) {
+		return (1);
+	}
+	return (0);
+}
+
 static uint64_t
 get_rand_num(int rfd)
 {

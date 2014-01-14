@@ -47,6 +47,13 @@ typedef union container {
 #endif
 } container_t;
 
+void
+debug_func(int a, int b)
+{
+	int x = 0;
+	x += 1;
+	return;
+}
 
 int
 gnu_cmpfun(const void *z1, const void *z2, void *private)
@@ -64,6 +71,29 @@ gnu_cmpfun(const void *z1, const void *z2, void *private)
 	}
 
 	return (0);
+}
+
+/*
+ * Global Variables.
+ */
+int do_subseq_sl;
+int do_subseq_arr;
+slablist_elem_t subseq[100];
+int seq_cap;
+
+void
+subseq_reverse(slablist_elem_t *arr)
+{
+	int i = 0;
+	int j = seq_cap - 1;
+	slablist_elem_t tmp;
+	while (i < j) {
+		tmp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
+		i++;
+		j--;
+	}
 }
 
 int
@@ -429,6 +459,49 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 		STRUC_ADD_BEGIN(NULL, elem.sle_u, 0);
 
 		(*sadd_f[t])(ls, elem);
+		STRUC_ADD_END(0);
+		debug_func(do_subseq_sl, do_subseq_arr);
+		if (do_subseq_sl || do_subseq_arr) {
+			subseq[seq_cap] = elem;
+			seq_cap++;
+		}
+		int has_subseq;
+		/*
+		 * If we can do subseq testing, and we have a subseq of 100, we
+		 * test the slablist_subseq call on a slablist.
+		 * We test a subseq that is definitely going to be there, and a
+		 * reversed subseq that is most likely not going to be in the
+		 * list.
+		 */
+		debug_func(do_subseq_sl, seq_cap);
+		if (do_subseq_sl && seq_cap == 100) {
+			int l = 0;
+			slablist_t *sl_ss = slablist_create("subseq", 8, NULL,
+			    NULL, SL_ORDERED);
+			while (l < 100) {
+				slablist_add(sl_ss, subseq[l], 0);
+				l++;
+			}
+			/* this should evaluate to true for ordered slablists */
+			has_subseq = slablist_subseq(ls->sl, sl_ss, NULL, 0);
+			slablist_reverse(sl_ss);
+			/* this is _likely_ to evaluate to false */
+			has_subseq = slablist_subseq(ls->sl, sl_ss, NULL, 0);
+		}
+		/* Same as the previous but for subseq arrays */
+		if (do_subseq_arr && seq_cap == 100) {
+			/* this should evaluate to true for ordered slablists */
+			has_subseq = slablist_subseq(ls->sl, NULL, subseq,
+			    100);
+			subseq_reverse(subseq);
+			/* this is _likely_ to evaluate to false */
+			has_subseq = slablist_subseq(ls->sl, NULL, subseq,
+			    100);
+			
+		}
+		if (seq_cap == 100) {
+			seq_cap = 0;
+		}
 		if (do_dups && ops % 2) {
 			(*sadd_f[t])(ls, elem);
 			(*sadd_f[t])(ls, elem);
@@ -443,7 +516,6 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 			(*sadd_f[t])(ls, elem);
 		}
 
-		STRUC_ADD_END(0);
 		ops++;
 	}
 }
@@ -503,6 +575,10 @@ main(int ac, char *av[])
 	int maxlvl;
 	struct_type_t struct_type = ST_SL;
 	int do_rem = 0;
+	do_subseq_sl = 0;
+	do_subseq_arr = 0;
+	seq_cap = 0;
+
 	int do_post_sort = 0;
 	int do_map = 0;
 	int do_foldr = 0;
@@ -574,6 +650,12 @@ main(int ac, char *av[])
 		if (strcmp("sort", av[aci]) == 0) {
 			do_post_sort++;
 		}
+		if (strcmp("subseqsl", av[aci]) == 0) {
+			do_subseq_sl++;
+		}
+		if (strcmp("subseqarr", av[aci]) == 0) {
+			do_subseq_arr++;
+		}
 		if (strcmp("map", av[aci]) == 0) {
 			do_map++;
 		}
@@ -595,6 +677,10 @@ main(int ac, char *av[])
 	}
 	if (is_rand + is_seq_inc + is_seq_dec > 1) {
 		printf("ERROR: Must specifiy ONLY ONE insertion pattern");
+		exit(0);
+	}
+	if (do_dups && (do_subseq_sl || do_subseq_arr)) {
+		printf("ERROR: Can't do duplicates and subsequences at the same time");
 		exit(0);
 	}
 	int sl_flag = 0;

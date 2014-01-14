@@ -731,7 +731,7 @@ slablist_map_sml(slablist_t *sl, slablist_map_t f)
 	uint64_t nodes = sl->sl_elems;
 	uint64_t node = 0;
 	small_list_t *s = (small_list_t *)sl->sl_head;
-	/* 
+	/*
 	 * We place the elems in an array, to avoid calling `f` more than we
 	 * have to.
 	 */
@@ -751,7 +751,7 @@ slablist_map_range_sml(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
 	uint64_t nodes = sl->sl_elems;
 	uint64_t node = 0;
 	small_list_t *s = (small_list_t *)sl->sl_head;
-	/* 
+	/*
 	 * We place the elems in an array, to avoid calling `f` more than we
 	 * have to.
 	 */
@@ -841,7 +841,7 @@ slablist_fold_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 	uint64_t node = 0;
 	small_list_t *s = (small_list_t *)sl->sl_head;
 	slablist_elem_t accumulator = zero;
-	/* 
+	/*
 	 * We place the elems in an array, to avoid calling `f` more than we
 	 * have to. This has the additional benefit of allowing us to use the
 	 * same code for both left and right folds.
@@ -867,7 +867,7 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	uint64_t node = 0;
 	small_list_t *s = (small_list_t *)sl->sl_head;
 	slablist_elem_t accumulator = zero;
-	/* 
+	/*
 	 * We place the elems in an array, to avoid calling `f` more than we
 	 * have to. This has the additional benefit of allowing us to use the
 	 * same code for both left and right folds.
@@ -888,11 +888,14 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	while (sl->sl_cmp_elem(elems[j], max) > 0) {
 		j--;
 	}
+	/*
+	 * We couldn't find the appropriate range.
+	 */
 	if (j < i) {
-		return;
+		return (accumulator);
 	}
 	nodes = j - i + 1;
-	
+
 	accumulator = f(accumulator, elems+i, nodes);
 	return (accumulator);
 }

@@ -113,6 +113,14 @@ typedef union slablist_elem {
 	char		sle_c[8];
 } slablist_elem_t;
 
+/*
+ * Because SmartOS no longer understands what a pthread_mutex_t is we have to
+ * replace the member with a 'fake' member that is of the same size (24 bytes).
+ */
+typedef struct pmutex {
+	uint64_t	pm_buf[3];
+} pmutex_t;
+
 
 /*
  * These are the structs that the DTrace consumers see. In slablinfo, we only
@@ -185,7 +193,7 @@ struct subarr {
 };
 
 struct subslab {
-        pthread_mutex_t         ss_mutex;
+        pmutex_t         	ss_mutex;
         subslab_t               *ss_next;
         subslab_t               *ss_prev;
         subslab_t               *ss_below;
@@ -198,7 +206,7 @@ struct subslab {
 };
 
 struct slablist {
-        pthread_mutex_t         sl_mutex;
+        pmutex_t         	sl_mutex;
         slablist_t              *sl_prev;
         slablist_t              *sl_next;
         slablist_t              *sl_sublayer;

@@ -2,11 +2,12 @@
 
 # The input size (we make it very large --- slab lists can handle it ;).
 
-source ./cmd_arr
+source ./common_vars
 
 
 dtest[0]="../tests/insert.d"
 dtest[1]="../tests/find_bubble_up.d"
+dtest[2]="../tests/subseq.d"
 
 # All tests execute asynchronously. Each job should, at peak, take up ~200M of
 # RAM. Which means the tests need ~5G of RAM minimum to run. We can tolerate
@@ -16,14 +17,27 @@ pfexec rm -r test_results 2> /dev/null
 pfexec mkdir test_results
 pfexec chmod go+rw test_results
 rifile=test_results/insert_
+rsfile=test_results/subseq_
 rffile=test_results/find_
 for i in {0..11}; do;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
-		-s ${dtest[0]} -o $rifile$i &;
+		-s ${dtest[0]} -o $rifile$i;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
-		-s ${dtest[1]} -o $rffile$i &;
+		-s ${dtest[1]} -o $rffile$i;
+
+	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${scmd[$i]}"\
+		-s ${dtest[0]} -o $rifile"s_"$i;
+
+	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${scmd[$i]}"\
+		-s ${dtest[1]} -o $rffile"s_"$i;
 done;
+#for i in {12..14}; do;
+#	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
+#		-s ${dtest[2]} -o $rsfile$i &;
+#	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${scmd[$i]}"\
+#		-s ${dtest[2]} -o $rsfile"s_"$i &;
+#done;
 echo Waiting...
 wait;

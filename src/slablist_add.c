@@ -198,16 +198,14 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 	}
 
 	int ip = 0;		/* add-point */
-	slablist_t *sl;
-	sl = s->s_list;
 
 	ip = i;
 
 	SLABLIST_FWDSHIFT_BEGIN(s->s_list, s, i);
 	size_t shiftsz = (s->s_elems - (size_t)i) * 8;
 	bcopy(&(s->s_arr[i]), &(s->s_arr[(i+1)]), shiftsz);
-	s->s_arr[i] = elem;
 	SLABLIST_FWDSHIFT_END();
+	s->s_arr[i] = elem;
 
 	/*
 	 * If we added at the beginning of the slab, we have to change the
@@ -360,9 +358,9 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 
 	int ip = 0;		/* add-point */
 	slab_t *stmp_lst;
-	slab_t *stmp_fst;
+	// slab_t *stmp_fst;
 	subslab_t *sstmp_lst;
-	subslab_t *sstmp_fst;
+	// subslab_t *sstmp_fst;
 
 	ip = i;
 
@@ -429,18 +427,18 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 		if (s1 != NULL) {
 			stmp_lst = (slab_t *)GET_SUBSLAB_ELEM(s,
 			    SUBELEM_MAX - 1);
-			stmp_fst = (slab_t *)GET_SUBSLAB_ELEM(s, 0);
+			// stmp_fst = (slab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = stmp_lst->s_max;
-			s->ss_min = stmp_lst->s_min;
+			// s->ss_min = stmp_lst->s_min;
 		} else {
 			sstmp_lst = (subslab_t *)GET_SUBSLAB_ELEM(s,
 			    SUBELEM_MAX - 1);
-			sstmp_fst = (subslab_t *)GET_SUBSLAB_ELEM(s, 0);
+			// sstmp_fst = (subslab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = sstmp_lst->ss_max;
-			s->ss_min = sstmp_lst->ss_min;
+			// s->ss_min = sstmp_lst->ss_min;
 		}
 		SLABLIST_SUBSLAB_SET_MAX(s);
-		SLABLIST_SUBSLAB_SET_MIN(s);
+		// SLABLIST_SUBSLAB_SET_MIN(s);
 	}
 
 	if (SLABLIST_TEST_ADD_SLAB_ENABLED()) {
@@ -1018,7 +1016,7 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	 */
 	subslab_t *ns = NULL;
 	add_ctx_t *ctx = mk_add_ctx();
-	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	// int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	int i = 0;
 	/*
