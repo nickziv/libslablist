@@ -19,19 +19,38 @@ pfexec chmod go+rw test_results
 rifile=test_results/insert_
 rsfile=test_results/subseq_
 rffile=test_results/find_
+# XXX ON SLEEPS
+#
+# We add a sleep after every DTrace command, because not doing so results in
+# all of the DTrace processes 'freezing'. Actually, they get permanently
+# strand:d in the 'sleep' state (according to prstat output), and don't execute
+# the given command at all. The sleeps are a workaround.
+#
+# The DTrace docs don't say anything about starting dtrace processes in rapid
+# succession... They also don't say anything about executing 48 instances of
+# it, simultaneously.
+#
+# Either way, for now, the two-second delay between exec's seems to do the
+# trick. I don't know if this is a timing issue that results in a kind of
+# dead-lock, if it is simply a matter of having too many dtrace processes, or
+# both.
 for i in {0..11}; do;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
-		-s ${dtest[0]} -o $rifile$i;
+		-s ${dtest[0]} -o $rifile$i &;
+	sleep 2;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\
-		-s ${dtest[1]} -o $rffile$i;
+		-s ${dtest[1]} -o $rffile$i &;
+	sleep 2;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${scmd[$i]}"\
-		-s ${dtest[0]} -o $rifile"s_"$i;
+		-s ${dtest[0]} -o $rifile"s_"$i &;
+	sleep 2;
 
 	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${scmd[$i]}"\
-		-s ${dtest[1]} -o $rffile"s_"$i;
+		-s ${dtest[1]} -o $rffile"s_"$i &;
+	sleep 2;
 done;
 #for i in {12..14}; do;
 #	pfexec dtrace -L /opt/libslablist/include/dtrace/ -c "${cmd[$i]}"\

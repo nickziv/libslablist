@@ -87,6 +87,9 @@ extern int slablist_rem(slablist_t *, slablist_elem_t, uint64_t, slablist_rem_cb
 extern int slablist_rem_range(slablist_t *, slablist_elem_t, slablist_elem_t, slablist_rem_cb_t);
 extern void slablist_reap(slablist_t *);
 extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
+//TODO
+//extern slablist_elem_t slablist_get_head(slablist_t *);
+//extern slablist_elem_t slablist_get_end(slablist_t *);
 extern slablist_elem_t slablist_get_rand(slablist_t *);
 extern uint64_t slablist_get_rand_pos(slablist_t *);
 extern int slablist_find(slablist_t *, slablist_elem_t, slablist_elem_t *);
