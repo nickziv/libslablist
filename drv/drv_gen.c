@@ -315,6 +315,7 @@ sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
 	slablist_rem(c->sl, elem, pos, rcb);
 }
 
+/*
 void
 sl_foldr(container_t *c, slablist_fold_cb_t *fcb)
 {
@@ -325,6 +326,7 @@ sl_foldl(container_t *c, slablist_fold_cb_t *fcb)
 {
 
 }
+*/
 
 void
 jmpcbt_op(container_t *c, slablist_elem_t elem)
@@ -796,10 +798,10 @@ main(int ac, char *av[])
 			do_free_remaining(&cis, struct_type, INT, SRT);
 		}
 		if (do_foldr) {
-			do_foldr(&cis, struct_type, INT, SRT);
+			//do_foldrs(&cis, struct_type, INT, SRT);
 		}
 		if (do_foldl) {
-			do_foldl(&cis, struct_type, INT, SRT);
+			//do_foldls(&cis, struct_type, INT, SRT);
 		}
 	}
 	if (strord) {
