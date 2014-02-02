@@ -1,16 +1,17 @@
 #!/bin/ksh 
 
+nimpls=11
 impl[0]=uuavl
-impl[1]=sl
+impl[1]=jmpc_skl_16
 impl[2]=gnuavl
 impl[3]=gnupavl
 impl[4]=gnutavl
 impl[5]=gnurtavl
 impl[6]=gnurb
 impl[7]=gnuprb
-impl[8]="jmpc-btree-512"
-impl[9]="jmpc-btree-1024"
-impl[10]="jmpc-btree-4096"
-impl[11]="jmpc-skl-16"
-impl[12]="myskl-16"
-impl[13]="redblack"
+impl[8]=jmpc_btree_512
+impl[9]=jmpc_btree_1024
+impl[10]=jmpc_btree_4096
+impl[11]=sl
+#impl[12]="myskl-16"
+#impl[13]="redblack"

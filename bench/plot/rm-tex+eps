@@ -1,4 +1,0 @@
-#!/bin/ksh
-
-rm `ls | grep "\.eps$"` 
-rm `ls | grep "\.tex$"` 

@@ -316,6 +316,17 @@ sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
 }
 
 void
+sl_foldr(container_t *c, slablist_fold_cb_t *fcb)
+{
+
+}
+void
+sl_foldl(container_t *c, slablist_fold_cb_t *fcb)
+{
+
+}
+
+void
 jmpcbt_op(container_t *c, slablist_elem_t elem)
 {
 	bt_insert(c->jmpc_btree, elem.sle_p);
@@ -604,19 +615,19 @@ main(int ac, char *av[])
 		struct_type = ST_GNURB;
 	} else if (strcmp("gnuprb", av[1]) == 0) {
 		struct_type = ST_GNUPRB;
-	} else if (strcmp("jmpc-btree-512", av[1]) == 0)  {
+	} else if (strcmp("jmpc_btree_512", av[1]) == 0)  {
 		struct_type = ST_JMPCBT;
 		nodesize = 512;
-	} else if (strcmp("jmpc-btree-1024", av[1]) == 0)  {
+	} else if (strcmp("jmpc_btree_1024", av[1]) == 0)  {
 		struct_type = ST_JMPCBT;
 		nodesize = 1024;
-	} else if (strcmp("jmpc-btree-4096", av[1]) == 0)  {
+	} else if (strcmp("jmpc_btree_4096", av[1]) == 0)  {
 		struct_type = ST_JMPCBT;
 		nodesize = 4096;
-	} else if (strcmp("jmpc-skl-16", av[1]) == 0)  {
+	} else if (strcmp("jmpc_skl_16", av[1]) == 0)  {
 		struct_type = ST_JMPCSKL;
 		maxlvl = 16;
-	} else if (strcmp("myskl-16", av[1]) == 0) {
+	} else if (strcmp("myskl_16", av[1]) == 0) {
 		struct_type = ST_MYSKL;
 		maxlvl = 16;
 	} else if (strcmp("redblack", av[1]) == 0) {
@@ -783,6 +794,12 @@ main(int ac, char *av[])
 		do_ops(&cis, struct_type, maxops, INT, SRT, do_dups);
 		if (do_rem) {
 			do_free_remaining(&cis, struct_type, INT, SRT);
+		}
+		if (do_foldr) {
+			do_foldr(&cis, struct_type, INT, SRT);
+		}
+		if (do_foldl) {
+			do_foldl(&cis, struct_type, INT, SRT);
 		}
 	}
 	if (strord) {
