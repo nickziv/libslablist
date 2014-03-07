@@ -761,7 +761,6 @@ slablist_map_range_sml(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
 		s = s->sml_next;
 		node++;
 	}
-	node = 0;
 	int i = 0;
 	int j = nodes - 1;
 	while (sl->sl_cmp_elem(elems[i], min) < 0) {
@@ -879,7 +878,7 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 		node++;
 	}
 
-	node = 0;
+	node;
 	int i = 0;
 	int j = nodes - 1;
 	while (sl->sl_cmp_elem(elems[i], min) < 0) {

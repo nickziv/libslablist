@@ -22,7 +22,11 @@
  * Use is subject to license terms.
  */
 
+#ifdef UMEM
 #include <umem.h>
+#else
+#include <stdlib.h>
+#endif
 #include <strings.h>
 #include "slablist_impl.h"
 
@@ -33,6 +37,7 @@ umem_cache_t *cache_subarr;
 umem_cache_t *cache_small_list;
 umem_cache_t *cache_add_ctx;
 
+#ifdef UMEM
 int
 slablist_ctor(void *buf, void *ignored, int flags)
 {
@@ -82,10 +87,12 @@ add_ctx_ctor(void *buf, void *ignored, int flags)
 	bzero(ctx, (sizeof (add_ctx_t)));
 	return (0);
 }
+#endif
 
 int
 slablist_umem_init()
 {
+#ifdef UMEM
 	cache_slablist = umem_cache_create("slablist",
 		sizeof (slablist_t),
 		0,
@@ -146,28 +153,44 @@ slablist_umem_init()
 		NULL,
 		0);
 
+#endif
 	return (0);
 }
 
 slablist_t *
 mk_slablist()
 {
+#ifdef UMEM
 	return (umem_cache_alloc(cache_slablist, UMEM_NOFAIL));
+#else
+	return (calloc(1, sizeof(slablist_t)));
+#endif
+
 }
 
 void
 rm_slablist(slablist_t *sl)
 {
+#ifdef UMEM
 	bzero(sl, sizeof (slablist_t));
 	sl->sl_is_small_list = 1;
 	umem_cache_free(cache_slablist, sl);
+#else
+	bzero(sl, sizeof (slablist_t));
+	sl->sl_is_small_list = 1;
+	free(sl);
+#endif
 }
 
 
 slab_t *
 mk_slab()
 {
+#ifdef UMEM
 	slab_t *s = umem_cache_alloc(cache_slab, UMEM_NOFAIL);
+#else
+	slab_t *s = calloc(1, sizeof (slab_t));
+#endif
 	return (s);
 }
 
@@ -175,14 +198,22 @@ void
 rm_slab(slab_t *s)
 {
 	bzero(s, sizeof (slab_t));
+#ifdef UMEM
 	umem_cache_free(cache_slab, s);
+#else
+	free(s);
+#endif
 }
 
 
 subslab_t *
 mk_subslab()
 {
+#ifdef UMEM
 	subslab_t *ss = umem_cache_alloc(cache_subslab, UMEM_NOFAIL);
+#else
+	subslab_t *ss = calloc(1, sizeof (subslab_t));
+#endif
 	return (ss);
 }
 
@@ -190,13 +221,21 @@ void
 rm_subslab(subslab_t *s)
 {
 	bzero(s, sizeof (subslab_t));
+#ifdef UMEM
 	umem_cache_free(cache_subslab, s);
+#else
+	free(s);
+#endif
 }
 
 add_ctx_t *
 mk_add_ctx()
 {
+#ifdef UMEM
 	add_ctx_t *ctx = umem_cache_alloc(cache_add_ctx, UMEM_NOFAIL);
+#else
+	add_ctx_t *ctx = calloc(1, sizeof (add_ctx_t));
+#endif
 	return (ctx);
 }
 
@@ -204,13 +243,21 @@ void
 rm_add_ctx(add_ctx_t *ctx)
 {
 	bzero(ctx, sizeof (add_ctx_t));
+#ifdef UMEM
 	umem_cache_free(cache_add_ctx, ctx);
+#else
+	free(ctx);
+#endif
 }
 
 subarr_t *
 mk_subarr()
 {
+#ifdef UMEM
 	subarr_t *sa = umem_cache_alloc(cache_subarr, UMEM_NOFAIL);
+#else
+	subarr_t *sa = calloc(1, sizeof (subarr_t));
+#endif
 	return (sa);
 }
 
@@ -218,13 +265,21 @@ void
 rm_subarr(subarr_t *s)
 {
 	bzero(s, sizeof (subarr_t));
+#ifdef UMEM
 	umem_cache_free(cache_subarr, s);
+#else
+	free(s);
+#endif
 }
 
 small_list_t *
 mk_sml_node()
 {
+#ifdef UMEM
 	small_list_t *s = umem_cache_alloc(cache_small_list, UMEM_NOFAIL);
+#else
+	small_list_t *s = calloc(1, sizeof (small_list_t));
+#endif
 	return (s);
 }
 
@@ -232,23 +287,39 @@ void
 rm_sml_node(small_list_t *s)
 {
 	bzero(s, sizeof (small_list_t));
+#ifdef UMEM
 	umem_cache_free(cache_small_list, s);
+#else
+	free(s);
+#endif
 }
 
 void *
 mk_buf(size_t sz)
 {
+#ifdef UMEM
 	return (umem_alloc(sz, UMEM_NOFAIL));
+#else
+	return (malloc(sz));
+#endif
 }
 
 void *
 mk_zbuf(size_t sz)
 {
+#ifdef UMEM
 	return (umem_zalloc(sz, UMEM_NOFAIL));
+#else
+	return (calloc(1, sz));
+#endif
 }
 
 void
 rm_buf(void *s, size_t sz)
 {
+#ifdef UMEM
 	umem_free(s, sz);
+#else
+	free(s);
+#endif
 }

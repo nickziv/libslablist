@@ -151,18 +151,16 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 
 	slablist_t *bl = sl->sl_baselayer;
 	subslab_t *b = bl->sl_head;
+	subslab_t *bprev = NULL;
 	uint16_t layers = bl->sl_layer;
 	uint16_t layer = 0;
 	/*
 	 * We visit the subslabs in the baselayer, adding up their ss_usr_elems
 	 * members, until this sum exceeds the position we are looking for.
 	 */
-	while (b != NULL) {
+	while (sum_usr_elems < act_pos) {
 		sum_usr_elems += b->ss_usr_elems;
 		SLABLIST_GET_POS_BASE_WALK(b);
-		if (sum_usr_elems >= act_pos) {
-			break;
-		}
 		b = b->ss_next;
 	}
 
@@ -183,12 +181,9 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	sum_usr_elems = elems_skipped;
 	while (layer < layers - 1) {
 		subslab_t *c = GET_SUBSLAB_ELEM(b, 0);
-		while (c != NULL) {
+		while (sum_usr_elems < act_pos) {
 			sum_usr_elems += c->ss_usr_elems;
 			SLABLIST_GET_POS_SUB_WALK(c);
-			if (sum_usr_elems >= act_pos) {
-				break;
-			}
 			c = c->ss_next;
 		}
 		b = c;
@@ -202,12 +197,9 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	 */
 	slab_t *s = GET_SUBSLAB_ELEM(b, 0);
 	sum_usr_elems = elems_skipped;
-	while (s != NULL) {
+	while (sum_usr_elems < act_pos) {
 		sum_usr_elems += s->s_elems;
 		SLABLIST_GET_POS_TOP_WALK(s);
-		if (sum_usr_elems >= act_pos) {
-			break;
-		}
 		s = s->s_next;
 	}
 
@@ -921,7 +913,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 	if (sl->sl_sublayers > 1) {
 
 		/* find the baseslab from which to start bubbling up */
-		fs = sub_find_linear_scan(sl->sl_baselayer, elem, &found);
+		sub_find_linear_scan(sl->sl_baselayer, elem, &found);
 		SLABLIST_BUBBLE_UP(sl, found);
 
 		/* Bubble up through all of the sublayers */
@@ -935,7 +927,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 			}
 
 			/* we get the appropriate subslab */
-			fs = find_subslab_in_subslab(found, elem, &found);
+			find_subslab_in_subslab(found, elem, &found);
 
 			SLABLIST_BUBBLE_UP(sl, found);
 			layers++;
@@ -961,7 +953,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 		SLABLIST_BUBBLE_UP_TOP(sl, *sbptr);
 	}
 	if (sl->sl_sublayers == 1) {
-		fs = sub_find_linear_scan(sl->sl_sublayer, elem, &found);
+		sub_find_linear_scan(sl->sl_sublayer, elem, &found);
 		fs = find_slab_in_subslab(found, elem, sbptr);
 		SLABLIST_BUBBLE_UP_TOP(sl, *sbptr);
 	}
@@ -1036,6 +1028,10 @@ typedef struct subseq {
 	slablist_elem_t	*sseq_sub2;
 } subseq_t;
 
+/*
+ * XXX THIS code doesn't pass the static analyzer and needs some serious
+ * fixing. DO NOT USE!
+ */
 slablist_elem_t
 subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
 {

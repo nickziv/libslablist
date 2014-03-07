@@ -1,7 +1,0 @@
-#!/usr/bin/ksh
-
-pfexec ./clean
-pfexec ./remove_lib
-./build_lib illumos
-pfexec ./install_lib
-./build_drv

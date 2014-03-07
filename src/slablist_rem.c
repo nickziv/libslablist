@@ -107,11 +107,11 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 
 		uint64_t mod = pos % sl->sl_elems;
 		small_list_t *sml = sl->sl_head;
-		sml = sl->sl_head;
 
 
 		if (sl->sl_elems < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
 			ret = SL_ENCIRC;
+			goto end;
 		}
 
 		uint64_t i = 0;
@@ -171,9 +171,7 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 	if (melems >= SUBSLAB_FREE_SPACE(sn)) {
 		cpelems = SUBSLAB_FREE_SPACE(sn);
 		from = s->ss_elems - cpelems;
-	}
-
-	if (SUBSLAB_FREE_SPACE(sn) > melems) {
+	} else {
 		cpelems = melems;
 	}
 
@@ -495,9 +493,7 @@ move_to_next(slab_t *s, slab_t *sn)
 	if (melems >= SLAB_FREE_SPACE(sn)) {
 		cpelems = SLAB_FREE_SPACE(sn);
 		from = s->s_elems - cpelems;
-	}
-
-	if (SLAB_FREE_SPACE(sn) > melems) {
+	} else {
 		cpelems = melems;
 	}
 
@@ -698,9 +694,7 @@ move_to_prev(slab_t *s, slab_t *sp)
 slab_t *
 slab_generic_rem(slab_t *sm, subslab_t **below)
 {
-	slab_t *sn = sm->s_next;
-	slab_t *sp = sm->s_prev;
-	slab_t *uls = NULL; /* this is ptr to slab we have to unlink + free */
+	slab_t *uls = sm; /* this is ptr to slab we have to unlink + free */
 	slablist_t *sl = sm->s_list;
 	*below = sm->s_below;
 
@@ -708,7 +702,6 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 	 * If the slab becomes empty we can free it right away.
 	 */
 	if (sm->s_elems == 0) {
-		uls = sm;
 		goto end;
 	}
 
@@ -721,8 +714,8 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 	}
 
 
-	sn = sm->s_next;
-	sp = sm->s_prev;
+	slab_t *sn = sm->s_next;
+	slab_t *sp = sm->s_prev;
 	if (sn != NULL && sm->s_elems <= SLAB_FREE_SPACE(sn)) {
 		SLABLIST_SLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		move_to_next(sm, sn);
@@ -783,9 +776,7 @@ end:;
 subslab_t *
 subslab_generic_rem(subslab_t *sm, subslab_t **below)
 {
-	subslab_t *sn = sm->ss_next;
-	subslab_t *sp = sm->ss_prev;
-	subslab_t *uls = NULL; /* this is ptr to slab we must unlink + free */
+	subslab_t *uls = sm; /* this is ptr to slab we must unlink + free */
 	slablist_t *sl = sm->ss_list;
 	*below = sm->ss_below;
 
@@ -793,7 +784,6 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 		/*
 		 * If the slab becomes empty we can free it right away.
 		 */
-		uls = sm;
 		goto end;
 	}
 
@@ -806,8 +796,8 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 	}
 
 
-	sn = sm->ss_next;
-	sp = sm->ss_prev;
+	subslab_t *sn = sm->ss_next;
+	subslab_t *sp = sm->ss_prev;
 	if (sn != NULL && sm->ss_elems <= SUBSLAB_FREE_SPACE(sn)) {
 		SLABLIST_SUBSLAB_MOVE_MID_TO_NEXT(sl, sm, sn);
 		sub_move_to_next(sm, sn);

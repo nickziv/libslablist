@@ -1,20 +1,13 @@
-To build and install libslablist, you'll need to do the following.
+To install:
 
-On Illumos[1] based systems:
-	cd build/
-	./build_install_illumos
+	cd build/illumos
+	make install
 
-On Unix[2] systems (i.e. those without umem):
-	cd build/
-	./build_install_unix
+To uninstall
 
-To uninstall:
-	./remove_lib
+	cd build/illumos
+	make uninstall
 
-To clean the build directory
-	./clean_lib; ./clean_drv;
-
-[1]: So far has only been tested on OpenIndiana and SmartOS.
-[2]: Hasn't been tested recently
-
-A Linux port is on the way.
+The install won't work, if you don't have the Primary Administrator role on
+Illumos (makefiles use pfexec a lot).  If you don't have this role, you will
+need to change the PREFIX variable in build/Makefile.master.

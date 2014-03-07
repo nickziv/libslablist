@@ -1,7 +1,12 @@
 #!/bin/ksh
 
-source ../main/impls
-source ../main/input_sizes
+# arg1 = the /bench dir
+# arg2 = the build/bench results dir
+# arg3 = input size
+# arg4 = machine name
+
+source $1/main/impls
+#source $1/main/input_sizes
 
 
 f1names="c(\"ms\", \"elems\", \"heapsz\")"
@@ -79,9 +84,9 @@ print "library(ggplot2)" >> $output
 # First we generate the fucking files.
 for i in {0..$nimpls}; do;
 	struct=${impl[$i]}
-	file="../../"${impl[$i]}"/dl380_8GB_throughput_plus_heap_intsrt_rand_${in_sz[1]}"
+	file="$2/"${impl[$i]}"/$4_throughput_plus_heap_rand_intsrt_$3"
 	print "rand_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
-	file="../../"${impl[$i]}"/dl380_8GB_throughput_plus_heap_intsrt_seqinc_${in_sz[1]}"
+	file="$2/"${impl[$i]}"/$4_throughput_plus_heap_seqinc_intsrt_$3"
 	print "seq_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
 done;
 
@@ -162,9 +167,9 @@ print "library(ggplot2)" >> $output
 # First we generate the fucking files.
 for i in {0..$nimpls}; do;
 	struct=${impl[$i]}
-	file="../../"${impl[$i]}"/dl380_8GB_throughput_post_intsrt_rand_${in_sz[1]}"
+	file="$2/"${impl[$i]}"/$4_throughput_post_rand_intsrt_$3"
 	print "rand_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
-	file="../../"${impl[$i]}"/dl380_8GB_throughput_post_intsrt_seqinc_${in_sz[1]}"
+	file="$2/"${impl[$i]}"/$4_throughput_post_seqinc_intsrt_$3"
 	print "seq_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
 done;
 
@@ -233,9 +238,9 @@ for ix in {0..$nimpls}; do;
 	output=$outdir/$z.R
 	struct=${impl[$ix]}
 	print "library(ggplot2)" >> $output
-	file="../../"${impl[$ix]}"/dl380_8GB_throughput_post_intsrt_rand_${in_sz[1]}"
+	file="$2/"${impl[$ix]}"/$4_throughput_post_rand_intsrt_$3"
 	print "rand_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
-	file="../../"${impl[$ix]}"/dl380_8GB_throughput_post_intsrt_seqinc_${in_sz[1]}"
+	file="$2/"${impl[$ix]}"/$4_throughput_post_seqinc_intsrt_$3"
 	print "seq_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
 	print "jpeg('../imgs/${impl[$ix]}_${x[$cx]}_${y[$cx]}_${geom[$gx]}.jpeg', $jpw, $jph)" >> $output
 	#print "plotvar <- ggplot();" >> $output

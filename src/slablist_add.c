@@ -58,7 +58,7 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 {
 	lock_list(sl);
 
-	int ret;
+	int ret = 0;
 	if (sl->sl_head == NULL) {
 		/*
 		 * If the ptr to the head of this slablist is null, we have

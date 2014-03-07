@@ -394,7 +394,6 @@ test_subslab(subslab_t *s)
 		elems = s->ss_elems;
 		if (sl->sl_layer == 1) {
 			j = 0;
-			k = 1;
 			while (j < (elems - 1)) {
 				k = j + 1;
 				slab_t *e1 = GET_SUBSLAB_ELEM(s, j);
@@ -409,7 +408,6 @@ test_subslab(subslab_t *s)
 		} else {
 
 			j = 0;
-			k = 1;
 			while (j < (elems - 1)) {
 				k = j + 1;
 				subslab_t *se1 = GET_SUBSLAB_ELEM(s, j);
@@ -817,9 +815,9 @@ test_find_bubble_up(subslab_t *found, slab_t *sbptr, slablist_elem_t elem)
 		}
 
 		if (sl->sl_layer > 1) {
-			f = test_subslab_bin_srch(elem, ss);
+			test_subslab_bin_srch(elem, ss);
 		} else {
-			f = test_subslab_bin_srch_top(elem, ss);
+			test_subslab_bin_srch_top(elem, ss);
 		}
 
 	} else {
@@ -849,10 +847,6 @@ test_slab_move_next(slab_t *scp, slab_t *sn, slab_t *sncp, int *i)
 	if (scp->s_elems >= cpable) {
 		tocp = cpable;
 		from = scp->s_elems - tocp;
-	}
-
-	if (scp->s_elems < cpable) {
-		tocp = scp->s_elems;
 	}
 
 
@@ -903,11 +897,6 @@ test_slab_move_prev(slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 		from = tocp - 1;
 	}
 
-	if (scp->s_elems < cpable) {
-		tocp = scp->s_elems;
-	}
-
-
 	/*
 	 * loops that check that elem spcp[from] -> scp[0] == the elem sp[0]
 	 * to s[NELEMS]. One loop per slab.
@@ -957,10 +946,6 @@ test_subslab_move_next(subslab_t *scp, subslab_t *sn,
 		from = scp->ss_elems - tocp;
 	}
 
-	if (scp->ss_elems < cpable) {
-		tocp = scp->ss_elems;
-	}
-
 
 	/*
 	 * loops that check that elem scp[from] -> sncp[end] ==
@@ -1008,10 +993,6 @@ test_subslab_move_prev(subslab_t *scp, subslab_t *sp,
 	if (scp->ss_elems >= cpable) {
 		tocp = cpable;
 		from = tocp - 1;
-	}
-
-	if (scp->ss_elems < cpable) {
-		tocp = scp->ss_elems;
 	}
 
 

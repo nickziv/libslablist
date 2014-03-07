@@ -1,0 +1,174 @@
+SLDIR=			$(PWD)/../../src
+DSDIR=			$(PWD)/../../drv
+TOOLS=			$(PWD)/../../tools
+#
+# Insert The location for your ONBLD tools. Then uncomment CTF*_POSTPROC, and
+# recomment the blank one.
+#
+ONBLD_TOOLS=		
+TEST=			$(PWD)/../../tests
+BENCH=			$(PWD)/../../bench
+# The benchmark results directory
+R_BENCH=		$(PWD)/bench
+FGDIR=			$(R_BENCH)/fg
+R_BENCH_SD=		$(DS_IMPLS:%=$(R_BENCH)/%)
+BENCH_DRV=		$(BENCH)/main
+BENCH_PLOT=		$(BENCH)/rplots
+PREFIX=			/opt/libslablist/
+
+FG_OUT_SIR=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_rand.out
+FG_SVG_SIR=		$(FG_OUT_SIR:%.out=%.svg)
+FG_CMD_SIR=		./$(DRV) sl $(BENCH_SIZE) intsrt rand
+FG_OUT_SII=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_seqinc.out
+FG_SVG_SII=		$(FG_OUT_SII:%.out=%.svg)
+FG_CMD_SII=		./$(DRV) sl $(BENCH_SIZE) intsrt seqinc
+FG_OUT_SID=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_seqdec.out
+FG_SVG_SID=		$(FG_OUT_SID:%.out=%.svg)
+FG_CMD_SID=		./$(DRV) sl $(BENCH_SIZE) intsrt seqdec
+
+
+FG_OUT_OIR=		$(FGDIR)/time/$(BENCH_SIZE)_intord_rand.out
+FG_SVG_OIR=		$(FG_OUT_OIR:%.out=%.svg)
+FG_CMD_OIR=		./$(DRV) sl $(BENCH_SIZE) intord rand
+FG_OUT_OII=		$(FGDIR)/time/$(BENCH_SIZE)_intord_seqinc.out
+FG_SVG_OII=		$(FG_OUT_OII:%.out=%.svg)
+FG_CMD_OII=		./$(DRV) sl $(BENCH_SIZE) intord seqinc
+FG_OUT_OID=		$(FGDIR)/time/$(BENCH_SIZE)_intord_seqdec.out
+FG_SVG_OID=		$(FG_OUT_OID:%.out=%.svg)
+FG_CMD_OID=		./$(DRV) sl $(BENCH_SIZE) intord seqdec
+
+FG_TIME_STACKS=		'profile-1234hz /pid == $target/ {@[ustack()] = count();}'
+FG_OUTS=		$(FG_OUT_SIR) $(FG_OUT_SII) $(FG_OUT_SID)\
+			$(FG_OUT_OIR) $(FG_OUT_OII) $(FG_OUT_OID)
+FG_SVGS=		$(FG_SVG_SIR) $(FG_SVG_SII) $(FG_SVG_SID)\
+			$(FG_SVG_OIR) $(FG_SVG_OII) $(FG_SVG_OID)
+
+
+
+CTF=			$(ONBLD_TOOLS)/ctf
+CTFCONVERT=		$(CTF)/bin/$(MACH)/ctfconvert
+CTFMERGE=		$(CTF)/bin/$(MACH)/ctfmerge
+CTFSTABS=		$(CTF)/bin/$(MACH)/ctfstabs
+CTFSTRIP=		$(CTF)/bin/$(MACH)/ctfstrip
+DTRACE_LIBS=		$(PREFIX)/include
+DTRACE=			pfexec /usr/sbin/dtrace -L $(DTRACE_LIBS)
+DTRACE_FRAMES=		-x ustackframes=100
+AWK=			pfexec awk
+DTRACEH=		/usr/sbin/dtrace -h -s
+DTRACEG=		/usr/sbin/dtrace -G -64 -s
+SO=			libslablist.so.1
+
+# CTFC_POSTPROC=		$(CTFCONVERT) -i -L VERSION $@
+CTFC_POSTPROC=
+
+# CTFM_POSTPROC=		$(CTFMERGE) -L VERSION -o $@ $(C_OBJECTS)
+CTFC_POSTPROC=
+
+CKSTATIC=		clang --analyze
+CC=			gcc
+CFLAGS=			-m64 -fPIC -W -Wall
+DSCFLAGS=		-m64
+DSCINC=			-I /opt/libslablist/include -I /opt/myskl/include -I /opt/libredblack/include
+LDFLAGS=		-h libslablist.so.1 -shared
+DSLDFLAGS=		-R $(PREFIX)/lib/64:$(PREFIX)/lib
+LIBS=			-lc
+DSLIBS=			-lc -luutil -L $(PREFIX)/lib/64 -lslablist
+
+C_SRCS=			$(SLDIR)/slablist_add.c\
+			$(SLDIR)/slablist_rem.c\
+			$(SLDIR)/slablist_find.c\
+			$(SLDIR)/slablist_umem.c\
+			$(SLDIR)/slablist_cons.c\
+			$(SLDIR)/slablist_test.c
+
+DS_SRCS=		$(DSDIR)/bst.c\
+			$(DSDIR)/bsts.c\
+			$(DSDIR)/pavl.c\
+			$(DSDIR)/pbst.c\
+			$(DSDIR)/prb.c\
+			$(DSDIR)/rb.c\
+			$(DSDIR)/rtavl.c\
+			$(DSDIR)/rtbst.c\
+			$(DSDIR)/rtrb.c\
+			$(DSDIR)/tavl.c\
+			$(DSDIR)/tbst.c\
+			$(DSDIR)/trb.c\
+			$(DSDIR)/bt_code.c\
+			$(DSDIR)/avl.c\
+			$(DSDIR)/skiplist.c
+			
+DRV_SRCS=		$(DSDIR)/drv_gen.c
+DRV_OBJECT=		$(DSDIR)/drv_gen.o
+DRV=			drv_gen
+
+
+PLISTS:=		$(C_SRCS:%.c=%.plist)
+C_OBJECTS:=		$(C_SRCS:%.c=%.o)
+
+DS_OBJECTS:=		$(DS_SRCS:%.c=%.o)
+
+D_OBJECTS:=		slablist_provider.o
+
+D_HDRS=			slablist_provider.h
+D_SCR=			slablist_provider.d
+
+DS_D_HDRS=		struc_provider.h
+DS_D_OBJECTS=		struc_provider.o
+
+#
+# All of the data-structure impls. We add the .Z to facilitate
+# pattern matching.
+#
+
+DS_IMPLS_EXT=		uuavl.Z\
+			jmpc_skl_16.Z\
+			gnuavl.Z\
+			gnupavl.Z\
+			gnutavl.Z\
+			gnurtavl.Z\
+			gnurb.Z\
+			gnuprb.Z\
+			jmpc_btree_512.Z\
+			jmpc_btree_1024.Z\
+			jmpc_btree_4096.Z
+
+DS_IMPLS:=	$(DS_IMPLS_EXT:%.Z=%)
+
+
+
+BENCH_SIZE=		1000000
+
+BENCH_SL_THR_HEAP=	$(TOOLS)/throughput_plus_heap.d
+
+STACKCOLLAPSE=		$(TOOLS)/stackcollapse.pl
+FLAMEGRAPH=		$(TOOLS)/flamegraph.pl
+
+BENCH_GEN_THR_HEAP=	$(DSDIR)/throughput_plus_heap.d
+
+MACH_NAME=		zone_8GB
+
+BENCH_PPROC=		$(TOOLS)/throughput.awk
+
+TPHRI=			throughput_plus_heap_rand_intsrt
+TPRI=			throughput_post_rand_intsrt
+TPHSI=			throughput_plus_heap_seqinc_intsrt
+TPSI=			throughput_post_seqinc_intsrt
+
+DS_RI_SUF=		$(MACH_NAME)_$(TPHRI)_$(BENCH_SIZE)
+DS_SI_SUF=		$(MACH_NAME)_$(TPHSI)_$(BENCH_SIZE)
+DS_RI_PP_SUF=		$(MACH_NAME)_$(TPRI)_$(BENCH_SIZE)
+DS_SI_PP_SUF=		$(MACH_NAME)_$(TPSI)_$(BENCH_SIZE)
+SL_BENCH_R_I=		$(R_BENCH)/sl/$(DS_RI_SUF)
+SL_BENCH_S_I=		$(R_BENCH)/sl/$(DS_SI_SUF)
+SL_BENCH_R_I_PP=	$(R_BENCH)/sl/$(DS_RI_PP_SUF)
+SL_BENCH_S_I_PP=	$(R_BENCH)/sl/$(DS_SI_PP_SUF)
+SL_BENCH=		$(SL_BENCH_R_I) $(SL_BENCH_S_I)
+SL_BENCH_PP=		$(SL_BENCH_R_I_PP) $(SL_BENCH_S_I_PP)
+
+
+DS_BENCHES_R_I:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_SUF))
+DS_BENCHES_S_I:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_SUF))
+DS_BENCHES_R_I_PP:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_PP_SUF))
+DS_BENCHES_S_I_PP:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_PP_SUF))
+DS_BENCHES:=		$(DS_BENCHES_R_I) $(DS_BENCHES_S_I)
+DS_BENCHES_PP:=		$(DS_BENCHES_R_I_PP) $(DS_BENCHES_S_I_PP)
