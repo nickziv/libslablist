@@ -195,7 +195,7 @@ provider slablist {
 	probe link_subslab_after(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
 		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
 	probe link_subslab_before(slablist_t *sl, subslab_t *s1, subslab_t *s2) :
-		(slinfo_t *sl, slabinfo_t *s1, subslabinfo_t *s2);
+		(slinfo_t *sl, subslabinfo_t *s1, subslabinfo_t *s2);
 	probe unlink_subslab(slablist_t *sl, subslab_t *s) :
 		(slinfo_t *sl, subslabinfo_t *s);
 	probe find_slab_pos_begin(int);
