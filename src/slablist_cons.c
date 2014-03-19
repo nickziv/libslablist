@@ -546,14 +546,8 @@ attach_sublayer(slablist_t *sl)
 	sh->ss_list = sub;
 	sh->ss_arr = mk_subarr();
 
-	slab_t *h = NULL;
-	subslab_t *hh = NULL;
-	if (sl->sl_superlayer == NULL) {
-		h = sl->sl_head;
-	} else {
-		hh = sl->sl_head;
-	}
-
+	slab_t *h = sl->sl_head;
+	subslab_t *hh = sl->sl_head;
 
 	sub->sl_slabs = 1;
 	sub->sl_elems = sl->sl_slabs;
@@ -570,7 +564,6 @@ attach_sublayer(slablist_t *sl)
 		SLABLIST_SL_INC_SUBLAYERS(sup);
 		sup = sup->sl_superlayer;
 	}
-	sup = sub->sl_superlayer;
 
 	subslab_t *sc = hh;
 	slab_t *c = h;
@@ -579,7 +572,7 @@ attach_sublayer(slablist_t *sl)
 	slab_t *f = NULL;
 	slab_t *l = NULL;
 	uint64_t i = 0;
-	if (sup->sl_layer) {
+	if (sl->sl_layer) {
 		/* Copy pointers of all superslabs into the head subslab */
 		while (i < sl->sl_slabs) {
 			SLABLIST_SUBSLAB_AI(sub, sh, NULL, sc);
