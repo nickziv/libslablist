@@ -156,8 +156,6 @@ provider slablist {
 	probe find_begin(slablist_t *sl, slablist_elem_t k) :
 		(slinfo_t *sl, slablist_elem_t k);
 	probe find_end(int, slablist_elem_t);
-	probe get_rand(slablist_t *sl, slablist_elem_t f) :
-		(slinfo_t *sl, slablist_elem_t f);
 	probe get_pos_begin(slablist_t *sl, uint64_t p) :
 		(slinfo_t *sl, uint64_t p);
 	probe get_pos_end(slab_t *s) :
