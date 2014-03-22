@@ -410,9 +410,9 @@
 #define	FS_UNDER_RANGE	-1
 #define	FS_OVER_RANGE	1
 
-#define	SUBELEM_MAX	((uint32_t)512)
-#define	SELEM_MAX	((uint16_t)121)
-#define	SMELEM_MAX	((uint64_t)60)
+#define	SUBELEM_MAX	(512)
+#define	SELEM_MAX	(121)
+#define	SMELEM_MAX	(60)
 
 #define	SLAB_FREE_SPACE(s)	((uint64_t)(SELEM_MAX - s->s_elems))
 #define	SUBSLAB_FREE_SPACE(s)	((uint64_t)(SUBELEM_MAX - s->ss_elems))
@@ -435,7 +435,11 @@ struct slab {
 	slab_t 			*s_prev;
 	subslab_t		*s_below;
 	slablist_t		*s_list;
+#if SELEM_MAX <= 256
 	uint8_t			s_elems;
+#else
+	uint16_t		s_elems;
+#endif
 	slablist_elem_t		s_arr[SELEM_MAX];
 };
 

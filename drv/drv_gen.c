@@ -533,18 +533,24 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 	}
 }
 
+void
+rm_cb_str(slablist_elem_t e)
+{
+	return; /* TODO implement this function! */
+}
 
 void
 do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord)
 {
 /* TODO: MAKE THIS GENERIC
+	slablist_t *sl = ls->sl;
 	uint64_t remaining = slablist_get_elems(sl);
 	uint64_t type = slablist_get_type(sl);
 	char *name = slablist_get_name(sl);
 	printf("%s: %d\n", name, type);
-	slablist_elem_t *elem;
-	slablist_elem_t *randrem;
-	slablist_elem_t *zero_rem;
+	slablist_elem_t elem;
+	slablist_elem_t randrem;
+	slablist_elem_t zero_rem;
 	zero_rem.sle_u = 0;
 	int ret;
 	while (remaining > 0) {
