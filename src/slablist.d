@@ -178,14 +178,14 @@ typedef struct slinfo {
  * file from the latest release. Otherwise the translators won't work.
  */
 struct slab {
+        slablist_elem_t         s_min;
+        slablist_elem_t         s_max;
         slab_t                  *s_next;
         slab_t                  *s_prev;
-        slab_t                  *s_below;
+        subslab_t               *s_below;
         slablist_t              *s_list;
         uint8_t                 s_elems;
-        slablist_elem_t		s_max;
-        slablist_elem_t		s_min;
-        slablist_elem_t		s_arr[121];
+        slablist_elem_t         s_arr[121];
 };
 
 struct subarr {
@@ -193,15 +193,15 @@ struct subarr {
 };
 
 struct subslab {
-        pmutex_t         	ss_mutex;
+        slablist_elem_t         ss_min;
+        slablist_elem_t         ss_max;
         subslab_t               *ss_next;
         subslab_t               *ss_prev;
+        pmutex_t         	ss_mutex;
         subslab_t               *ss_below;
         slablist_t              *ss_list;
         uint16_t                ss_elems;
         uint64_t                ss_usr_elems;
-        slablist_elem_t		ss_max;
-        slablist_elem_t		ss_min;
         subarr_t                *ss_arr;
 };
 

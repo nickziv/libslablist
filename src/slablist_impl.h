@@ -429,13 +429,13 @@ typedef struct small_list {
 } small_list_t;
 
 struct slab {
+	slablist_elem_t		s_min;
+	slablist_elem_t		s_max;
 	slab_t			*s_next;
 	slab_t 			*s_prev;
 	subslab_t		*s_below;
 	slablist_t		*s_list;
 	uint8_t			s_elems;
-	slablist_elem_t		s_max;
-	slablist_elem_t		s_min;
 	slablist_elem_t		s_arr[SELEM_MAX];
 };
 
@@ -444,15 +444,15 @@ typedef struct subarr {
 } subarr_t;
 
 struct subslab {
-	pthread_mutex_t		ss_mutex;
+	slablist_elem_t		ss_min;
+	slablist_elem_t		ss_max;
 	subslab_t		*ss_next;
 	subslab_t		*ss_prev;
+	pthread_mutex_t		ss_mutex;
 	subslab_t		*ss_below;
 	slablist_t		*ss_list;
 	uint16_t		ss_elems;
 	uint64_t		ss_usr_elems;
-	slablist_elem_t		ss_max;
-	slablist_elem_t		ss_min;
 	subarr_t		*ss_arr;
 };
 
