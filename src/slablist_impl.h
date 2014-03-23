@@ -435,7 +435,7 @@ struct slab {
 	slab_t 			*s_prev;
 	subslab_t		*s_below;
 	slablist_t		*s_list;
-#if SELEM_MAX <= 256
+#if SELEM_MAX < 256
 	uint8_t			s_elems;
 #else
 	uint16_t		s_elems;
