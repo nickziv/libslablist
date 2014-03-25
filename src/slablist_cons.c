@@ -539,7 +539,6 @@ attach_sublayer(slablist_t *sl)
 	sub->sl_head = mk_subslab();
 
 	SLABLIST_SLAB_MK(sub);
-	SLIST_SET_SUBLAYER(sub->sl_flags);
 
 	subslab_t *sh = sub->sl_head;
 	sh->ss_elems = sl->sl_slabs;

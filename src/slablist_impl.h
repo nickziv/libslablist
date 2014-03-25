@@ -42,20 +42,9 @@
 #define	SLAB_LINK_BEFORE	0
 #define	SLAB_LINK_AFTER		1
 
+/* A maximum of 9 layers is allowed per slab list */
 #define	MAX_LYRS		9
 
-#define	SOI_FWD			1
-#define	SOI_BWD			-1
-
-#define	GET_ELEMS(x)\
-	((x << 7) >> 7)
-
-#define	SET_ELEMS(x, y)\
-		(*(((uint8_t)(&y))+1) = x)
-
-
-#define	IS_SL_OBJ_SZ_LOCAL(x)\
-	(x <= 8)
 
 #define	SLIST_SORTED(x)\
 	(x & 0x80)
@@ -63,24 +52,52 @@
 #define	SLIST_ORDERED(x)\
 	!SLIST_SORTED(x)
 
-#define	SLIST_SUBLAYER(x)\
-	(x & 0x04)
-
-#define	SLIST_SET_SUBLAYER(x)\
-	(x |= 0x04)
-
+/*
+ * A slab lists isn't _actually_ circularly linked --- it has NULL pointers at
+ * the beginning and end.
+ *
+ *	NULL <-> SLAB <-> SLAB <-> SLAB <-> NULL
+ *
+ * However, the user can tell the library to treat the list as if it is
+ * circular by setting a flag. This simply means that the library won't stop at
+ * the terminating NULL --- it will loop around to the HEAD slab and continue
+ * doing what it does.
+ *
+ * This is currently used for getting at elements at an index that is much
+ * greater than the maximum index. It does not affect folding or mapping (as we
+ * would have an infinite loop).
+ *
+ * I can't really think of other situations in which it would be practially
+ * useful to have this circularity --- we already store the head and end slabs
+ * in the slablist_t struct.
+ */
 #define	SLIST_IS_CIRCULAR(x)\
 	(x & 0x10)
 
 #define	SLIST_SET_CIRCULAR(x)\
 	(x |= 0x10)
 
+/*
+ * Sometimes the user starts with an ordered slab list A, and decides he wants
+ * to sort the elements in some arbitrary way. To do this, we create a
+ * temporary _sorted_ slab list B, and re-insert the elements in A to B. After
+ * each insert to B, we remove that elem from A. B is different from the
+ * typical (user-created) sorted list because it has built-in support for
+ * dealing with duplicate/equivalent elements --- while a normal sorted list
+ * can either ignore or replace duplicates. Once we finish inserting to B, we
+ * make A's head-slab pointer point to B's head slab. We remove all of B's
+ * sublayers, as well as its top-most slablist_t.
+ */
 #define	SLIST_IS_SORTING_TEMP(x)\
 	(x & 0x10)
 
 #define	SLIST_SET_SORTING_TEMP(x)\
 	(x |= 0x10)
 
+/*
+ * When finding a slab/subslab into who's bounds elem `E` could fit, we know
+ * that `E` can either be IN, UNDER, or OVER those bounds.
+ */
 #define	FS_IN_RANGE	0
 #define	FS_UNDER_RANGE	-1
 #define	FS_OVER_RANGE	1
@@ -89,6 +106,10 @@
 #define	SELEM_MAX	(121)
 #define	SMELEM_MAX	(60)
 
+/*
+ * These are used in the removal code (slablist_rem.c) and testing code
+ * (slablist_test.c) to determine how much free space a (sub)slab has.
+ */
 #define	SLAB_FREE_SPACE(s)	((uint64_t)(SELEM_MAX - s->s_elems))
 #define	SUBSLAB_FREE_SPACE(s)	((uint64_t)(SUBELEM_MAX - s->ss_elems))
 
@@ -382,30 +403,30 @@ typedef struct rem_ctx {
  * are initialized and updated. A slablist can have a maximum of 8 sublayers.
  */
 struct slablist {
-	pthread_mutex_t		sl_mutex;
-	slablist_t		*sl_prev;
-	slablist_t		*sl_next;
-	slablist_t		*sl_sublayer;
-	slablist_t		*sl_baselayer;
-	slablist_t		*sl_superlayer;
-	uint16_t		sl_req_sublayer;
-	uint8_t			sl_brk;
-	uint8_t			sl_sublayers;
-	uint8_t			sl_layer;
-	uint8_t			sl_is_small_list;
-	void			*sl_head;
-	void			*sl_end;
-	char			*sl_name;
-	size_t			sl_obj_sz;
-	uint8_t			sl_mpslabs;
-	uint64_t		sl_mslabs;
-	uint64_t		sl_slabs;
-	uint64_t		sl_elems;
-	uint8_t			sl_flags;
+	pthread_mutex_t		sl_mutex;	/* slablist-wide lock */
+	slablist_t		*sl_prev;	/* not in use */
+	slablist_t		*sl_next;	/* not in use */
+	slablist_t		*sl_sublayer;	/* sublayer, if any */
+	slablist_t		*sl_baselayer;	/* own baselayer, if any */
+	slablist_t		*sl_superlayer; /* superlayer, if any */
+	uint16_t		sl_req_sublayer; /* max num of baseslabs */
+	uint8_t			sl_brk;		/* no longer in use */
+	uint8_t			sl_sublayers;	/* number of sublayers */
+	uint8_t			sl_layer;	/* own layer [0 if top] */
+	uint8_t			sl_is_small_list; /* bool; true if no slabs */
+	void			*sl_head;	/* head slab/subslab */
+	void			*sl_end;	/* last slab/subslab */
+	char			*sl_name;	/* this list's debug name */
+	size_t			sl_obj_sz;	/* size of elems */
+	uint8_t			sl_mpslabs;	/* min %-age needed to reap */
+	uint64_t		sl_mslabs;	/* min number needed to reap */
+	uint64_t		sl_slabs;	/* tot num slabs linked to */
+	uint64_t		sl_elems;	/* tot elems in list */
+	uint8_t			sl_flags;	/* usr-set flags */
 	int			(*sl_cmp_elem)(slablist_elem_t,
-					slablist_elem_t);
+					slablist_elem_t); /* cmp callback */
 	int			(*sl_bnd_elem)(slablist_elem_t, slablist_elem_t,
-					slablist_elem_t);
+					slablist_elem_t); /* bounds callback */
 };
 
 
