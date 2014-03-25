@@ -120,14 +120,6 @@ bench_plot:
 	$(BENCH_PLOT)/gen.ksh $(BENCH) $(R_BENCH) $(BENCH_SIZE) $(MACH_NAME)
 	$(BENCH_PLOT)/plot.ksh
 
-#280 total make-file lines
-#359 lines of ksh for building 
-#145 lines of ksh for benching
-
-#280/504 = 0.55
-# The makefiles saved us 45% of code --- and they do more, like avoiding
-# unneccassary builds.
-
 $(FGDIR):
 	mkdir $(FGDIR)
 	mkdir $(FGDIR)/time
@@ -186,7 +178,7 @@ $(FG_SVG_OID): $(FG_OUT_OID)
 flamegraphs: $(FG_SVGS)
 
 clean_flamegraphs:
-	rm -r $(FGDIR)
+	pfexec rm -r $(FGDIR)
 
 clean_bench:
 	pfexec rm -r $(R_BENCH)
