@@ -868,7 +868,8 @@ ripple_aispm(slab_t *s)
  * Assuming that `elem` is in the range of `s`, we add into `s`. If `rep` is
  * not 0, we can replace an elem that has the same key as `elem` with `elem`.
  * The replaced elem is saved in `repd_elem`. If we can't replace but find a
- * duplicate we notify the caller, by setting `edup`.
+ * duplicate we notify the caller, by returning an add_ctx_t with an EDUP
+ * error.
  */
 static add_ctx_t *
 gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
