@@ -5,6 +5,11 @@
 # arg3 = input size
 # arg4 = machine name
 
+#
+# TODO Sorry about the excessively long lines... I recommend turning on
+# text-wrapping. I'll fix this in the future.
+#
+
 source $1/main/impls
 
 
@@ -76,19 +81,17 @@ rm -r imgs
 mkdir imgs
 
 for z in {0..11}; do
+	output=$outdir/$z.R
 
-output=$outdir/$z.R
-
-print "library(ggplot2)" >> $output
-# First we generate the fucking files.
-for i in {0..$nimpls}; do;
-	struct=${impl[$i]}
-	file="$2/"${impl[$i]}"/$4_throughput_plus_heap_rand_intsrt_$3"
-	print "rand_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
-	file="$2/"${impl[$i]}"/$4_throughput_plus_heap_seqinc_intsrt_$3"
-	print "seq_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
-done;
-
+	print "library(ggplot2)" >> $output
+	# First we generate the fucking files.
+	for i in {0..$nimpls}; do;
+		struct=${impl[$i]}
+		file="$2/"${impl[$i]}"/$4_throughput_plus_heap_rand_intsrt_$3"
+		print "rand_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
+		file="$2/"${impl[$i]}"/$4_throughput_plus_heap_seqinc_intsrt_$3"
+		print "seq_df_$struct <- read.table('$file', col.names=$f1names);" >> $output
+	done;
 done;
 
 jpw="width = 2800"
@@ -103,74 +106,76 @@ propsX[1]="size = 6"
 # Here we generate the regular X vs. Y plots.
 z=0
 for px in {0..1}; do
-  for gx in {0..1}; do;
-    for cx in {0..2}; do;
-      output=$outdir/$z.R   
-      print "jpeg('../imgs/${pat[$px]}_${x[$cx]}_${y[$cx]}_${geom[$gx]}.jpeg', $jpw, $jph)" >> $output
-      print "plotvar <- ggplot();" >> $output
-      print "$prefix + ggtitle(\"Comparison of All Structs\")" >> $output
+	for gx in {0..1}; do;
+		for cx in {0..2}; do;
+			output=$outdir/$z.R
+			print "jpeg('../imgs/${pat[$px]}_${x[$cx]}_${y[$cx]}_${geom[$gx]}.jpeg', $jpw, $jph)" >> $output
+			print "plotvar <- ggplot();" >> $output
+			print "$prefix + ggtitle(\"Comparison of All Structs\")" >> $output
 
-      # We make the geoms for the current plot.
-      #for ix in {0..$nimpls}; do;
-      for ix in {0..$nimpls}; do;
-	data=${pat[$px]}_df_${impl[$ix]}
-	aes="aes(x = ${x[$cx]}, y = ${y[$cx]}, colour = '${rcol[$ix]}')"
-	aesX="aes(x = ${x[$cx]}, y = ${y[$cx]})"
-	#print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]}, colour = '${col[$ix]}');" >> $output
-	print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]});" >> $output
-      done;
+			# We make the geoms for the current plot.
+			#for ix in {0..$nimpls}; do;
+			for ix in {0..$nimpls}; do;
+				data=${pat[$px]}_df_${impl[$ix]}
+				aes="aes(x = ${x[$cx]}, y = ${y[$cx]}, colour = '${rcol[$ix]}')"
+				aesX="aes(x = ${x[$cx]}, y = ${y[$cx]})"
+				#print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]}, colour = '${col[$ix]}');" >> $output
+				print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]});" >> $output
+			done;
 
-      # And now the legend
-      print "$prefix + scale_colour_identity(name = 'data structure', " >> $output
-      print "breaks = c(" >> $output
-      for ix in {0..$nimpls}; do;
-	if [[ $ix -eq $nimpls ]]; then 
-	  print "'${rcol[$ix]}')," >> $output
-	else
-	  print "'${rcol[$ix]}'," >> $output
-	fi
-      done;
-      print "labels = c(" >> $output
-      for ix in {0..$nimpls}; do;
-	if [[ $ix -eq $nimpls ]]; then 
-	  print "'${impl[$ix]}')," >> $output
-	else
-	  print "'${impl[$ix]}'," >> $output
-	fi
-      done;
-      print "guide = 'legend');" >> $output
+			# And now the legend
+			print "$prefix + scale_colour_identity(name = 'data structure', " >> $output
+			print "breaks = c(" >> $output
 
-      print "$prefix + guides(colour = guide_legend(override.aes = list(size=$lnpt_sz)));" >> $output
-      #print "$prefix + xlim($xlima, $xlimb);" >> $output
-      print "$prefix + theme(title=element_text(face='bold',size=$font_sz));" >> $output
-      print "$prefix + theme(axis.title.x=element_text(face='bold',size=$font_sz));" >> $output
-      print "$prefix + theme(axis.title.y=element_text(face='bold',size=$font_sz));" >> $output
-      print "$prefix + theme(axis.text.x=element_text(size=$font_sz));" >> $output
-      print "$prefix + theme(axis.text.y=element_text(size=$font_sz));" >> $output
-      print "$prefix + theme(legend.title=element_text(face='bold',size=$font_sz));" >> $output
-      print "$prefix + theme(legend.text=element_text(size=$font_sz));" >> $output
+			for ix in {0..$nimpls}; do;
+				if [[ $ix -eq $nimpls ]]; then
+					print "'${rcol[$ix]}')," >> $output
+				else
+					print "'${rcol[$ix]}'," >> $output
+				fi
+			done;
 
-      print "print(plotvar);" >> $output
-      print "dev.off();" >> $output
-      z=`echo $z + 1 | bc`
-    done;
-  done;
+			print "labels = c(" >> $output
+
+			for ix in {0..$nimpls}; do;
+				if [[ $ix -eq $nimpls ]]; then
+					print "'${impl[$ix]}')," >> $output
+				else
+					print "'${impl[$ix]}'," >> $output
+				fi
+			done;
+
+			print "guide = 'legend');" >> $output
+
+			print "$prefix + guides(colour = guide_legend(override.aes = list(size=$lnpt_sz)));" >> $output
+			#print "$prefix + xlim($xlima, $xlimb);" >> $output
+			print "$prefix + theme(title=element_text(face='bold',size=$font_sz));" >> $output
+			print "$prefix + theme(axis.title.x=element_text(face='bold',size=$font_sz));" >> $output
+			print "$prefix + theme(axis.title.y=element_text(face='bold',size=$font_sz));" >> $output
+			print "$prefix + theme(axis.text.x=element_text(size=$font_sz));" >> $output
+			print "$prefix + theme(axis.text.y=element_text(size=$font_sz));" >> $output
+			print "$prefix + theme(legend.title=element_text(face='bold',size=$font_sz));" >> $output
+			print "$prefix + theme(legend.text=element_text(size=$font_sz));" >> $output
+
+			print "print(plotvar);" >> $output
+			print "dev.off();" >> $output
+			z=`echo $z + 1 | bc`
+		done;
+	done;
 done;
 
 # This is the header for the plotting code the follows.
 for z in {12..13}; do
-
-output=$outdir/$z.R
-
-print "library(ggplot2)" >> $output
-# First we generate the fucking files.
-for i in {0..$nimpls}; do;
-	struct=${impl[$i]}
-	file="$2/"${impl[$i]}"/$4_throughput_post_rand_intsrt_$3"
-	print "rand_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
-	file="$2/"${impl[$i]}"/$4_throughput_post_seqinc_intsrt_$3"
-	print "seq_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
-done;
+	output=$outdir/$z.R
+	print "library(ggplot2)" >> $output
+	# First we generate the files.
+	for i in {0..$nimpls}; do;
+		struct=${impl[$i]}
+		file="$2/"${impl[$i]}"/$4_throughput_post_rand_intsrt_$3"
+		print "rand_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
+		file="$2/"${impl[$i]}"/$4_throughput_post_seqinc_intsrt_$3"
+		print "seq_df2_$struct <- read.table('$file', col.names=$f2names);" >> $output
+	done;
 
 done;
 
@@ -181,50 +186,52 @@ z=12
 gx=0
 cx=3
 for px in {0..1}; do
-  output=$outdir/$z.R
-  print "jpeg('../imgs/${pat[$px]}_${x[$cx]}_${y[$cx]}_${geom[$gx]}.jpeg', $jpw, $jph)" >> $output
-  print "plotvar <- ggplot();" >> $output
-  print "$prefix + ggtitle(\"Insertion Rates of All Structs\")" >> $output
-  for ix in {0..$nimpls}; do;
-	data=${pat[$px]}_df2_${impl[$ix]}
-	aes="aes(x = ${x[$cx]}, y = ${y[$cx]}, colour = '${rcol[$ix]}')"
-	aesX="aes(x = ${x[$cx]}, y = ${y[$cx]})"
-	#print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]}, colour = '${col[$ix]}');" >> $output
-	print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]});" >> $output
-  done;
-  # And now the legend
-  print "$prefix + scale_colour_identity(name = 'data structure', " >> $output
-  print "breaks = c(" >> $output
-  for ix in {0..$nimpls}; do;
-    if [[ $ix -eq $nimpls ]]; then 
-      print "'${rcol[$ix]}')," >> $output
-    else
-      print "'${rcol[$ix]}'," >> $output
-    fi
-  done;
-  print "labels = c(" >> $output
-  for ix in {0..$nimpls}; do;
-    if [[ $ix -eq $nimpls ]]; then 
-      print "'${impl[$ix]}')," >> $output
-    else
-      print "'${impl[$ix]}'," >> $output
-    fi
-  done;
-  print "guide = 'legend');" >> $output
-  print "$prefix + guides(colour = guide_legend(override.aes = list(size=$lnpt_sz)));" >> $output
-  #print "$prefix + xlim($xlima, $xlimb);" >> $output
-  print "$prefix + theme(title=element_text(face='bold',size=$font_sz));" >> $output
-  print "$prefix + theme(axis.title.x=element_text(face='bold',size=$font_sz));" >> $output
-  print "$prefix + theme(axis.title.y=element_text(face='bold',size=$font_sz));" >> $output
-  print "$prefix + theme(axis.text.x=element_text(size=$font_sz));" >> $output
-  print "$prefix + theme(axis.text.y=element_text(size=$font_sz));" >> $output
-  print "$prefix + theme(legend.title=element_text(face='bold',size=$font_sz));" >> $output
-  print "$prefix + theme(legend.text=element_text(size=$font_sz));" >> $output
+	output=$outdir/$z.R
+	print "jpeg('../imgs/${pat[$px]}_${x[$cx]}_${y[$cx]}_${geom[$gx]}.jpeg', $jpw, $jph)" >> $output
+	print "plotvar <- ggplot();" >> $output
+	print "$prefix + ggtitle(\"Insertion Rates of All Structs\")" >> $output
+	for ix in {0..$nimpls}; do;
+		data=${pat[$px]}_df2_${impl[$ix]}
+		aes="aes(x = ${x[$cx]}, y = ${y[$cx]}, colour = '${rcol[$ix]}')"
+		aesX="aes(x = ${x[$cx]}, y = ${y[$cx]})"
+		#print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]}, colour = '${col[$ix]}');" >> $output
+		print "$prefix + geom_${geom[$gx]}(data = $data, $aes, ${props[$gx]});" >> $output
+	done;
+
+	# And now the legend
+	print "$prefix + scale_colour_identity(name = 'data structure', " >> $output
+	print "breaks = c(" >> $output
+	for ix in {0..$nimpls}; do;
+		if [[ $ix -eq $nimpls ]]; then
+			print "'${rcol[$ix]}')," >> $output
+		else
+			print "'${rcol[$ix]}'," >> $output
+		fi
+	done;
+	print "labels = c(" >> $output
+	for ix in {0..$nimpls}; do;
+		if [[ $ix -eq $nimpls ]]; then
+			print "'${impl[$ix]}')," >> $output
+		else
+			print "'${impl[$ix]}'," >> $output
+		fi
+	done;
+
+	print "guide = 'legend');" >> $output
+	print "$prefix + guides(colour = guide_legend(override.aes = list(size=$lnpt_sz)));" >> $output
+	#print "$prefix + xlim($xlima, $xlimb);" >> $output
+	print "$prefix + theme(title=element_text(face='bold',size=$font_sz));" >> $output
+	print "$prefix + theme(axis.title.x=element_text(face='bold',size=$font_sz));" >> $output
+	print "$prefix + theme(axis.title.y=element_text(face='bold',size=$font_sz));" >> $output
+	print "$prefix + theme(axis.text.x=element_text(size=$font_sz));" >> $output
+	print "$prefix + theme(axis.text.y=element_text(size=$font_sz));" >> $output
+	print "$prefix + theme(legend.title=element_text(face='bold',size=$font_sz));" >> $output
+	print "$prefix + theme(legend.text=element_text(size=$font_sz));" >> $output
 
 
-  print "print(plotvar);" >> $output
-  print "dev.off();" >> $output
-  z=`echo $z + 1 | bc`
+	print "print(plotvar);" >> $output
+	print "dev.off();" >> $output
+	z=`echo $z + 1 | bc`
 done;
 
 # We generate _individual_ plots for insertion rate, per MS.
@@ -258,7 +265,7 @@ for ix in {0..$nimpls}; do;
 	print "$prefix + scale_colour_identity(name = 'data structure', " >> $output
 	print "breaks = c(" >> $output
 	for ix in {0..1}; do;
-		if [[ $ix -eq 1 ]]; then 
+		if [[ $ix -eq 1 ]]; then
 			print "'${rcol[$ix]}')," >> $output
 		else
 			print "'${rcol[$ix]}'," >> $output
@@ -266,7 +273,7 @@ for ix in {0..$nimpls}; do;
 	done;
 	print "labels = c(" >> $output
 	for ix in {0..1}; do;
-		if [[ $ix -eq 1 ]]; then 
+		if [[ $ix -eq 1 ]]; then
 			print "'${pat[$ix]}')," >> $output
 		else
 			print "'${pat[$ix]}'," >> $output
