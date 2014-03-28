@@ -1,5 +1,0 @@
-#!/bin/ksh
-
-#by machine
-in_sz[0]=10000000
-in_sz[1]=10000000

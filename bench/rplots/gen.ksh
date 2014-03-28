@@ -6,7 +6,6 @@
 # arg4 = machine name
 
 source $1/main/impls
-#source $1/main/input_sizes
 
 
 f1names="c(\"ms\", \"elems\", \"heapsz\")"

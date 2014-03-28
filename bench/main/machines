@@ -1,4 +1,0 @@
-#!/bin/ksh
-
-machine[0]=thinkpad
-machine[1]=dl380_8GB
