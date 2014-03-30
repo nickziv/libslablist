@@ -9,6 +9,8 @@
 # TODO Sorry about the excessively long lines... I recommend turning on
 # text-wrapping. I'll fix this in the future.
 #
+# Soon, this file may be re-implemented in nawk, which might _actually_ the
+# right tool for the job (that comes with unix). Still evaluating this option.
 
 source $1/main/impls
 
