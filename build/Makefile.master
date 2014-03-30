@@ -104,6 +104,7 @@ DRV=			drv_gen
 
 
 PLISTS:=		$(C_SRCS:%.c=%.plist)
+CSTYLES:=		$(C_SRCS:%.c=%.cstyle)
 C_OBJECTS:=		$(C_SRCS:%.c=%.o)
 
 DS_OBJECTS:=		$(DS_SRCS:%.c=%.o)
@@ -139,6 +140,7 @@ DS_IMPLS:=	$(DS_IMPLS_EXT:%.Z=%)
 
 
 BENCH_SL_THR_HEAP=	$(TOOLS)/throughput_plus_heap.d
+CSTYLE=			$(TOOLS)/cstyle.pl
 
 STACKCOLLAPSE=		$(TOOLS)/stackcollapse.pl
 FLAMEGRAPH=		$(TOOLS)/flamegraph.pl

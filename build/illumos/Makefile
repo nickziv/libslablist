@@ -89,6 +89,12 @@ $(DRV): install $(DRV_OBJECT) $(DS_D_OBJECTS) $(DS_OBJECTS)
 $(PLISTS): %.plist: %.c $(D_HDRS)
 	$(CKSTATIC) -D UMEM $< -o $@
 
+$(CSTYLES): %.cstyle: %.c $(D_HDRS)
+	$(CSTYLE) $<
+
+.PHONY: cstyle
+cstyle: $(CSTYLES)
+
 
 $(R_BENCH): 
 	mkdir $(R_BENCH)

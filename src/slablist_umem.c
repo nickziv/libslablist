@@ -163,7 +163,7 @@ mk_slablist()
 #ifdef UMEM
 	return (umem_cache_alloc(cache_slablist, UMEM_NOFAIL));
 #else
-	return (calloc(1, sizeof(slablist_t)));
+	return (calloc(1, sizeof (slablist_t)));
 #endif
 
 }

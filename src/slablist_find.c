@@ -1137,4 +1137,3 @@ slablist_subseq(slablist_t *sl, slablist_t *sub1, slablist_elem_t *sub2,
 	}
 	return (0);
 }
-
