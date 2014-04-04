@@ -404,13 +404,10 @@ typedef struct rem_ctx {
  */
 struct slablist {
 	pthread_mutex_t		sl_mutex;	/* slablist-wide lock */
-	slablist_t		*sl_prev;	/* not in use */
-	slablist_t		*sl_next;	/* not in use */
 	slablist_t		*sl_sublayer;	/* sublayer, if any */
 	slablist_t		*sl_baselayer;	/* own baselayer, if any */
 	slablist_t		*sl_superlayer; /* superlayer, if any */
 	uint16_t		sl_req_sublayer; /* max num of baseslabs */
-	uint8_t			sl_brk;		/* no longer in use */
 	uint8_t			sl_sublayers;	/* number of sublayers */
 	uint8_t			sl_layer;	/* own layer [0 if top] */
 	uint8_t			sl_is_small_list; /* bool; true if no slabs */

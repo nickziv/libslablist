@@ -119,7 +119,7 @@ typedef union slablist_elem {
  */
 typedef struct pmutex {
 	uint64_t	pm_buf[3];
-} pmutex_t;
+} pthread_mutex_t;
 
 
 /*
@@ -197,7 +197,7 @@ struct subslab {
         slablist_elem_t         ss_max;
         subslab_t               *ss_next;
         subslab_t               *ss_prev;
-        pmutex_t         	ss_mutex;
+        pthread_mutex_t         ss_mutex;
         subslab_t               *ss_below;
         slablist_t              *ss_list;
         uint16_t                ss_elems;
@@ -206,29 +206,27 @@ struct subslab {
 };
 
 struct slablist {
-        pmutex_t         	sl_mutex;
-        slablist_t              *sl_prev;
-        slablist_t              *sl_next;
-        slablist_t              *sl_sublayer;
-        slablist_t              *sl_baselayer;
-        slablist_t              *sl_superlayer;
-        uint16_t                sl_req_sublayer;
-        uint8_t                 sl_brk;
-        uint8_t                 sl_sublayers;
-        uint8_t                 sl_layer;
-        uint8_t                 sl_is_small_list;
-        void                    *sl_head;
-        void                    *sl_end;
-        char                    *sl_name;
-        size_t                  sl_obj_sz;
-        uint8_t			sl_mpslabs;
-        uint64_t		sl_mslabs;
-        uint64_t                sl_slabs;
-        uint64_t                sl_elems;
-        uint8_t                 sl_flags;
-        int                     (*sl_cmp_elem)(uintptr_t, uintptr_t);
-        int                     (*sl_cmp_super)(uintptr_t, uintptr_t);
-        void                    (*sl_ser_list)(int, uintptr_t);
+        pthread_mutex_t         sl_mutex;       /* slablist-wide lock */
+        slablist_t              *sl_sublayer;   /* sublayer, if any */
+        slablist_t              *sl_baselayer;  /* own baselayer, if any */
+        slablist_t              *sl_superlayer; /* superlayer, if any */
+        uint16_t                sl_req_sublayer; /* max num of baseslabs */
+        uint8_t                 sl_sublayers;   /* number of sublayers */
+        uint8_t                 sl_layer;       /* own layer [0 if top] */
+        uint8_t                 sl_is_small_list; /* bool; true if no slabs */
+        void                    *sl_head;       /* head slab/subslab */
+        void                    *sl_end;        /* last slab/subslab */
+        char                    *sl_name;       /* this list's debug name */
+        size_t                  sl_obj_sz;      /* size of elems */
+        uint8_t                 sl_mpslabs;     /* min %-age needed to reap */
+        uint64_t                sl_mslabs;      /* min number needed to reap */
+        uint64_t                sl_slabs;       /* tot num slabs linked to */
+        uint64_t                sl_elems;       /* tot elems in list */
+        uint8_t                 sl_flags;       /* usr-set flags */
+        int                     (*sl_cmp_elem)(slablist_elem_t,
+                                        slablist_elem_t); /* cmp callback */
+        int                     (*sl_bnd_elem)(slablist_elem_t, slablist_elem_t,
+                                        slablist_elem_t); /* bounds callback */
 };
 
 /*

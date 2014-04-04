@@ -123,7 +123,7 @@ $(DS_BENCHES_S_I): $(R_BENCH)/%/$(MACH_NAME)_$(TPHSI)_$(BENCH_SIZE): %
 bench: $(DRV) $(SL_BENCH) $(DS_BENCHES) $(SL_BENCH_PP) $(DS_BENCHES_PP)
 
 bench_plot: 
-	$(BENCH_PLOT)/gen.ksh $(BENCH) $(R_BENCH) $(BENCH_SIZE) $(MACH_NAME)
+	$(NAWK) $(NAWK_ARGS) -f $(BENCH_PLOT)/gen.nawk
 	$(BENCH_PLOT)/plot.ksh
 
 $(FGDIR):

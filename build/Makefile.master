@@ -53,6 +53,9 @@ CTFSTABS=		$(CTF)/bin/$(MACH)/ctfstabs
 CTFSTRIP=		$(CTF)/bin/$(MACH)/ctfstrip
 DTRACE_LIBS=		$(PREFIX)/include
 DTRACE=			pfexec /usr/sbin/dtrace -L $(DTRACE_LIBS)
+NAWK=			nawk
+NAWK_ARGS=		-v arg1="$(BENCH)" -v arg2="$(R_BENCH)" -v\
+			arg3="$(BENCH_SIZE)" -v arg4="$(MACH_NAME)"
 DTRACE_FRAMES=		-x ustackframes=100
 AWK=			pfexec awk
 DTRACEH=		/usr/sbin/dtrace -h -s

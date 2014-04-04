@@ -33,7 +33,6 @@
 #include "slablist_provider.h"
 
 static int init = 0;
-static int nlists = 0;
 static slablist_t *lst_sl = NULL;
 /* static pthread_mutex_t lst_sl_lk; */
 extern int slablist_umem_init();
@@ -93,18 +92,6 @@ slablist_create(
 	list->sl_req_sublayer = 10;
 
 	SLABLIST_CREATE(list);
-	/*
-	 * Add the newly created list to the head of the doubly linked list of
-	 * slab-lists. In libslablist, all slab lists are linked to each other.
-	 */
-	if (lst_sl == NULL) {
-		lst_sl = list;
-	} else {
-		list->sl_next = lst_sl;
-		lst_sl->sl_prev = list;
-		lst_sl = list;
-	}
-	nlists++;
 	return (list);
 }
 
@@ -470,7 +457,6 @@ slablist_destroy(slablist_t *sl)
 		}
 	}
 
-	nlists--;
 	rm_slablist(sl);
 	unlock_list(sl);
 }
