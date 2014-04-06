@@ -90,7 +90,7 @@ $(DRV): install $(DRV_OBJECT) $(DS_D_OBJECTS) $(DS_OBJECTS)
 $(PLISTS): %.plist: %.c $(D_HDRS)
 	$(CKSTATIC) -D UMEM $< -o $@
 
-$(CSTYLES): %.cstyle: %.c $(D_HDRS)
+$(CSTYLES): %.cstyle: %.c
 	$(CSTYLE) $<
 
 .PHONY: cstyle
@@ -200,6 +200,9 @@ check: $(PLISTS)
 clean:
 	rm $(SLDIR)/$(D_HDRS)
 	rm $(OBJECTS) $(SO)
+
+clean_cstyle:
+	rm $(SLDIR)/$(D_HDRS)
 
 clean_check:
 	rm $(PLISTS)
