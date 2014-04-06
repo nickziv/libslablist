@@ -10,6 +10,7 @@ DS_PROV=	struc_provider.d
 
 OBJECTS=	$(C_OBJECTS) $(D_OBJECTS)
 
+
 $(D_HDRS): 
 	$(DTRACEH) $(SLDIR)/$(D_SCR) -o $(SLDIR)/$(D_HDRS)
 
@@ -29,7 +30,7 @@ fuckit:
 
 $(C_SRCS): %.c: $(D_HDRS)
 
-$(C_OBJECTS): %.o: %.c
+$(C_OBJECTS): %.o: %.c $(C_HDRS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 	$(CTFC_POSTPROC)
 #$(CTFCONVERT) -i -L VERSION $@

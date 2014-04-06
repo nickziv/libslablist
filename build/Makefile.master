@@ -85,6 +85,12 @@ C_SRCS=			$(SLDIR)/slablist_add.c\
 			$(SLDIR)/slablist_cons.c\
 			$(SLDIR)/slablist_test.c
 
+C_HDRS=			$(SLDIR)/slablist_find.h\
+			$(SLDIR)/slablist_cons.h\
+			$(SLDIR)/slablist_test.h\
+			$(SLDIR)/slablist.h\
+			$(SLDIR)/slablist_impl.h
+
 DS_SRCS=		$(DSDIR)/bst.c\
 			$(DSDIR)/bsts.c\
 			$(DSDIR)/pavl.c\

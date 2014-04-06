@@ -267,6 +267,18 @@ uuavl_op(container_t *c, slablist_elem_t elem)
 }
 
 void
+uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
+    slablist_rem_cb_t *rcb)
+{
+	uu_avl_t *ls = c->uuavl.uuc_avl;
+	uu_avl_pool_t *lp = c->uuavl.uuc_avl_pool;
+	node_t *node = mk_node();
+	uu_avl_node_init(node, &node->n, lp);
+	node->e = elem;
+	uu_avl_remove(ls, node);
+}
+
+void
 gnuavl_op(container_t *c, slablist_elem_t elem)
 {
 	avl_insert(c->gnuavl, elem.sle_p);
@@ -315,6 +327,7 @@ sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
 	slablist_rem(c->sl, elem, pos, rcb);
 }
 
+
 /*
 void
 sl_foldr(container_t *c, slablist_fold_cb_t *fcb)
@@ -360,7 +373,9 @@ redblack_op(container_t *c, slablist_elem_t elem)
 #endif
 
 typedef void (*struct_subr_t)(container_t *, slablist_elem_t);
-typedef void (*struct_subr_rem_t)(container_t *, slablist_elem_t);
+typedef void (*struct_subr_rem_t)(container_t *, slablist_elem_t, uint64_t,
+    slablist_rem_cb_t *);
+
 
 struct_subr_t sadd_f[12];
 struct_subr_rem_t srem_f[12];
