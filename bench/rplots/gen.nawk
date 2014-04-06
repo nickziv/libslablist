@@ -130,7 +130,9 @@ for (p in pattern) {
 			    "_" geom ".jpeg', "jpw ", "jph ")" >> output;
 
 			print "plotvar <- ggplot();" >> output;
-			print prefix " + ggtitle(\"Comparison of All Structs\")" >> output;
+			print prefix\
+			    " + ggtitle(\"Comparison of All Structs\")"\
+			     >> output;
 
 			# We make the geoms for the current plot.
 			for (im = 0; im <= 11; im++) {
@@ -144,7 +146,8 @@ for (p in pattern) {
 			}
 
 			# And now the legend
-			print prefix " + scale_colour_identity(name = 'data structure', "\
+			print prefix " + scale_colour_identity(name ="\
+			    " 'data structure', "\
 			    >> output;
 
 			print "breaks = c(" >> output;
@@ -174,8 +177,8 @@ for (p in pattern) {
 			print prefix " + guides(colour = guide_legend("\
 			    "override.aes = list(size="lnpt_sz")));" >> output;
 			#print prefix" + xlim($xlima, $xlimb);" >> output;
-			print prefix " + theme(title=element_text(face='bold',size="\
-			    font_sz "));" >> output;
+			print prefix " + theme(title=element_text(face='bold'"\
+			    ",size="font_sz "));" >> output;
 
 			print prefix " + theme(axis.title.x=element_text("\
 			    "face='bold',size=" font_sz"));" >> output;
@@ -210,9 +213,12 @@ while (z <= 13) {
 	for (im = 0; im <= 11; im++) {
 		i = impl[im];
 		file = arg2"/" i "/"arg4"_throughput_post_rand_intsrt_"arg3;
-		print "rand_df2_" i " <- read.table('"file"', col.names="f2names");" >> output;
+		print "rand_df2_" i " <- read.table('"file"', col.names="\
+		    f2names");" >> output;
+
 		file = arg2"/" i "/"arg4"_throughput_post_seqinc_intsrt_"arg3;
-		print "seq_df2_" i " <- read.table('"file"', col.names="f2names");" >> output;
+		print "seq_df2_" i " <- read.table('"file"', col.names="\
+		    f2names");" >> output;
 	}
 	z++;
 }
@@ -227,18 +233,24 @@ coord = 3;
 for (p in pattern) {
 	pat = pattern[p];
 	output = outdir "/" z ".R";
-	print "jpeg('../imgs/"pat"_"x[coord]"_"y[coord]"_"geom".jpeg', "jpw", "jph")" >> output;
+	print "jpeg('../imgs/"pat"_"x[coord]"_"y[coord]"_"geom".jpeg', "jpw\
+	    ", "jph")" >> output;
 	print "plotvar <- ggplot();" >> output;
 	print prefix" + ggtitle(\"Insertion Rates of All Structs\")" >> output;
 	for (im = 0; im <= 11; im++) {
 		i = impl[im];
 		data = pat"_df2_"i;
-		aes = "aes(x = "x[coord]", y = "y[coord]", colour = '"rcol[i]"')";
-		print prefix" + geom_"geom"(data = "data", "aes", "props[geom]");" >> output;
+		aes = "aes(x = "x[coord]", y = "y[coord]", colour = '"\
+		    rcol[i]"')";
+
+		print prefix" + geom_"geom"(data = "data", "aes", "props[geom]\
+		    ");" >> output;
 	}
 
 	# And now the legend
-	print prefix" + scale_colour_identity(name = 'data structure', " >> output;
+	print prefix" + scale_colour_identity(name = 'data structure', "\
+	    >> output;
+
 	print "breaks = c(" >> output;
 	for (im = 0; im <= 11; im++) {
 		i = impl[im];
@@ -307,7 +319,9 @@ for (im = 0; im <= 11; im++) {
 	for (p in pattern) {
 		pat = pattern[p];
 		data = pat"_df2_"i;
-		aes="aes(x = "x[coord]", y = "y[coord]", colour = '"rcol[pat]"')";
+		aes="aes(x = "x[coord]", y = "y[coord]", colour = '"rcol[pat]\
+		    "')";
+
 		print prefix " + geom_"geom"(data = "data", "aes", "\
 		    props[geom]");" >> output;
 	}
