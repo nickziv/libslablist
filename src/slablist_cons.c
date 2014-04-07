@@ -426,14 +426,14 @@ slablist_destroy(slablist_t *sl)
 	/*
 	 * We remove all of the slabs in the top layer/
 	 */
-	if (!(sl->sl_is_small_list) && sl->sl_head != NULL) {
+	if (!(IS_SMALL_LIST(sl)) && sl->sl_head != NULL) {
 		remove_slabs(sl);
 	}
 
 	/*
 	 * We remove all of the sublabs in the sublayers, one by one.
 	 */
-	if (!(sl->sl_is_small_list) && sl->sl_sublayer != NULL) {
+	if (!(IS_SMALL_LIST(sl)) && sl->sl_sublayer != NULL) {
 		while (p != NULL) {
 			q = p;
 			remove_subslabs(p);
@@ -446,7 +446,7 @@ slablist_destroy(slablist_t *sl)
 	 * If however, we are dealing with a non-empty small list, we remove
 	 * the individual linked list nodes.
 	 */
-	if (sl->sl_is_small_list && sl->sl_head != NULL) {
+	if (IS_SMALL_LIST(sl) && sl->sl_head != NULL) {
 		sml = sl->sl_head;
 		uint64_t i = 0;
 		while (i < sl->sl_elems) {
@@ -611,7 +611,7 @@ int small_list_add(slablist_t *, slablist_elem_t, int, slablist_elem_t *);
 void
 slab_to_small_list(slablist_t *sl)
 {
-	sl->sl_is_small_list = 1;
+	IS_SMALL_LIST(sl) = 1;
 	slab_t *h = sl->sl_head;
 	sl->sl_head = NULL;
 	uint64_t nelems = sl->sl_elems;
@@ -657,7 +657,7 @@ small_list_to_slab(slablist_t *sl)
 	}
 
 	SLABLIST_SLAB_INC_ELEMS(s);
-	sl->sl_is_small_list = 0;
+	IS_SMALL_LIST(sl) = 0;
 	sl->sl_head = s;
 	sl->sl_end = s;
 	sl->sl_slabs = 1;
@@ -762,7 +762,7 @@ slablist_map_range_sml(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
 void
 slablist_map(slablist_t *sl, slablist_map_t f)
 {
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_map_sml(sl, f);
 		return;
 	}
@@ -780,7 +780,7 @@ void
 slablist_map_range(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
     slablist_elem_t max)
 {
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_map_range_sml(sl, f, min, max);
 		return;
 	}
@@ -890,7 +890,7 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 slablist_elem_t
 slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
 		return (ret);
 	}
@@ -917,7 +917,7 @@ slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 slablist_elem_t
 slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
 		return (ret);
 	}
@@ -938,7 +938,7 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
 	slablist_elem_t accumulator = zero;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_range_sml(sl, f, min, max,
 		    zero);
 		return (ret);
@@ -973,7 +973,7 @@ slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
 	slablist_elem_t accumulator = zero;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_range_sml(sl, f, min, max,
 		    zero);
 		return (ret);

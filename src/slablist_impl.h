@@ -174,8 +174,8 @@ typedef struct small_list {
  * added thus far. The subslabs contain pointers to slabs above them.
  *
  * Here is a conceptual representation (that isn't quite accurate of what the
- * layout actually looks like. Say that once we reach 5 slabs out linear-search
- * method starts to cost too much. We do the following:
+ * layout actually looks like). Say that once we reach 5 slabs our
+ * linear-search method starts to cost too much. We do the following:
  *
  *	[S] <-> [S] <-> [S] <-> [S] <-> [S]
  *	    This list is getting costly.
@@ -393,6 +393,7 @@ typedef struct rem_ctx {
 	subslab_t		*rc_below;
 } rem_ctx_t;
 
+#define IS_SMALL_LIST(sl) (sl->sl_slabs == 0)
 /*
  * This is the handle that stores the state of the slablist. It contains bounds
  * and comparison functions supplied by the user. Every sublayer has one of
@@ -410,7 +411,6 @@ struct slablist {
 	uint16_t		sl_req_sublayer; /* max num of baseslabs */
 	uint8_t			sl_sublayers;	/* number of sublayers */
 	uint8_t			sl_layer;	/* own layer [0 if top] */
-	uint8_t			sl_is_small_list; /* bool; true if no slabs */
 	void			*sl_head;	/* head slab/subslab */
 	void			*sl_end;	/* last slab/subslab */
 	char			*sl_name;	/* this list's debug name */

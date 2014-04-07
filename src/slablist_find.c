@@ -256,7 +256,7 @@ sml_node_get(slablist_t *sl, uint64_t pos)
 		return (NULL);
 	}
 
-	if (!(sl->sl_is_small_list)) {
+	if (!(IS_SMALL_LIST(sl))) {
 		return (NULL);
 	}
 
@@ -292,7 +292,7 @@ slablist_get(slablist_t *sl, uint64_t pos)
 	uint64_t off_pos;
 	slab_t *s;
 	small_list_t *sml = NULL;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		sml = sml_node_get(sl, pos);
 		ret = sml->sml_data;
 	} else {
@@ -976,7 +976,7 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 	slab_t *potential;
 	uint64_t i = 0;
 	slablist_elem_t ret;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		small_list_t *sml = sl->sl_head;
 		while (i < sl->sl_elems &&
 		    sl->sl_cmp_elem(key, sml->sml_data) != 0) {

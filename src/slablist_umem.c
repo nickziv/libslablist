@@ -43,7 +43,6 @@ slablist_ctor(void *buf, void *ignored, int flags)
 {
 	slablist_t *s = buf;
 	bzero(s, sizeof (slablist_t));
-	s->sl_is_small_list = 1;
 	return (0);
 }
 
@@ -173,11 +172,9 @@ rm_slablist(slablist_t *sl)
 {
 #ifdef UMEM
 	bzero(sl, sizeof (slablist_t));
-	sl->sl_is_small_list = 1;
 	umem_cache_free(cache_slablist, sl);
 #else
 	bzero(sl, sizeof (slablist_t));
-	sl->sl_is_small_list = 1;
 	free(sl);
 #endif
 }

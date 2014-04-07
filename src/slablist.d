@@ -158,7 +158,6 @@ typedef struct slinfo {
 	uint16_t		sli_req_sublayer;
 	uint8_t			sli_sublayers;
 	uint8_t			sli_layer;
-	uint8_t			sli_is_small_list;
 	uintptr_t		sli_head;
 	uintptr_t		sli_end;
 	string			sli_name;
@@ -213,7 +212,6 @@ struct slablist {
         uint16_t                sl_req_sublayer; /* max num of baseslabs */
         uint8_t                 sl_sublayers;   /* number of sublayers */
         uint8_t                 sl_layer;       /* own layer [0 if top] */
-        uint8_t                 sl_is_small_list; /* bool; true if no slabs */
         void                    *sl_head;       /* head slab/subslab */
         void                    *sl_end;        /* last slab/subslab */
         char                    *sl_name;       /* this list's debug name */
@@ -295,8 +293,6 @@ translator slinfo_t < slablist_t *sl >
 				sizeof (sl->sl_sublayers));
 	sli_layer = *(uint8_t *)copyin((uintptr_t)&sl->sl_layer,
 				sizeof (sl->sl_layer));
-	sli_is_small_list = *(uint8_t *)copyin((uintptr_t)&sl->sl_is_small_list,
-				sizeof (sl->sl_is_small_list));
 	sli_head = *(uintptr_t *)copyin((uintptr_t)&sl->sl_head,
 				sizeof (sl->sl_head));
 	sli_end = *(uintptr_t *)copyin((uintptr_t)&sl->sl_end,

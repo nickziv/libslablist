@@ -131,7 +131,7 @@ end:;
 	 * We run tests, if DTrace test-probes are enabled.
 	 */
 	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
-		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
+		SLABLIST_TEST_IS_SML_LIST(!(IS_SMALL_LIST(sl)));
 	}
 
 	if (SLABLIST_TEST_SMLIST_NELEMS_ENABLED()) {
@@ -1047,7 +1047,7 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *remd, subslab_t *below)
 void
 slablist_reap(slablist_t *sl)
 {
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		return;
 	}
 
@@ -1380,7 +1380,7 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 		return (ret);
 	}
 
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		small_list_t *node = sl->sl_head;
 		small_list_t *prev = NULL;
 		/* we find the first node */
@@ -1452,7 +1452,7 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 		sup = sup->sl_superlayer;
 		layer--;
 	}
-	if (!(sl->sl_is_small_list) && sl->sl_elems == SMELEM_MAX) {
+	if (!(IS_SMALL_LIST(sl)) && sl->sl_elems == SMELEM_MAX) {
 		/*
 		 * If we have lowered the number of elems to 1/2 a slab, we
 		 * turn the slab into a small linked list.
@@ -1481,7 +1481,7 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 	int ret;
 	slab_t *found = NULL;
 
-	if (!(sl->sl_is_small_list) && sl->sl_elems == SMELEM_MAX) {
+	if (!(IS_SMALL_LIST(sl)) && sl->sl_elems == SMELEM_MAX) {
 		/*
 		 * If we have lowered the number of elems to 1/2 a slab, we
 		 * turn the slab into a small linked list.
@@ -1490,7 +1490,7 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 	}
 
 
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		/*
 		 * We are dealing with a small list and have to remove the
 		 * element.
@@ -1505,7 +1505,7 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 	if (SLIST_SORTED(sl->sl_flags)) {
 
 		if (SLABLIST_TEST_IS_SLAB_LIST_ENABLED()) {
-			SLABLIST_TEST_IS_SLAB_LIST(sl->sl_is_small_list);
+			SLABLIST_TEST_IS_SLAB_LIST(IS_SMALL_LIST(sl));
 		}
 
 		SLABLIST_REM_BEGIN(sl, elem, pos);

@@ -164,7 +164,7 @@ end:;
 	 * enabled those probes.
 	 */
 	if (SLABLIST_TEST_IS_SML_LIST_ENABLED()) {
-		SLABLIST_TEST_IS_SML_LIST(!(sl->sl_is_small_list));
+		SLABLIST_TEST_IS_SML_LIST(!(IS_SMALL_LIST(sl)));
 	}
 
 	if (SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
@@ -1359,7 +1359,7 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 
 
 	int ret;
-	if (sl->sl_is_small_list && sl->sl_elems <= (SMELEM_MAX - 1)) {
+	if (IS_SMALL_LIST(sl) && sl->sl_elems <= (SMELEM_MAX - 1)) {
 		/*
 		 * The number of elements is too small to justify the use of
 		 * slabs. So we store the data in a singly linked list.
@@ -1370,7 +1370,7 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 		return (ret);
 	}
 
-	if (sl->sl_is_small_list && sl->sl_elems == SMELEM_MAX) {
+	if (IS_SMALL_LIST(sl) && sl->sl_elems == SMELEM_MAX) {
 		/*
 		 * We convert the small_list into a slab.
 		 */
@@ -1390,7 +1390,7 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 		 */
 
 		if (SLABLIST_TEST_IS_SLAB_LIST_ENABLED()) {
-			SLABLIST_TEST_IS_SLAB_LIST(sl->sl_is_small_list);
+			SLABLIST_TEST_IS_SLAB_LIST(IS_SMALL_LIST(sl));
 		}
 
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
@@ -1513,7 +1513,7 @@ slablist_sort(slablist_t *sl, slablist_cmp_t cmp, slablist_bnd_t bnd)
 	SLIST_SET_SORTING_TEMP(tmp->sl_flags);
 	uint64_t i = 0;
 	uint64_t j = 0;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		small_list_t *prev_node = NULL;
 		small_list_t *node = sl->sl_head;
 		while (i < sl->sl_elems) {
@@ -1557,7 +1557,7 @@ slablist_reverse(slablist_t *sl)
 	void *head = sl->sl_head;
 	sl->sl_head = sl->sl_end;
 	sl->sl_end = head;
-	if (sl->sl_is_small_list) {
+	if (IS_SMALL_LIST(sl)) {
 		small_list_t *n = head;
 		small_list_t *n_tmp;
 		small_list_t *n_prev = NULL;
