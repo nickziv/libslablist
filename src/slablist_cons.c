@@ -611,7 +611,6 @@ int small_list_add(slablist_t *, slablist_elem_t, int, slablist_elem_t *);
 void
 slab_to_small_list(slablist_t *sl)
 {
-	IS_SMALL_LIST(sl) = 1;
 	slab_t *h = sl->sl_head;
 	sl->sl_head = NULL;
 	uint64_t nelems = sl->sl_elems;
@@ -657,7 +656,6 @@ small_list_to_slab(slablist_t *sl)
 	}
 
 	SLABLIST_SLAB_INC_ELEMS(s);
-	IS_SMALL_LIST(sl) = 0;
 	sl->sl_head = s;
 	sl->sl_end = s;
 	sl->sl_slabs = 1;
