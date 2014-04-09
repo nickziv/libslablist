@@ -22,6 +22,14 @@
  * Use is subject to license terms.
  */
 
+/*
+ * This file contains the private structures for libslablist, a library that
+ * implements the sorted and unsorted slab list. The structure itself was
+ * inspired by the use of slabs in the slab allocator, which was invented by
+ * Jeff Bonwick in 1993. This is simply an expansion of his original idea (a
+ * circular doubly linked list of slabs/buffers).
+ */
+
 
 #include <stdint.h>
 #include <pthread.h>
