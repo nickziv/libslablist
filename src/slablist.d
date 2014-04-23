@@ -155,13 +155,12 @@ typedef struct subarrinfo {
 
 
 typedef struct slinfo {
-	uint16_t		sli_req_sublayer;
+	uint8_t			sli_req_sublayer;
 	uint8_t			sli_sublayers;
 	uint8_t			sli_layer;
 	uintptr_t		sli_head;
 	uintptr_t		sli_end;
 	string			sli_name;
-	size_t			sli_obj_sz;
 	uint8_t 		sli_mpslabs;
 	uint64_t 		sli_mslabs;
 	uint64_t		sli_slabs;
@@ -196,7 +195,6 @@ struct subslab {
         slablist_elem_t         ss_max;
         subslab_t               *ss_next;
         subslab_t               *ss_prev;
-        pthread_mutex_t         ss_mutex;
         subslab_t               *ss_below;
         slablist_t              *ss_list;
         uint16_t                ss_elems;
@@ -205,17 +203,15 @@ struct subslab {
 };
 
 struct slablist {
-        pthread_mutex_t         sl_mutex;       /* slablist-wide lock */
         slablist_t              *sl_sublayer;   /* sublayer, if any */
         slablist_t              *sl_baselayer;  /* own baselayer, if any */
         slablist_t              *sl_superlayer; /* superlayer, if any */
-        uint16_t                sl_req_sublayer; /* max num of baseslabs */
+        uint8_t                 sl_req_sublayer; /* max num of baseslabs */
         uint8_t                 sl_sublayers;   /* number of sublayers */
         uint8_t                 sl_layer;       /* own layer [0 if top] */
         void                    *sl_head;       /* head slab/subslab */
         void                    *sl_end;        /* last slab/subslab */
         char                    *sl_name;       /* this list's debug name */
-        size_t                  sl_obj_sz;      /* size of elems */
         uint8_t                 sl_mpslabs;     /* min %-age needed to reap */
         uint64_t                sl_mslabs;      /* min number needed to reap */
         uint64_t                sl_slabs;       /* tot num slabs linked to */
@@ -225,6 +221,7 @@ struct slablist {
                                         slablist_elem_t); /* cmp callback */
         int                     (*sl_bnd_elem)(slablist_elem_t, slablist_elem_t,
                                         slablist_elem_t); /* bounds callback */
+
 };
 
 /*
@@ -287,7 +284,7 @@ translator subarrinfo_t < subarr_t *s >
 #pragma D binding "1.6.1" translator
 translator slinfo_t < slablist_t *sl >
 {
-	sli_req_sublayer = *(uint16_t *)copyin((uintptr_t)&sl->sl_req_sublayer,
+	sli_req_sublayer = *(uint8_t *)copyin((uintptr_t)&sl->sl_req_sublayer,
 				sizeof (sl->sl_req_sublayer));
 	sli_sublayers = *(uint8_t *)copyin((uint8_t)&sl->sl_sublayers,
 				sizeof (sl->sl_sublayers));
@@ -302,8 +299,6 @@ translator slinfo_t < slablist_t *sl >
 		copyin(
 		(uintptr_t)&sl->sl_name,
 		sizeof (sl->sl_name)));
-	sli_obj_sz = *(size_t *)copyin((uintptr_t)&sl->sl_obj_sz,
-				sizeof (size_t));
 	sli_mpslabs = *(uint8_t *)copyin((uintptr_t)&sl->sl_mpslabs,
 	 			sizeof (sl->sl_mpslabs));
 	sli_mslabs = *(uint64_t *)copyin((uintptr_t)&sl->sl_mslabs,
