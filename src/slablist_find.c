@@ -287,7 +287,6 @@ sml_node_get(slablist_t *sl, uint64_t pos)
 slablist_elem_t
 slablist_get(slablist_t *sl, uint64_t pos)
 {
-	lock_list(sl);
 	slablist_elem_t ret;
 	uint64_t off_pos;
 	slab_t *s;
@@ -300,7 +299,6 @@ slablist_get(slablist_t *sl, uint64_t pos)
 		ret = s->s_arr[off_pos];
 	}
 
-	unlock_list(sl);
 	return (ret);
 }
 
@@ -970,7 +968,6 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 int
 slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 {
-	lock_list(sl);
 
 	SLABLIST_FIND_BEGIN(sl, key);
 	slab_t *potential;
@@ -985,7 +982,6 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 		}
 		*found = sml->sml_data;
 		SLABLIST_FIND_END(SL_SUCCESS, *found);
-		unlock_list(sl);
 		return (SL_SUCCESS);
 	}
 
@@ -1003,16 +999,13 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 		*found  = ret;
 		if (sl->sl_cmp_elem(key, ret) == 0) {
 			SLABLIST_FIND_END(SL_SUCCESS, *found);
-			unlock_list(sl);
 			return (SL_SUCCESS);
 		} else {
 			SLABLIST_FIND_END(SL_ENFOUND, *found);
-			unlock_list(sl);
 			return (SL_ENFOUND);
 		}
 	} else {
 		SLABLIST_FIND_END(SL_ARGORD, *found);
-		unlock_list(sl);
 		return (SL_ARGORD);
 	}
 }

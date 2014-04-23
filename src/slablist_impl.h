@@ -321,7 +321,6 @@ struct subslab {
 	slablist_elem_t		ss_max;
 	subslab_t		*ss_next;
 	subslab_t		*ss_prev;
-	pthread_mutex_t		ss_mutex;
 	subslab_t		*ss_below;
 	slablist_t		*ss_list;
 	uint16_t		ss_elems;
@@ -412,17 +411,15 @@ typedef struct rem_ctx {
  * are initialized and updated. A slablist can have a maximum of 8 sublayers.
  */
 struct slablist {
-	pthread_mutex_t		sl_mutex;	/* slablist-wide lock */
 	slablist_t		*sl_sublayer;	/* sublayer, if any */
 	slablist_t		*sl_baselayer;	/* own baselayer, if any */
 	slablist_t		*sl_superlayer; /* superlayer, if any */
-	uint16_t		sl_req_sublayer; /* max num of baseslabs */
+	uint8_t			sl_req_sublayer; /* max num of baseslabs */
 	uint8_t			sl_sublayers;	/* number of sublayers */
 	uint8_t			sl_layer;	/* own layer [0 if top] */
 	void			*sl_head;	/* head slab/subslab */
 	void			*sl_end;	/* last slab/subslab */
 	char			*sl_name;	/* this list's debug name */
-	size_t			sl_obj_sz;	/* size of elems */
 	uint8_t			sl_mpslabs;	/* min %-age needed to reap */
 	uint64_t		sl_mslabs;	/* min number needed to reap */
 	uint64_t		sl_slabs;	/* tot num slabs linked to */
@@ -434,12 +431,44 @@ struct slablist {
 					slablist_elem_t); /* bounds callback */
 };
 
+/*
+ * A lockable slablist.
+ */
+typedef struct lk_slablist {
+	pthread_mutex_t		lksl_mutex;	/* slablist-wide lock */
+	slablist_t		*lksl_sl; 	/* the slablist */
+} lk_slablist_t;
+
+/*
+ * XXX NOT YET IMPLEMENTED.
+ *
+ * A multi-threaded slablist. Effectively multiple slab lists used
+ * concurrently. We have additional functions that can be used to rebalance
+ * multiple cooperating slab lists.
+ *
+ * XXX TODO I'm thinking of moving first N and last N base-slabs (and all their
+ * super-slabs) to/from adjacent slablists. This operations is ridiculously
+ * simple to implement, due to how coarse-grained it is. Hopefully will be
+ * sufficient for rebalancing needs.
+ */
+struct mt_slablist {
+	lk_slablist_t		**mtsl_sl;	/* the slablists */
+	pthread_mutex_t		mtsl_mutex;
+	slablist_elem_t		mtsl_min;
+	slablist_elem_t		mtsl_max;
+	uint64_t		mtsl_approx_elems;
+};
+
 
 /*
  * Memory allocation functions.
  */
 slablist_t *mk_slablist(void);
 void rm_slablist(slablist_t *);
+mt_slablist_t *mk_mt_slablist(void);
+void rm_mt_slablist(mt_slablist_t *);
+lk_slablist_t *mk_lk_slablist(void);
+void rm_lk_slablist(lk_slablist_t *);
 slab_t *mk_slab(void);
 subslab_t *mk_subslab(void);
 subarr_t *mk_subarr(void);

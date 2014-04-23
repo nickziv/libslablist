@@ -31,6 +31,8 @@
 #include "slablist_impl.h"
 
 umem_cache_t *cache_slablist;
+umem_cache_t *cache_lk_slablist;
+umem_cache_t *cache_mt_slablist;
 umem_cache_t *cache_slab;
 umem_cache_t *cache_subslab;
 umem_cache_t *cache_subarr;
@@ -43,6 +45,22 @@ slablist_ctor(void *buf, void *ignored, int flags)
 {
 	slablist_t *s = buf;
 	bzero(s, sizeof (slablist_t));
+	return (0);
+}
+
+int
+lk_slablist_ctor(void *buf, void *ignored, int flags)
+{
+	lk_slablist_t *s = buf;
+	bzero(s, sizeof (lk_slablist_t));
+	return (0);
+}
+
+int
+mt_slablist_ctor(void *buf, void *ignored, int flags)
+{
+	mt_slablist_t *s = buf;
+	bzero(s, sizeof (mt_slablist_t));
 	return (0);
 }
 
@@ -96,6 +114,26 @@ slablist_umem_init()
 		sizeof (slablist_t),
 		0,
 		slablist_ctor,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0);
+
+	cache_lk_slablist = umem_cache_create("lk_slablist",
+		sizeof (lk_slablist_t),
+		0,
+		lk_slablist_ctor,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		0);
+
+	cache_mt_slablist = umem_cache_create("mt_slablist",
+		sizeof (mt_slablist_t),
+		0,
+		mt_slablist_ctor,
 		NULL,
 		NULL,
 		NULL,
@@ -179,6 +217,51 @@ rm_slablist(slablist_t *sl)
 #endif
 }
 
+lk_slablist_t *
+mk_lk_slablist()
+{
+#ifdef UMEM
+	return (umem_cache_alloc(cache_lk_slablist, UMEM_NOFAIL));
+#else
+	return (calloc(1, sizeof (lk_slablist_t)));
+#endif
+
+}
+
+void
+rm_lk_slablist(lk_slablist_t *sl)
+{
+#ifdef UMEM
+	bzero(sl, sizeof (lk_slablist_t));
+	umem_cache_free(cache_lk_slablist, sl);
+#else
+	bzero(sl, sizeof (lk_slablist_t));
+	free(sl);
+#endif
+}
+
+mt_slablist_t *
+mk_mt_slablist()
+{
+#ifdef UMEM
+	return (umem_cache_alloc(cache_mt_slablist, UMEM_NOFAIL));
+#else
+	return (calloc(1, sizeof (mt_slablist_t)));
+#endif
+
+}
+
+void
+rm_mt_slablist(mt_slablist_t *sl)
+{
+#ifdef UMEM
+	bzero(sl, sizeof (mt_slablist_t));
+	umem_cache_free(cache_mt_slablist, sl);
+#else
+	bzero(sl, sizeof (mt_slablist_t));
+	free(sl);
+#endif
+}
 
 slab_t *
 mk_slab()

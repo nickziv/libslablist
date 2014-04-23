@@ -51,11 +51,9 @@ static int
 small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_elem_t *rdl)
 {
-	lock_list(sl);
 
 	int ret;
 	if (sl->sl_head == NULL || sl->sl_elems == 0) {
-		unlock_list(sl);
 		return (SL_EMPTY);
 	}
 
@@ -148,7 +146,6 @@ end:;
 			int f = test_smlist_elems_sorted(sl);
 			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
-	unlock_list(sl);
 	return (ret);
 }
 
@@ -1365,9 +1362,7 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
     slablist_rem_cb_t f)
 {
 	SLABLIST_REM_RANGE_BEGIN(sl, min, max);
-	lock_list(sl);
 	if (!SLIST_SORTED(sl->sl_flags)) {
-		unlock_list(sl);
 		SLABLIST_REM_RANGE_END(SL_ARGORD);
 		return (SL_ARGORD);
 	}
@@ -1375,7 +1370,6 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 	int ret;
 	if (sl->sl_cmp_elem(min, max) == 0) {
 		ret = slablist_rem_impl(sl, min, 0, f);
-		unlock_list(sl);
 		SLABLIST_REM_RANGE_END(ret);
 		return (ret);
 	}
@@ -1409,7 +1403,6 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 		if (remd_head) {
 			sl->sl_head = node;
 		}
-		unlock_list(sl);
 		SLABLIST_REM_RANGE_END(SL_SUCCESS);
 		return (SL_SUCCESS);
 	}
@@ -1459,7 +1452,6 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 		 */
 		slab_to_small_list(sl);
 	}
-	unlock_list(sl);
 	SLABLIST_REM_RANGE_END(SL_SUCCESS);
 	return (SL_SUCCESS);
 }
@@ -1472,7 +1464,6 @@ int
 slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
-	lock_list(sl);
 
 	slablist_elem_t rdl;
 	uint64_t off_pos;
@@ -1571,7 +1562,6 @@ end:;
 	if (rcb != NULL) {
 		rcb(rdl);
 	}
-	unlock_list(sl);
 
 	SLABLIST_REM_END(ret);
 
@@ -1592,8 +1582,6 @@ int
 slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
-	lock_list(sl);
 	int ret = slablist_rem_impl(sl, elem, pos, rcb);
-	unlock_list(sl);
 	return (ret);
 }

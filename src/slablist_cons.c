@@ -37,31 +37,9 @@ static slablist_t *lst_sl = NULL;
 /* static pthread_mutex_t lst_sl_lk; */
 extern int slablist_umem_init();
 
-int
-lock_list(slablist_t *sl)
-{
-	int e = pthread_mutex_lock(&sl->sl_mutex);
-	return (e);
-}
-
-int
-trylock_list(slablist_t *sl)
-{
-	int e = pthread_mutex_trylock(&sl->sl_mutex);
-	return (e);
-}
-
-int
-unlock_list(slablist_t *sl)
-{
-	int e = pthread_mutex_unlock(&sl->sl_mutex);
-	return (e);
-}
-
 slablist_t *
 slablist_create(
 	char *name,		/* descriptive name */
-	size_t obj_size,	/* size of elem */
 	slablist_cmp_t cmpfun,	/* comparison function callback */
 	slablist_bnd_t bndfun,	/* bounds function callback */
 	uint8_t fl)		/* flags */
@@ -82,7 +60,6 @@ slablist_create(
 	strcpy(list->sl_name, name);
 	list->sl_cmp_elem = cmpfun;
 	list->sl_bnd_elem = bndfun;
-	list->sl_obj_sz = obj_size;
 	list->sl_flags = fl;
 
 	/* reap defaults */
@@ -95,6 +72,7 @@ slablist_create(
 	return (list);
 }
 
+
 /*
  * This function allows the user to set the minimum percentage of reapable
  * slabs that need to be present before a reap begins.
@@ -102,13 +80,11 @@ slablist_create(
 void
 slablist_set_reap_pslabs(slablist_t *sl, uint8_t new)
 {
-	lock_list(sl);
 	if (new <= 99) {
 		sl->sl_mpslabs = new;
 	} else {
 		sl->sl_mpslabs = 99;
 	}
-	unlock_list(sl);
 }
 
 /*
@@ -118,15 +94,12 @@ slablist_set_reap_pslabs(slablist_t *sl, uint8_t new)
 void
 slablist_set_reap_slabs(slablist_t *sl, uint64_t new)
 {
-	lock_list(sl);
 	sl->sl_mslabs = new;
-	unlock_list(sl);
 }
 
 void
 slablist_set_attach_req(slablist_t *sl, uint64_t req)
 {
-	lock_list(sl);
 	/*
 	 * Set the sublayer_req value, which can never be larger than the
 	 * number of elems that can fit in a subslab.
@@ -136,7 +109,6 @@ slablist_set_attach_req(slablist_t *sl, uint64_t req)
 	} else {
 		sl->sl_req_sublayer = SUBELEM_MAX;
 	}
-	unlock_list(sl);
 }
 
 uint64_t
@@ -413,7 +385,6 @@ remove_subslabs(slablist_t *sl)
 void
 slablist_destroy(slablist_t *sl)
 {
-	lock_list(sl);
 	SLABLIST_DESTROY(sl);
 	size_t namesz = strlen(sl->sl_name);
 	rm_buf(sl->sl_name, namesz);
@@ -458,7 +429,6 @@ slablist_destroy(slablist_t *sl)
 	}
 
 	rm_slablist(sl);
-	unlock_list(sl);
 }
 
 

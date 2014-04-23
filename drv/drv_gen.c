@@ -504,7 +504,7 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 		debug_func(do_subseq_sl, seq_cap);
 		if (do_subseq_sl && seq_cap == 100) {
 			int l = 0;
-			slablist_t *sl_ss = slablist_create("subseq", 8, NULL,
+			slablist_t *sl_ss = slablist_create("subseq", NULL,
 			    NULL, SL_ORDERED);
 			while (l < 100) {
 				slablist_add(sl_ss, subseq[l], 0);
@@ -751,7 +751,7 @@ main(int ac, char *av[])
 
 
 	case ST_SL:
-		cis.sl = slablist_create("intlistsrt", 8, sl_cmpfun, bndfun, sl_flag);
+		cis.sl = slablist_create("intlistsrt", sl_cmpfun, bndfun, sl_flag);
 		break;
 	case ST_UUAVL:
 		cis.uuavl.uuc_avl_pool = uu_avl_pool_create("lsp", sizeof (node_t), 0,
@@ -807,7 +807,7 @@ main(int ac, char *av[])
 
 	if (strsrt) {
 /*
-		sl_str_s = slablist_create("strlistsrt", STRMAXSZ, cmpfun_str,
+		sl_str_s = slablist_create("strlistsrt", cmpfun_str,
 					bndfun_str, SL_SORTED);
 		do_ops(sl_str_s, maxops, STR, SRT);
 		do_free_remaining(sl_str_s, STR, SRT);
@@ -827,7 +827,7 @@ main(int ac, char *av[])
 	}
 	if (strord) {
 /*
-		sl_str_o = slablist_create("strlistord", STRMAXSZ, cmpfun_str,
+		sl_str_o = slablist_create("strlistord", cmpfun_str,
 					bndfun_str, SL_ORDERED);
 		do_ops(sl_str_o, maxops, STR, ORD);
 		do_free_remaining(sl_str_o, STR, ORD);
@@ -839,7 +839,7 @@ main(int ac, char *av[])
 			slablist_sort(cis.sl, sl_cmpfun, bndfun);
 		}
 /*
-		sl_int_o = slablist_create("intlistord", 8, cmpfun, bndfun,
+		sl_int_o = slablist_create("intlistord", cmpfun, bndfun,
 					SL_ORDERED);
 		do_ops(sl_int_o, maxops, INT, ORD);
 		do_free_remaining(sl_int_o, INT, ORD);

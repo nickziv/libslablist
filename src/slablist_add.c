@@ -56,7 +56,6 @@ int
 small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
     slablist_elem_t *repd_elem)
 {
-	lock_list(sl);
 
 	int ret = 0;
 	if (sl->sl_head == NULL) {
@@ -176,7 +175,6 @@ end:;
 		SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
 
-	unlock_list(sl);
 
 	return (ret);
 }
@@ -1355,7 +1353,6 @@ subslab_gen_add(int status, slab_t *s1, subslab_t *s2, subslab_t *s)
 int
 slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 {
-	lock_list(sl);
 
 
 	int ret;
@@ -1474,7 +1471,6 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 		ret = SL_SUCCESS;
 	}
 
-	unlock_list(sl);
 
 	SLABLIST_ADD_END(ret);
 	return (ret);
@@ -1508,7 +1504,7 @@ slablist_sort(slablist_t *sl, slablist_cmp_t cmp, slablist_bnd_t bnd)
 	 * We create a special kind of sorted slab list that we will use to
 	 * sort the elements in `sl`.
 	 */
-	slablist_t *tmp = slablist_create("temp_sorting", sl->sl_obj_sz, cmp,
+	slablist_t *tmp = slablist_create("temp_sorting", cmp,
 	    bnd, SL_SORTED);
 	SLIST_SET_SORTING_TEMP(tmp->sl_flags);
 	uint64_t i = 0;
