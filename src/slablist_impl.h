@@ -400,6 +400,21 @@ typedef struct rem_ctx {
 	subslab_t		*rc_below;
 } rem_ctx_t;
 
+/*
+ * TODO Replace the members in slablist_t with a layer_info_t ptr. This should
+ * decrease the memory usage of small lists. This is important in the common
+ * situation where users may have hundres or thousands of small lists, instead
+ * of one giant slab list.
+ *
+ * typedef struct layer_info {
+ *	slablist_t		*sl_sublayer;
+ *	slablist_t		*sl_baselayer;
+ *	slablist_t		*sl_superlayer;
+ *	uint8_t			sl_sublayers;
+ *	uint8_t			sl_layer;
+ * } layer_info_t;
+ */
+
 #define IS_SMALL_LIST(sl) (sl->sl_slabs == 0)
 /*
  * This is the handle that stores the state of the slablist. It contains bounds
