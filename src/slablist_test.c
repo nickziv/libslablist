@@ -903,12 +903,11 @@ test_slab_move_prev(slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 	 */
 	int j = sp->s_elems - 1;
 	int k = from;
+	/*
+	 * We start from `scp` and work backwards from `from` to 0. We check
+	 * against all of the elements that have been _copied_ into `sp`.
+	 */
 	while (k >= 0) {
-		/*
-		 * We start from `scp` and work backwards from `from` to 0. We
-		 * check against all of the elements that have been _copied_
-		 * into `sp`.
-		 */
 		if (scp->s_arr[k].sle_u != sp->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_PREV_SCP);
@@ -917,11 +916,11 @@ test_slab_move_prev(slab_t *scp, slab_t *sp, slab_t *spcp, int *i)
 		k--;
 	}
 	k = spcp->s_elems - 1;
+	/*
+	 * We then continue to `spcp` and check that against the _original_
+	 * elems.
+	 */
 	while (k >= 0) {
-		/*
-		 * We then continue to `spcp` and check that against the
-		 * _original_ elems.
-		 */
 		if (spcp->s_arr[k].sle_u != sp->s_arr[j].sle_u) {
 			*i = j;
 			return (E_TEST_SLAB_MOVE_PREV_SPCP);
@@ -953,11 +952,11 @@ test_subslab_move_next(subslab_t *scp, subslab_t *sn,
 	 */
 	int j = 0;
 	int k = from;
+	/*
+	 * We start at `scp` and check all the elements against the _copied_
+	 * elements that are stored in `sn`.
+	 */
 	while (k < scp->ss_elems) {
-		/*
-		 * We start at `scp` and check all the elements against the
-		 * _copied_ elements that are stored in `sn`.
-		 */
 		if (GET_SUBSLAB_ELEM(scp, k) != GET_SUBSLAB_ELEM(sn, j)) {
 			*i = j;
 			return (E_TEST_SUBSLAB_MOVE_NEXT_SCP);
@@ -966,11 +965,11 @@ test_subslab_move_next(subslab_t *scp, subslab_t *sn,
 		k++;
 	}
 	k = 0;
+	/*
+	 * We now continue to `sncp` and check all the elements against the
+	 * _original_ elements that are stored in `sn`.
+	 */
 	while (k < sncp->ss_elems) {
-		/*
-		 * We now continue to `sncp` and check all the elements against
-		 * the _original_ elements that are stored in `sn`.
-		 */
 		if (GET_SUBSLAB_ELEM(sncp, k) != GET_SUBSLAB_ELEM(sn, j)) {
 			*i = j;
 			return (E_TEST_SUBSLAB_MOVE_NEXT_SNCP);
@@ -1002,12 +1001,11 @@ test_subslab_move_prev(subslab_t *scp, subslab_t *sp,
 	 */
 	int j = sp->ss_elems - 1;
 	int k = from;
+	/*
+	 * We start from `scp` and work backwards from `from` to 0. We check
+	 * against all of the elements that have been _copied_ into `sp`.
+	 */
 	while (k >= 0) {
-		/*
-		 * We start from `scp` and work backwards from `from` to 0. We
-		 * check against all of the elements that have been _copied_
-		 * into `sp`.
-		 */
 		if (GET_SUBSLAB_ELEM(scp, k) != GET_SUBSLAB_ELEM(sp, j)) {
 			*i = j;
 			return (E_TEST_SUBSLAB_MOVE_PREV_SCP);
@@ -1016,11 +1014,11 @@ test_subslab_move_prev(subslab_t *scp, subslab_t *sp,
 		k--;
 	}
 	k = spcp->ss_elems - 1;
+	/*
+	 * We then continue to `spcp` and check that against the _original_
+	 * elems.
+	 */
 	while (k >= 0) {
-		/*
-		 * We then continue to `spcp` and check that against the
-		 * _original_ elems.
-		 */
 		if (GET_SUBSLAB_ELEM(spcp, k) != GET_SUBSLAB_ELEM(sp, j)) {
 			*i = j;
 			return (E_TEST_SUBSLAB_MOVE_PREV_SPCP);
