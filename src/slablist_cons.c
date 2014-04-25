@@ -44,11 +44,11 @@ slablist_create(
 	slablist_bnd_t bndfun,	/* bounds function callback */
 	uint8_t fl)		/* flags */
 {
+	/*
+	 * If this is the first use of libslablist, we initialize the umem
+	 * caches.
+	 */
 	if (init == 0) {
-		/*
-		 * If this is the first use of libslablist, we initialize the
-		 * umem caches.
-		 */
 		slablist_umem_init();
 		init = 1;
 	}
@@ -365,9 +365,6 @@ remove_subslabs(slablist_t *sl)
 	uint64_t i = 0;
 	uint64_t nslabs = sl->sl_slabs;
 	while (i < nslabs) {
-		/*
-		 * We are not responsible for user-allocated objects.
-		 */
 		sn = s->ss_next;
 		unlink_subslab(s);
 		rm_subarr(s->ss_arr);
@@ -586,11 +583,11 @@ slab_to_small_list(slablist_t *sl)
 	uint64_t nelems = sl->sl_elems;
 	sl->sl_elems = 0;
 	uint64_t i = 0;
+	/*
+	 * We copy the data from the head slab into sml_nodes, which we link up
+	 * into a singly linked list.
+	 */
 	while (i < nelems) {
-		/*
-		 * We copy the data from the head slab into sml_nodes, which we
-		 * link up into a singly linked list.
-		 */
 		small_list_add(sl, h->s_arr[i], 0, NULL);
 		i++;
 	}
