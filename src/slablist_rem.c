@@ -72,21 +72,18 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 		small_list_t *sml = sl->sl_head;
 		uint64_t i = 0;
 		while (i < sl->sl_elems) {
+			/*
+			 * If we find the sml node that contains `elem` we
+			 * unlink it, free it, and set rdl to that elem.
+			 * Otherwise, we go to the next element.
+			 */
 			if (sl->sl_cmp_elem(elem, sml->sml_data) == 0) {
-				/*
-				 * If we find the sml node that contains `elem`
-				 * we unlink it, free it, and set rdl to that
-				 * elem.
-				 */
 				*rdl = sml->sml_data;
 				unlink_sml_node(sl, prev);
 				rm_sml_node(sml);
 				ret = SL_SUCCESS;
 				goto end;
 			} else {
-				/*
-				 * Otherwise, we go to the next element.
-				 */
 				prev = sml;
 				sml = sml->sml_next;
 			}
@@ -137,14 +134,13 @@ end:;
 		SLABLIST_TEST_SMLIST_NELEMS(f);
 	}
 
+	/*
+	 * If test probe is enabled, we verify that the elems are sorted.
+	 */
 	if (SLIST_SORTED(sl->sl_flags) &&
 	    SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
-			/*
-			 * If test probe is enabled, we verify that the elems
-			 * are sorted.
-			 */
-			int f = test_smlist_elems_sorted(sl);
-			SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
+		int f = test_smlist_elems_sorted(sl);
+		SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
 	return (ret);
 }
@@ -179,12 +175,11 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 	subarr_t *sa = NULL;
 	subarr_t *sna = NULL;
 	int test_data_allocated = 0;
+	/*
+	 * To test that the next slab has of the elements that are to be
+	 * copied, we make copies of the slabs before they get modified.
+	 */
 	if (SLABLIST_TEST_SUBSLAB_MOVE_NEXT_ENABLED()) {
-		/*
-		 * To test that the next slab has of the elements that are to
-		 * be copied, we make copies of the slabs before they get
-		 * modified.
-		 */
 		scp = mk_subslab();
 		sncp = mk_subslab();
 		sa = mk_subarr();
@@ -258,11 +253,11 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 	sn->ss_elems = sn->ss_elems + cpelems;
 	s->ss_elems = s->ss_elems - cpelems;
 
+	/*
+	 * Here we compare the modified subslabs with their pre-mod copies. And
+	 * we remove the copies when done.
+	 */
 	if (SLABLIST_TEST_SUBSLAB_MOVE_NEXT_ENABLED()) {
-		/*
-		 * Here we compare the modified subslabs with their pre-mod
-		 * copies. And we remove the copies when done.
-		 */
 		int i;
 		int f = test_subslab_move_next(scp, sn, sncp, &i);
 		SLABLIST_TEST_SUBSLAB_MOVE_NEXT(f, scp, sn, sncp, from, i);
@@ -282,11 +277,11 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 		int last = s->ss_elems - 1;
 		ss0 = (slab_t *)GET_SUBSLAB_ELEM(sn, 0);
 		sn->ss_min = ss0->s_min;
+		/*
+		 * We only update the max of the middle slab if it is not
+		 * empty.
+		 */
 		if (s->ss_elems) {
-			/*
-			 * We only update the max of the middle slab if it is
-			 * not empty.
-			 */
 			ss0 = (slab_t *)GET_SUBSLAB_ELEM(s, last);
 			s->ss_max = ss0->s_max;
 		}
@@ -294,11 +289,11 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 		int last = s->ss_elems - 1;
 		ss1 = (subslab_t *)GET_SUBSLAB_ELEM(sn, 0);
 		sn->ss_min = ss1->ss_min;
+		/*
+		 * We only update the max of the middle subslab if it is not
+		 * empty.
+		 */
 		if (s->ss_elems) {
-			/*
-			 * We only update the max of the middle slab if it is
-			 * not empty.
-			 */
 			ss1 = (subslab_t *)GET_SUBSLAB_ELEM(s, last);
 			s->ss_max = ss1->ss_max;
 		}
@@ -343,12 +338,11 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	subarr_t *sa = NULL;
 	subarr_t *spa = NULL;
 	int test_data_allocated = 0;
+	/*
+	 * To test that the prev slab has of the elements that are to be
+	 * copied, we make copies of the slabs before they get modified.
+	 */
 	if (SLABLIST_TEST_SUBSLAB_MOVE_PREV_ENABLED()) {
-		/*
-		 * To test that the next slab has of the elements that are to
-		 * be copied, we make copies of the slabs before they get
-		 * modified.
-		 */
 		scp = mk_subslab();
 		spcp = mk_subslab();
 		sa = mk_subarr();
@@ -412,11 +406,11 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	bcopy(&(GET_SUBSLAB_ELEM(s, cpelems)), &(GET_SUBSLAB_ELEM(s, 0)),
 	    (melems-cpelems)*sz);
 
+	/*
+	 * Here we compare the modified slabs with their pre-mod copies. And we
+	 * remove the copies when done.
+	 */
 	if (SLABLIST_TEST_SUBSLAB_MOVE_PREV_ENABLED()) {
-		/*
-		 * Here we ccompare the modified slabs with their pre-mod
-		 * copies. And we remove the copies when done.
-		 */
 		int i;
 		int f = test_subslab_move_prev(scp, sp, spcp, &i);
 		SLABLIST_TEST_SUBSLAB_MOVE_PREV(f, scp, sp, spcp, from, i);
@@ -436,11 +430,11 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 		int last = sp->ss_elems - 1;
 		ss0 = (slab_t *)GET_SUBSLAB_ELEM(s, 0);
 		s->ss_min = ss0->s_min;
+		/*
+		 * We only update the max of the middle slab if it is not
+		 * empty.
+		 */
 		if (s->ss_elems) {
-			/*
-			 * We only update the max of the middle slab if it is
-			 * not empty.
-			 */
 			ss0 = (slab_t *)GET_SUBSLAB_ELEM(sp, last);
 			sp->ss_max = ss0->s_max;
 		}
@@ -448,11 +442,11 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 		int last = sp->ss_elems - 1;
 		ss1 = (subslab_t *)GET_SUBSLAB_ELEM(s, 0);
 		s->ss_min = ss1->ss_min;
+		/*
+		 * We only update the max of the middle subslab if it
+		 * is not empty.
+		 */
 		if (s->ss_elems) {
-			/*
-			 * We only update the max of the middle slab if it is
-			 * not empty.
-			 */
 			ss1 = (subslab_t *)GET_SUBSLAB_ELEM(sp, last);
 			sp->ss_max = ss1->ss_max;
 		}
@@ -499,12 +493,11 @@ move_to_next(slab_t *s, slab_t *sn)
 	slab_t *scp = NULL;
 	slab_t *sncp = NULL;
 	int test_data_allocated = 0;
+	/*
+	 * To test that the next slab has of the elements that are to be
+	 * copied, we make copies of the slabs before they get modified.
+	 */
 	if (SLABLIST_TEST_SLAB_MOVE_NEXT_ENABLED()) {
-		/*
-		 * To test that the next slab has of the elements that are to
-		 * be copied, we make copies of the slabs before they get
-		 * modified.
-		 */
 		scp = mk_slab();
 		sncp = mk_slab();
 		bcopy(s, scp, sizeof (slab_t));
@@ -545,11 +538,11 @@ move_to_next(slab_t *s, slab_t *sn)
 		q = q->ss_below;
 	}
 
+	/*
+	 * Here we compare the modified slabs with their pre-mod copies. And we
+	 * remove the copies when done.
+	 */
 	if (SLABLIST_TEST_SLAB_MOVE_NEXT_ENABLED()) {
-		/*
-		 * Here we ccompare the modified slabs with their pre-mod
-		 * copies. And we remove the copies when done.
-		 */
 		int i;
 		int f = test_slab_move_next(scp, sn, sncp, &i);
 		SLABLIST_TEST_SLAB_MOVE_NEXT(f, scp, sn, sncp, from, i);
@@ -601,12 +594,11 @@ move_to_prev(slab_t *s, slab_t *sp)
 	slab_t *scp = NULL;
 	slab_t *spcp = NULL;
 	int test_data_allocated = 0;
+	/*
+	 * To test that the prev slab has of the elements that are to be
+	 * copied, we make copies of the slabs before they get modified.
+	 */
 	if (SLABLIST_TEST_SLAB_MOVE_PREV_ENABLED()) {
-		/*
-		 * To test that the next slab has of the elements that are to
-		 * be copied, we make copies of the slabs before they get
-		 * modified.
-		 */
 		scp = mk_slab();
 		spcp = mk_slab();
 		bcopy(s, scp, sizeof (slab_t));
@@ -640,11 +632,11 @@ move_to_prev(slab_t *s, slab_t *sp)
 		q = q->ss_below;
 	}
 
+	/*
+	 * Here we ccompare the modified slabs with their pre-mod copies. And
+	 * we remove the copies when done.
+	 */
 	if (SLABLIST_TEST_SLAB_MOVE_PREV_ENABLED()) {
-		/*
-		 * Here we ccompare the modified slabs with their pre-mod
-		 * copies. And we remove the copies when done.
-		 */
 		int i;
 		int f = test_slab_move_prev(scp, sp, spcp, &i);
 		SLABLIST_TEST_SLAB_MOVE_PREV(f, scp, sp, spcp, from, i);
@@ -777,18 +769,18 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 	slablist_t *sl = sm->ss_list;
 	*below = sm->ss_below;
 
+	/*
+	 * If the slab becomes empty we can free it right away.
+	 */
 	if (sm->ss_elems == 0) {
-		/*
-		 * If the slab becomes empty we can free it right away.
-		 */
 		goto end;
 	}
 
+	/*
+	 * If we have only one slab, there is nothing for us to do and we
+	 * return from the function.
+	 */
 	if (sl->sl_slabs == 1) {
-		/*
-		 * If we have only one slab, there is nothing for us to do and
-		 * we return from the function.
-		 */
 		return (NULL);
 	}
 
@@ -918,11 +910,11 @@ remove_slab(uint64_t i, subslab_t *s)
 
 	SLABLIST_SUBBWDSHIFT_BEGIN(sl, s, i);
 	size_t sz = 8 * (s->ss_elems - (i + 1));
+	/*
+	 * If i is not the last element, we do a bwdshift. But if it is, we
+	 * only have to decrement s_elems.
+	 */
 	if (i != (uint64_t)(s->ss_elems - 1)) {
-		/*
-		 * If i is not the last element, we do a bwdshift. But if it
-		 * is, we only have to decrement s_elems.
-		 */
 		int from = i + 1;
 		int to = i;
 		bcopy(&(GET_SUBSLAB_ELEM(s, from)), &(GET_SUBSLAB_ELEM(s, to)),
@@ -1073,11 +1065,11 @@ slablist_reap(slablist_t *sl)
 				rm_slab(sn);
 				rmd = sn;
 				SLABLIST_SLAB_RM(sl);
+				/*
+				 * If we have sublayers, we ripple the changes
+				 * down.
+				 */
 				if (sl->sl_sublayers) {
-					/*
-					 * If we have sublayers, we ripple the
-					 * changes down.
-					 */
 					ripple_rem_to_sublayers(sl, rmd, below);
 				}
 			}
@@ -1472,20 +1464,19 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 	int ret;
 	slab_t *found = NULL;
 
+	/*
+	 * If we have lowered the number of elems to 1/2 a slab, we turn the
+	 * slab into a small linked list.
+	 */
 	if (!(IS_SMALL_LIST(sl)) && sl->sl_elems == SMELEM_MAX) {
-		/*
-		 * If we have lowered the number of elems to 1/2 a slab, we
-		 * turn the slab into a small linked list.
-		 */
 		slab_to_small_list(sl);
 	}
 
 
+	/*
+	 * We are dealing with a small list and have to remove the element.
+	 */
 	if (IS_SMALL_LIST(sl)) {
-		/*
-		 * We are dealing with a small list and have to remove the
-		 * element.
-		 */
 		SLABLIST_REM_BEGIN(sl, elem, pos);
 		ret = small_list_rem(sl, elem, pos, &rdl);
 		goto end;
@@ -1514,11 +1505,11 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 
 		i = slab_bin_srch(elem, s);
 
+		/*
+		 * If the element was not found, we have nothing to remove, and
+		 * return.
+		 */
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) != 0) {
-			/*
-			 * If the element was not found, we have nothing to
-			 * remove, and return.
-			 */
 			rdl.sle_u = NULL;
 
 			ret = SL_ENFOUND;
@@ -1544,11 +1535,11 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 		ripple_rem_to_sublayers(sl, remd, below);
 		slablist_t *subl = sl->sl_baselayer;
 		slablist_t *supl = subl->sl_superlayer;
+		/*
+		 * If the baselayer's superlayer has < sl_req_sublayer, the
+		 * baselayer is not needed. We remove it.
+		 */
 		if (subl != sl && supl->sl_slabs < sl->sl_req_sublayer) {
-			/*
-			 * If the baselayer's superlayer has < sl_req_sublayer,
-			 * the baselayer is not needed. We remove it.
-			 */
 			detach_sublayer(supl);
 		}
 	}
