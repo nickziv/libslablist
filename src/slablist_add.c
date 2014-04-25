@@ -58,12 +58,11 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 {
 
 	int ret = 0;
+	/*
+	 * If the ptr to the head of this slablist is null, we have to create
+	 * the head node, store `elem` into it, update metadata, and return.
+	 */
 	if (sl->sl_head == NULL) {
-		/*
-		 * If the ptr to the head of this slablist is null, we have
-		 * to create the head node, store `elem` into it, update
-		 * metadata, and return.
-		 */
 		sl->sl_head = mk_sml_node();
 		SLABLIST_ADD_HEAD(sl);
 		((small_list_t *)sl->sl_head)->sml_data = elem;
@@ -76,34 +75,32 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 	small_list_t *sml;
 	small_list_t *nsml = NULL;
 
+	/*
+	 * We place the element in the position so that it is less than the
+	 * element after it.
+	 */
 	if (SLIST_SORTED(sl->sl_flags)) {
-		/*
-		 * We place the element in the position so that it is less than
-		 * the element after it.
-		 */
 		sml = sl->sl_head;
 		small_list_t *prev = NULL;
 		uint64_t i = 0;
 		while (i < sl->sl_elems) {
+			/*
+			 * If `elem` is less than the data in the current
+			 * sml_node, we add `elem` before it.
+			 */
 			if (sl->sl_cmp_elem(elem, sml->sml_data) < 0) {
-				/*
-				 * If `elem` is less than the data in the
-				 * current sml_node, we add `elem` before
-				 * it.
-				 */
 				nsml = mk_sml_node();
 				nsml->sml_data = elem;
 				link_sml_node(sl, prev, nsml);
 				ret = SL_SUCCESS;
 				goto end;
 			}
+			/*
+			 * If `elem` is equal to the current sml_node, we
+			 * either replace its data with `elem` or, we error out
+			 * depending on the user's preference.
+			 */
 			if (sl->sl_cmp_elem(elem, sml->sml_data) == 0) {
-				/*
-				 * If `elem` is equal to the current sml_node,
-				 * we either replace its data with `elem` or,
-				 * we error out depending on the user's
-				 * preference.
-				 */
 				if (rep) {
 					if (repd_elem != NULL) {
 						*repd_elem = sml->sml_data;
@@ -111,9 +108,6 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 					sml->sml_data = elem;
 					SLABLIST_SLAB_AR(sl, NULL, elem, 1);
 				} else {
-					/*
-					 * We don't want to add duplicates.
-					 */
 					SLABLIST_SLAB_AR(sl, NULL, elem, 0);
 					ret = SL_EDUP;
 					goto end;
@@ -128,11 +122,11 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 			i++;
 		}
 
+		/*
+		 * We've reached the end of the list, and make elem the last
+		 * element.
+		 */
 		if (sml == NULL) {
-			/*
-			 * we've reached the end of the list, and make elem the
-			 * last element.
-			 */
 			nsml = mk_sml_node();
 			nsml->sml_data = elem;
 			link_sml_node(sl, prev, nsml);
@@ -166,11 +160,10 @@ end:;
 		SLABLIST_TEST_IS_SML_LIST(!(IS_SMALL_LIST(sl)));
 	}
 
+	/*
+	 * If test probe is enabled, we verify that the elems are sorted.
+	 */
 	if (SLABLIST_TEST_SMLIST_ELEMS_SORTED_ENABLED()) {
-		/*
-		 * If test probe is enabled, we verify that the elems
-		 * are sorted.
-		 */
 		int f = test_smlist_elems_sorted(sl);
 		SLABLIST_TEST_SMLIST_ELEMS_SORTED(f);
 	}
@@ -195,7 +188,7 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 		}
 	}
 
-	int ip = 0;		/* add-point */
+	int ip = 0;		/* insertion-point */
 
 	ip = i;
 
@@ -223,23 +216,18 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 		SLABLIST_SLAB_SET_MAX(s);
 	}
 
+	/*
+	 * Sometimes we are adding into a slab that is full, with the intention
+	 * of moving the last element into the next slab (which is not full).
+	 * In these situations, we don't want to increment anything, as all the
+	 * neccessary increments will occur when we move the elem into the next
+	 * slab (i.e. the next time we call this function). But we do want to
+	 * update the max value.
+	 */
 	if (s->s_elems < SELEM_MAX) {
-		/*
-		 * Sometimes we are adding into a slab that is full, with
-		 * the intention of moving the last element into the next slab
-		 * (which is not full). In these situations, we don't want to
-		 * increment anything, as all the neccessary increments will
-		 * occur when we move the elem into the next slab (i.e. the
-		 * next time we call this function).
-		 */
 		s->s_elems++;
 		SLABLIST_SLAB_INC_ELEMS(s);
 	} else {
-		/*
-		 * We've over-written the old max (with the intention of
-		 * adding it into the next slab). We have to update the max,
-		 * as a result.
-		 */
 		s->s_max = s->s_arr[(SELEM_MAX - 1)];
 		s->s_min = s->s_arr[0];
 		SLABLIST_SLAB_SET_MAX(s);
@@ -405,38 +393,23 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 		SLABLIST_SUBSLAB_SET_MAX(s);
 	}
 
+	/*
+	 * Same deal as the slab_t equivalent of this function. [add_elem()]
+	 */
 	if (s->ss_elems < SUBELEM_MAX) {
-		/*
-		 * Sometimes we are adding into a slab that is full, with
-		 * the intention of moving the last element into the next slab
-		 * (which is not full). In these situations, we don't want to
-		 * increment anything, as all the neccessary increments will
-		 * occur when we move the elem into the next slab (i.e. the
-		 * next time we call this function).
-		 */
 		s->ss_elems++;
 		SLABLIST_SUBSLAB_INC_ELEMS(s);
 	} else {
-		/*
-		 * We've over-written the old max (with the intention of
-		 * adding it into the next slab). We have to update the max,
-		 * as a result.
-		 */
 		if (s1 != NULL) {
 			stmp_lst = (slab_t *)GET_SUBSLAB_ELEM(s,
 			    SUBELEM_MAX - 1);
-			// stmp_fst = (slab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = stmp_lst->s_max;
-			// s->ss_min = stmp_lst->s_min;
 		} else {
 			sstmp_lst = (subslab_t *)GET_SUBSLAB_ELEM(s,
 			    SUBELEM_MAX - 1);
-			// sstmp_fst = (subslab_t *)GET_SUBSLAB_ELEM(s, 0);
 			s->ss_max = sstmp_lst->ss_max;
-			// s->ss_min = sstmp_lst->ss_min;
 		}
 		SLABLIST_SUBSLAB_SET_MAX(s);
-		// SLABLIST_SUBSLAB_SET_MIN(s);
 	}
 
 	if (SLABLIST_TEST_ADD_SLAB_ENABLED()) {
@@ -907,11 +880,6 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 			goto skip_rep;
 		}
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) == 0) {
-			/*
-			 * We don't store dups, so we either bail or replace,
-			 * based on preference. Only if `elem` is in the slab's
-			 * range can it be a duplicate.
-			 */
 			ctx->ac_repd_elem = s->s_arr[i];
 			ctx->ac_how = AC_HOW_INTO;
 			s->s_arr[i] = elem;
@@ -1356,21 +1324,22 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 
 
 	int ret;
+	/*
+	 * The number of elements is too small to justify the use of
+	 * slabs. So we store the data in a singly linked list.
+	 */
 	if (IS_SMALL_LIST(sl) && sl->sl_elems <= (SMELEM_MAX - 1)) {
-		/*
-		 * The number of elements is too small to justify the use of
-		 * slabs. So we store the data in a singly linked list.
-		 */
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
 		ret = small_list_add(sl, elem, 0,  NULL);
 		SLABLIST_ADD_END(ret);
 		return (ret);
 	}
 
+	/*
+	 * If the number of elems has grown to an acceptable level, we turn the
+	 * list into a slab.
+	 */
 	if (IS_SMALL_LIST(sl) && sl->sl_elems == SMELEM_MAX) {
-		/*
-		 * We convert the small_list into a slab.
-		 */
 		small_list_to_slab(sl);
 	}
 
@@ -1421,14 +1390,14 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 			usl = sl->sl_baselayer;
 		}
 
+		/*
+		 * If we have sl_req_sublayer slabs at the baselayer (or, if we
+		 * have no sublayers, in the slablist in general) we map the
+		 * slabs in the slablist/baselayer to a newly created
+		 * baselayer.
+		 */
 		if (sl->sl_req_sublayer &&
 		    usl->sl_slabs >= sl->sl_req_sublayer) {
-			/*
-			 * If we have sl_req_sublayer slabs at the baselayer
-			 * (or, if we have no sublayers, in the slablist in
-			 * general) we map the slabs in the slablist/baselayer
-			 * to a newly created baselayer.
-			 */
 			attach_sublayer(usl);
 		}
 
