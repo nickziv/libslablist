@@ -1394,21 +1394,16 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 
 		int fs;
 		slab_t *found;
+		/*
+		 * If we have sublayers, we do a binary search from the
+		 * base-slab to the candidate topslab. Otherwise, we just do a
+		 * linear search on our slab list. See the find_bubble_up()
+		 * implementation in slablist_find.c for details.
+		 */
 		if (sl->sl_sublayers) {
-			/*
-			 * If this slablist has sublayers, we create a buffer
-			 * of slab-ptrs. find_bubble_up populates this
-			 * buffer, with the slab that it walked over from each
-			 * layer. This way, the buffer can be used to add
-			 * elements to the sublayers, if we add a new slab to
-			 * the overlier. If we don't have sublayers, then we
-			 * do a linear srch to find the appropriate slab.
-			 */
 			fs = find_bubble_up(sl, elem, &found);
 			s = found;
-
 		} else {
-
 			fs = find_linear_scan(sl, elem, &s);
 		}
 
