@@ -41,38 +41,35 @@ slab_get_elem_pos_old(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	/* get the slab that contains the value at this position */
 	uint64_t e = sl->sl_elems;
 
+	/*
+	 * If the number of elements is less than the position we want and the
+	 * list is not circular, were return NULL.
+	 */
 	if (e < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-		/*
-		 * If the number of elements is less than the position
-		 * we want and the list is not circular, were return
-		 * NULL.
-		 */
 		return (NULL);
 	}
 
+	/*
+	 * If on the other hand, the number of elements is less than the
+	 * desired position, but the list _is_ circular, we take the mod of
+	 * desired position and the number of elements. Otherwise, mod is equal
+	 * to the position.
+	 */
 	if (e < pos) {
-		/*
-		 * If on the other hand, the number of elements is less
-		 * than the desired position, but the list _is_
-		 * circular, we take the mod of desired position and
-		 * the number of elements. Otherwise, mod is equal to
-		 * the position.
-		 */
 		mod = pos % e;
 	} else {
 		mod = pos;
 	}
 
 	i = 0;
+	/*
+	 * We keep updating `ecnt` with the number of elements in all of the
+	 * slabs that we have visited. As soon as `ecnt` exceeds `mod`, which
+	 * is the position that our desired element is in, we return the slab
+	 * that we are currently at, and set `off_pos` to the value of `ecnt`
+	 * _before_ we visited the current slab.
+	 */
 	while (i < sl->sl_slabs) {
-		/*
-		 * We keep updating `ecnt` with the number of elements
-		 * in all of the slabs that we have visited. As soon as
-		 * `ecnt` exceeds `mod`, which is the position that our
-		 * desired element is in, we return the slab that we
-		 * are currently at, and set `off_pos` to the value of
-		 * `ecnt` _before_ we visited the current slab.
-		 */
 		ecnt += slab->s_elems;
 
 		if (ecnt >= mod) {
@@ -126,14 +123,6 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 	if (!(sl->sl_sublayers)) {
 		SLABLIST_GET_POS_SHALLOW();
 		uint64_t i = 0;
-		/*
-		 * We keep updating `ecnt` with the number of elements
-		 * in all of the slabs that we have visited. As soon as
-		 * `ecnt` exceeds `act_pos`, which is the position that our
-		 * desired element is in, we return the slab that we
-		 * are currently at, and set `off_pos` to the value of
-		 * `ecnt` _before_ we visited the current slab.
-		 */
 		while (i < sl->sl_slabs) {
 			sum_usr_elems += slab->s_elems;
 
@@ -231,7 +220,6 @@ slab_get_pos(slablist_t *sl, uint64_t pos)
 	}
 
 	if (sl->sl_slabs < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
-		/* a slab doesn't exist at this position */
 		return (NULL);
 	}
 
@@ -468,23 +456,22 @@ slab_bin_srch(slablist_elem_t elem, slab_t *s)
 		}
 	}
 
+	/*
+	 * Because `min` is the insertion point, if `min` is greater than the
+	 * largest possible insertion point, we have to decrease `min` back to
+	 * the largest possible insertion point.
+	 */
 	if (min >= s->s_elems) {
-		/*
-		 * Because `min` is the insertion point, if `min` is greater
-		 * than the largest possible insertion point, we have to
-		 * decrease `min` back to the largest possible insertion point.
-		 */
 		min = s->s_elems - 1;
 	}
 
+	/*
+	 * If the binary search took us to an element that is smaller than
+	 * `elem`, we return the index of the next element, which is likely to
+	 * be larger. This is because all of our code insertion code assumes
+	 * that we return the index that we want to insert `elem` _at_.
+	 */
 	if (sl->sl_cmp_elem(elem, s->s_arr[min]) > 0) {
-		/*
-		 * If the binary search took us to an element that is smaller
-		 * than `elem`, we return the index of the next element, which
-		 * is likely to be larger. This is because all of our code
-		 * insertion code assumes that we return the index that we
-		 * want to insert `elem` _at_.
-		 */
 		if (sorting) {
 			return (slab_get_last_elem(sl, elem, s, min + 1));
 		}
@@ -550,25 +537,24 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 		}
 	}
 
+	/*
+	 * Because `min` is the insertion point, if `min` is greater than the
+	 * largest possible insertion point, we have to decrease `min` back to
+	 * the largest possible insertion point.
+	 */
 	if (min >= s->ss_elems) {
-		/*
-		 * Because `min` is the insertion point, if `min` is greater
-		 * than the largest possible insertion point, we have to
-		 * decrease `min` back to the largest possible insertion point.
-		 */
 		min = s->ss_elems - 1;
 	}
 
 	subslab_t *minss = GET_SUBSLAB_ELEM(s, min);
 	c = sl->sl_bnd_elem(elem, minss->ss_min, minss->ss_max);
+	/*
+	 * If the binary search took us to an element that is smaller than
+	 * `elem`, we return the index of the next element, which is likely to
+	 * be larger. This is because all of our code insertion code assumes
+	 * that we return the index that we want to insert `elem` _at_.
+	 */
 	if (c > 0) {
-		/*
-		 * If the binary search took us to an element that is smaller
-		 * than `elem`, we return the index of the next element, which
-		 * is likely to be larger. This is because all of our code
-		 * insertion code assumes that we return the index that we
-		 * want to insert `elem` _at_.
-		 */
 		if (sorting) {
 			return (subslab_get_last_subslab(sl, elem, s,
 			    min + 1));
@@ -640,24 +626,23 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 		}
 	}
 
+	/*
+	 * Because `min` is the insertion point, if `min` is greater than the
+	 * largest possible insertion point, we have to decrease `min` back to
+	 * the largest possible insertion point.
+	 */
 	if (min >= s->ss_elems) {
-		/*
-		 * Because `min` is the insertion point, if `min` is greater
-		 * than the largest possible insertion point, we have to
-		 * decrease `min` back to the largest possible insertion point.
-		 */
 		min = s->ss_elems - 1;
 	}
 
 	slab_t *tmp = GET_SUBSLAB_ELEM(s, min);
+	/*
+	 * If the binary search took us to an element that is smaller than
+	 * `elem`, we return the index of the next element, which is likely to
+	 * be larger. This is because all of our code insertion code assumes
+	 * that we return the index that we want to insert `elem` _at_.
+	 */
 	if (sl->sl_bnd_elem(elem, tmp->s_min, tmp->s_max) > 0) {
-		/*
-		 * If the binary search took us to an element that is smaller
-		 * than `elem`, we return the index of the next element, which
-		 * is likely to be larger. This is because all of our code
-		 * insertion code assumes that we return the index that we
-		 * want to insert `elem` _at_.
-		 */
 		if (sorting) {
 			return (subslab_get_last_slab(sl, elem, s, min + 1));
 		}
@@ -707,22 +692,19 @@ find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
 	x = subslab_bin_srch(elem, s);
 	slablist_t *sl = s->ss_list;
 	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	/*
+	 * If we get an index `x` that is larger than the index of the last
+	 * element, we set x to the index of the last element. This is
+	 * neccessary, since slab_bin_srch always assumes that we are searching
+	 * for an _insertion point_. That is, we want the index at which a new
+	 * element will be inserted. In the context of this function, we really
+	 * want the slab who's range is closest to that of `elem`. Hence why if
+	 * we exceed the maximum index, we know that the last slab is the one
+	 * we are looking for. Note that this is not a problem for an `elem`
+	 * that is below the slab's range, as the insertion point (0) and the
+	 * slab-index we are looking for are the same.
+	 */
 	if (!sorting && x > s->ss_elems - 1) {
-		/*
-		 * If we get an index `x` that is larger than the index
-		 * of the last element, we set x to the index of the
-		 * last element. This is neccessary, since
-		 * slab_bin_srch always assumes that we are searching
-		 * for an _insertion point_. That is, we want the index
-		 * at which a new element will be inserted. In the
-		 * context of this function, we really want the slab
-		 * who's range is closest to that of `elem`. Hence why
-		 * if we exceed the maximum index, we know that the
-		 * last slab is the one we are looking for. Note that
-		 * this is not a problem for an `elem` that is below
-		 * the slab's range, as the insertion point (0) and the
-		 * slab-index we are looking for are the same.
-		 */
 		x = s->ss_elems - 1;
 	}
 
@@ -747,22 +729,19 @@ find_slab_in_subslab(subslab_t *s, slablist_elem_t elem, slab_t **found)
 	x = subslab_bin_srch_top(elem, s);
 	slablist_t *sl = s->ss_list;
 	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
+	/*
+	 * If we get an index `x` that is larger than the index of the last
+	 * element, we set x to the index of the last element. This is
+	 * neccessary, since slab_bin_srch always assumes that we are searching
+	 * for an _insertion point_. That is, we want the index at which a new
+	 * element will be inserted. In the context of this function, we really
+	 * want the slab who's range is closest to that of `elem`. Hence why if
+	 * we exceed the maximum index, we know that the last slab is the one
+	 * we are looking for. Note that this is not a problem for an `elem`
+	 * that is below the slab's range, as the insertion point (0) and the
+	 * slab-index we are looking for are the same.
+	 */
 	if (!sorting && x > s->ss_elems - 1) {
-		/*
-		 * If we get an index `x` that is larger than the index
-		 * of the last element, we set x to the index of the
-		 * last element. This is neccessary, since
-		 * slab_bin_srch always assumes that we are searching
-		 * for an _insertion point_. That is, we want the index
-		 * at which a new element will be inserted. In the
-		 * context of this function, we really want the slab
-		 * who's range is closest to that of `elem`. Hence why
-		 * if we exceed the maximum index, we know that the
-		 * last slab is the one we are looking for. Note that
-		 * this is not a problem for an `elem` that is below
-		 * the slab's range, as the insertion point (0) and the
-		 * slab-index we are looking for are the same.
-		 */
 		x = s->ss_elems - 1;
 	}
 
