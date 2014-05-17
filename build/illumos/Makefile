@@ -54,7 +54,7 @@ uninstall:
 	pfexec rm -r $(PREFIX) 2> /dev/null
 
 install: 
-	pfexec rm -r $(PREFIX) 2> /dev/null
+	-pfexec rm -r $(PREFIX) 2> /dev/null
 	pfexec mkdir $(PREFIX)
 	pfexec mkdir $(PREFIX)/lib/
 	pfexec mkdir $(PREFIX)lib/64

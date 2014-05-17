@@ -415,6 +415,17 @@ typedef struct rem_ctx {
  * } layer_info_t;
  */
 
+/*
+ * The bookmark can be used to save one's place in a slablist. This is useful
+ * when one wants to fold over a slab list, but not all at once. If the list
+ * changes between accesses using this struct, the result is undefined.
+ */
+struct slablist_bm {
+	slablist_t		*sb_list;
+	void			*sb_node;
+	uint8_t			sb_index;
+};
+
 #define IS_SMALL_LIST(sl) (sl->sl_slabs == 0)
 /*
  * This is the handle that stores the state of the slablist. It contains bounds

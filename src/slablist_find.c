@@ -290,6 +290,106 @@ slablist_get(slablist_t *sl, uint64_t pos)
 	return (ret);
 }
 
+/*
+ * 0 is success, -1 is end.
+ */
+int
+slablist_next(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
+{
+	b->sb_list = sl;
+	slab_t *s;
+	small_list_t *sml;
+	int i;
+	if (b->sb_node == NULL) {
+		if (IS_SMALL_LIST(sl)) {
+			sml = sl->sl_head;
+			b->sb_node = sml;
+			*e = sml->sml_data;
+		} else {
+			s = sl->sl_head;
+			b->sb_node = s;
+			b->sb_index = 0;
+			*e = s->s_arr[0];
+		}
+		return (0);
+	}
+	if (IS_SMALL_LIST(sl)) {
+		sml = b->sb_node;
+		b->sb_node = sml->sml_next;
+		if (b->sb_node == NULL) {
+			return (-1);
+		}
+		*e = sml->sml_data;
+		return (0);
+	} else {
+		s = b->sb_node;
+		b->sb_index++;
+		i = b->sb_index;
+		if (b->sb_index == s->s_elems) {
+			b->sb_node = s->s_next;
+			s = s->s_next;
+			b->sb_index = 0;
+			i = 0;
+			if (s == NULL) {
+				return (-1);
+			}
+		}
+		*e = s->s_arr[i];
+		return (0);
+	}
+}
+
+int
+slablist_prev(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
+{
+	b->sb_list = sl;
+	slab_t *s;
+	small_list_t *prev;
+	small_list_t *sml = NULL;
+	int i;
+	if (b->sb_node == NULL) {
+		if (IS_SMALL_LIST(sl)) {
+			sml = sl->sl_end;
+			b->sb_node = sml;
+			*e = sml->sml_data;
+		} else {
+			s = sl->sl_end;
+			b->sb_node = s;
+			b->sb_index = s->s_elems - 1;
+			*e = s->s_arr[(b->sb_index)];
+		}
+		return (0);
+	}
+	if (IS_SMALL_LIST(sl)) {
+		while (sml != b->sb_node) {
+			sml = sl->sl_head;
+			prev = sml;
+			sml = sml->sml_next;
+		}
+		b->sb_node = prev;
+		if (prev == NULL) {
+			return (-1);
+		}
+		*e = prev->sml_data;
+		return (0);
+	} else {
+		s = b->sb_node;
+		b->sb_index--;
+		i = b->sb_index;
+		if (b->sb_index < 0) {
+			b->sb_node = s->s_prev;
+			s = s->s_prev;
+			if (s == NULL) {
+				return (-1);
+			}
+			i = s->s_elems - 1;
+			b->sb_index = i;
+		}
+		*e = s->s_arr[i];
+		return (0);
+	}
+}
+
 extern void link_slab(slab_t *, slab_t *, int);
 
 /*

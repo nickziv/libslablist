@@ -41,6 +41,8 @@
 
 
 
+typedef struct slablist_bm slablist_bm_t;
+
 typedef union slablist_elem {
 	uint64_t	sle_u;
 	double		sle_d;
@@ -61,6 +63,10 @@ typedef void slablist_rem_cb_t(slablist_elem_t);
 
 
 extern void slablist_map(slablist_t *, slablist_map_t);
+extern int slablist_next(slablist_t *, slablist_bm_t *, slablist_elem_t *);
+
+extern int slablist_prev(slablist_t *, slablist_bm_t *, slablist_elem_t *);
+
 extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t,
 slablist_elem_t zero);
 extern slablist_elem_t slablist_foldr(slablist_t *, slablist_fold_t,
