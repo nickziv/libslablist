@@ -491,6 +491,8 @@ struct mt_slablist {
  */
 slablist_t *mk_slablist(void);
 void rm_slablist(slablist_t *);
+slablist_bm_t *mk_bm(void);
+void rm_bm(slablist_bm_t *);
 mt_slablist_t *mk_mt_slablist(void);
 void rm_mt_slablist(mt_slablist_t *);
 lk_slablist_t *mk_lk_slablist(void);

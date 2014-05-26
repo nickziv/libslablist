@@ -63,6 +63,8 @@ typedef void slablist_rem_cb_t(slablist_elem_t);
 
 
 extern void slablist_map(slablist_t *, slablist_map_t);
+extern slablist_bm_t *slablist_bm_create();
+extern void slablist_bm_destroy(slablist_bm_t *);
 extern int slablist_next(slablist_t *, slablist_bm_t *, slablist_elem_t *);
 
 extern int slablist_prev(slablist_t *, slablist_bm_t *, slablist_elem_t *);

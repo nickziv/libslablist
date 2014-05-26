@@ -71,6 +71,20 @@ slablist_create(
 	SLABLIST_CREATE(list);
 	return (list);
 }
+slablist_bm_t *
+slablist_bm_create()
+{
+	slablist_bm_t *b = mk_bm();
+	return (b);
+}
+
+void
+slablist_bm_destroy(slablist_bm_t *b)
+{
+	rm_bm(b);
+}
+
+
 
 
 /*
