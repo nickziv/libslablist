@@ -1,6 +1,7 @@
 To install:
 
 	cd build/illumos
+	make all
 	make install
 
 To uninstall
