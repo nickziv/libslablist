@@ -135,8 +135,8 @@ extern slablist_elem_t slablist_get(slablist_t *, uint64_t);
 //extern slablist_elem_t slablist_mt_get(mt_slablist_t *, uint64_t);
 
 //TODO
-//extern slablist_elem_t slablist_get_head(slablist_t *);
-//extern slablist_elem_t slablist_get_end(slablist_t *);
+extern slablist_elem_t slablist_head(slablist_t *);
+extern slablist_elem_t slablist_end(slablist_t *);
 extern int slablist_find(slablist_t *, slablist_elem_t, slablist_elem_t *);
 //extern int slablist_mt_find(mt_slablist_t *, slablist_elem_t, slablist_elem_t *);
 

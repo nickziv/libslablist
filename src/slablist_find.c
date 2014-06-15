@@ -290,6 +290,22 @@ slablist_get(slablist_t *sl, uint64_t pos)
 	return (ret);
 }
 
+slablist_elem_t
+slablist_head(slablist_t *sl)
+{
+	slablist_elem_t ret;
+	ret.sle_p = sl->sl_head;
+	return (ret);
+}
+
+slablist_elem_t
+slablist_end(slablist_t *sl)
+{
+	slablist_elem_t ret;
+	ret.sle_p = sl->sl_end;
+	return (ret);
+}
+
 /*
  * 0 is success, -1 is end.
  */
