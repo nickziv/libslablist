@@ -36,7 +36,8 @@
 
 #define	STRMAXSZ 100
 
-#define	SEED 1997
+#define	SEED 1
+#define	STATE_SIZE 128
 
 #define	STR	1
 #define INT	0
@@ -58,6 +59,21 @@ typedef enum struct_type {
 	ST_REDBLACK,
 } struct_type_t;
 
+static unsigned int state0[32];
+static unsigned int state1[32] = {
+    3,
+    0x9a319039, 0x32d9c024, 0x9b663182, 0x5da1f342,
+    0x7449e56b, 0xbeb1dbb0, 0xab5c5918, 0x946554fd,
+    0x8c2e680f, 0xeb3d799f, 0xb11ee0b7, 0x2d436b86,
+    0xda672e2a, 0x1588ca88, 0xe369735d, 0x904f35f7,
+    0xd7158fd6, 0x6fa6f051, 0x616e6b96, 0xac94efdc,
+    0xde3b81e0, 0xdf0a6fb5, 0xf103bc02, 0x48f340fb,
+    0x36413f93, 0xc622c298, 0xf5a42ab8, 0x8a88d77b,
+    0xf5ad9d0e, 0x8999220b, 0x27fb47b9
+};
+
+
+
 int fd;
 int is_rand;
 int is_seq_inc;
@@ -71,6 +87,12 @@ int
 end()
 {
 	return (10);
+}
+
+void
+init_rand()
+{
+	(void)initstate(SEED, (char *)state0, STATE_SIZE);
 }
 
 uint64_t

@@ -408,8 +408,8 @@ set_add_callbacks(void)
 void
 set_rem_callbacks(void)
 {
-/*
 	srem_f[ST_SL] = &sl_rem;
+/*
 	srem_f[ST_UUAVL] = &uuavl_rem;
 	srem_f[ST_GNUAVL] = &gnuavl_rem;
 	srem_f[ST_GNUPAVL] = &gnupavl_rem;
@@ -555,39 +555,25 @@ rm_cb_str(slablist_elem_t e)
 }
 
 void
-do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord)
+do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
+    uint64_t maxops)
 {
-/* TODO: MAKE THIS GENERIC
-	slablist_t *sl = ls->sl;
-	uint64_t remaining = slablist_get_elems(sl);
-	uint64_t type = slablist_get_type(sl);
-	char *name = slablist_get_name(sl);
-	printf("%s: %d\n", name, type);
-	slablist_elem_t elem;
-	slablist_elem_t randrem;
-	slablist_elem_t zero_rem;
-	zero_rem.sle_u = 0;
-	int ret;
-	while (remaining > 0) {
-		if (type == SL_SORTED) {
-			randrem = slablist_get_rand(sl);
-			if (str) {
-				ret = slablist_rem(sl, randrem, 0, rm_cb_str);
-			} else {
-				ret = slablist_rem(sl, randrem, 0, NULL);
-			}
-		} else {
-			if (str) {
-				ret = slablist_rem(sl, zero_rem, 0, rm_cb_str);
-			} else {
-				ret = slablist_rem(sl, zero_rem, 0, NULL);
-			}
-		}
-		remaining--;
+	/* TODO handle non-sorted structs */
+	/* TODO handle structure destruction */
+	/* TODO implement removal procedures for non-slablists */
+	uint64_t ops = 0;
+	/*
+	 * We reset the random number generator, we remove the same elements we
+	 * inserted, in the order they were inserted.
+	 */
+	init_rand();
+	while (ops < maxops) {
+		uint64_t rd = get_data(fd);
+		slablist_elem_t elem;
+		elem.sle_u = rd;
+		srem_f[t](ls, elem, 0, NULL);
+		ops++;
 	}
-
-	slablist_destroy(sl);
-*/
 }
 
 
@@ -671,6 +657,7 @@ main(int ac, char *av[])
 		}
 		if (strcmp("rand", av[aci]) == 0) {
 			is_rand = 1;
+			init_rand();
 		}
 		if (strcmp("seqinc", av[aci]) == 0) {
 			is_seq_inc++;
@@ -816,7 +803,7 @@ main(int ac, char *av[])
 	if (intsrt) {
 		do_ops(&cis, struct_type, maxops, INT, SRT, do_dups);
 		if (do_rem) {
-			do_free_remaining(&cis, struct_type, INT, SRT);
+			do_free_remaining(&cis, struct_type, INT, SRT, maxops);
 		}
 		if (do_foldr) {
 			//do_foldrs(&cis, struct_type, INT, SRT);
