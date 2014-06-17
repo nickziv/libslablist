@@ -558,21 +558,42 @@ void
 do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
     uint64_t maxops)
 {
-	/* TODO handle non-sorted structs */
 	/* TODO handle structure destruction */
 	/* TODO implement removal procedures for non-slablists */
 	uint64_t ops = 0;
 	/*
-	 * We reset the random number generator, we remove the same elements we
-	 * inserted, in the order they were inserted.
+	 * If we used a random input pattern, we reset the random number
+	 * generator. The idea is to remove the same elements we inserted, in
+	 * the order they were inserted.
 	 */
-	init_rand();
-	while (ops < maxops) {
-		uint64_t rd = get_data(fd);
-		slablist_elem_t elem;
-		elem.sle_u = rd;
-		srem_f[t](ls, elem, 0, NULL);
-		ops++;
+	uint64_t rd;
+	if (is_rand) {
+		init_rand();
+		while (ops < maxops) {
+			rd = get_data(fd);
+			slablist_elem_t elem;
+			elem.sle_u = rd;
+			srem_f[t](ls, elem, 0, NULL);
+			ops++;
+		}
+	} else if (is_seq_inc) {
+		while (ops < maxops) {
+			/* as with adds, we use get_data to induce overhead */
+			rd = get_data(fd);
+			slablist_elem_t elem;
+			elem.sle_u = ops;
+			srem_f[t](ls, elem, 0, NULL);
+			ops++;
+		}
+	} else if (is_seq_dec) {
+		while (ops < maxops) {
+			/* as with adds, we use get_data to induce overhead */
+			rd = get_data(fd);
+			slablist_elem_t elem;
+			elem.sle_u = maxops - ops;
+			srem_f[t](ls, elem, 0, NULL);
+			ops++;
+		}
 	}
 }
 
