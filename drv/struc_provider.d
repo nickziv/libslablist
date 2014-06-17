@@ -26,5 +26,8 @@ provider struc {
 	probe add_begin(void *sl, uint64_t e, uint64_t r) :
 		(void *sl, uint64_t e, uint64_t r);
 	probe add_end(int);
+	probe rem_begin(void *sl, uint64_t e, uint64_t r) :
+		(void *sl, uint64_t e, uint64_t r);
+	probe rem_end(int);
 };
 

@@ -243,6 +243,13 @@ mk_node()
 	return (r);
 }
 
+void
+rm_node(node_t *n)
+{
+	bzero(n, sizeof (node_t));
+	umem_cache_free(cache_node, n);
+}
+
 #ifdef MYSKL
 myskl_node_t *
 mk_myskl_node()
@@ -267,7 +274,7 @@ uuavl_op(container_t *c, slablist_elem_t elem)
 }
 
 void
-uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
+uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t unused,
     slablist_rem_cb_t *rcb)
 {
 	uu_avl_t *ls = c->uuavl.uuc_avl;
@@ -276,6 +283,7 @@ uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
 	uu_avl_node_init(node, &node->n, lp);
 	node->e = elem;
 	uu_avl_remove(ls, node);
+	rm_node(node);
 }
 
 void
@@ -409,8 +417,8 @@ void
 set_rem_callbacks(void)
 {
 	srem_f[ST_SL] = &sl_rem;
-/*
 	srem_f[ST_UUAVL] = &uuavl_rem;
+/*
 	srem_f[ST_GNUAVL] = &gnuavl_rem;
 	srem_f[ST_GNUPAVL] = &gnupavl_rem;
 	srem_f[ST_GNURTAVL] = &gnurtavl_rem;
@@ -573,7 +581,9 @@ do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
 			rd = get_data(fd);
 			slablist_elem_t elem;
 			elem.sle_u = rd;
+			STRUC_REM_BEGIN(NULL, elem.sle_u, 0);
 			srem_f[t](ls, elem, 0, NULL);
+			STRUC_REM_END(0);
 			ops++;
 		}
 	} else if (is_seq_inc) {
@@ -582,7 +592,9 @@ do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
 			rd = get_data(fd);
 			slablist_elem_t elem;
 			elem.sle_u = ops;
+			STRUC_REM_BEGIN(NULL, elem.sle_u, 0);
 			srem_f[t](ls, elem, 0, NULL);
+			STRUC_REM_END(0);
 			ops++;
 		}
 	} else if (is_seq_dec) {
@@ -591,7 +603,9 @@ do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
 			rd = get_data(fd);
 			slablist_elem_t elem;
 			elem.sle_u = maxops - ops;
+			STRUC_REM_BEGIN(NULL, elem.sle_u, 0);
 			srem_f[t](ls, elem, 0, NULL);
+			STRUC_REM_END(0);
 			ops++;
 		}
 	}
