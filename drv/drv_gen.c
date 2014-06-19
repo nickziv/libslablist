@@ -273,7 +273,7 @@ uuavl_op(container_t *c, slablist_elem_t elem)
 	uu_avl_insert(ls, node, where);
 }
 
-void
+int
 uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t unused,
     slablist_rem_cb_t *rcb)
 {
@@ -284,6 +284,7 @@ uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t unused,
 	node->e = elem;
 	uu_avl_remove(ls, node);
 	rm_node(node);
+	return (0);
 }
 
 void
@@ -328,11 +329,12 @@ sl_op(container_t *c, slablist_elem_t elem)
 	slablist_add(c->sl, elem, 0);
 }
 
-void
+int
 sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
-	slablist_rem(c->sl, elem, pos, rcb);
+	int r = slablist_rem(c->sl, elem, pos, rcb);
+	return (r);
 }
 
 
@@ -381,7 +383,7 @@ redblack_op(container_t *c, slablist_elem_t elem)
 #endif
 
 typedef void (*struct_subr_t)(container_t *, slablist_elem_t);
-typedef void (*struct_subr_rem_t)(container_t *, slablist_elem_t, uint64_t,
+typedef int (*struct_subr_rem_t)(container_t *, slablist_elem_t, uint64_t,
     slablist_rem_cb_t *);
 
 
@@ -591,7 +593,7 @@ do_free_remaining(container_t *ls,  struct_type_t t, int str, int ord,
 			/* as with adds, we use get_data to induce overhead */
 			rd = get_data(fd);
 			slablist_elem_t elem;
-			elem.sle_u = ops;
+			elem.sle_u = ops + 1;
 			STRUC_REM_BEGIN(NULL, elem.sle_u, 0);
 			srem_f[t](ls, elem, 0, NULL);
 			STRUC_REM_END(0);

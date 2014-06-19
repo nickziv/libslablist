@@ -683,7 +683,12 @@ move_to_prev(slab_t *s, slab_t *sp)
 slab_t *
 slab_generic_rem(slab_t *sm, subslab_t **below)
 {
-	slab_t *uls = sm; /* this is ptr to slab we have to unlink + free */
+	/*
+	 * `uls` is the UnLinkableSlab. It MUST be initialized to NULL. If it
+	 * is not, the code following the `end` label will remove it, even
+	 * though it hasn't been emptied.
+	 */
+	slab_t *uls = NULL;
 	slablist_t *sl = sm->s_list;
 	*below = sm->s_below;
 
@@ -691,6 +696,7 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 	 * If the slab becomes empty we can free it right away.
 	 */
 	if (sm->s_elems == 0) {
+		uls = sm;
 		goto end;
 	}
 
@@ -754,6 +760,7 @@ end:;
 	}
 
 	if (uls != NULL) {
+		SLABLIST_RIPPLE_REM_SLAB(sl, uls, *below);
 		unlink_slab(uls);
 		rm_slab(uls);
 		SLABLIST_SLAB_RM(sl);
@@ -765,7 +772,12 @@ end:;
 subslab_t *
 subslab_generic_rem(subslab_t *sm, subslab_t **below)
 {
-	subslab_t *uls = sm; /* this is ptr to slab we must unlink + free */
+	/*
+	 * `uls` is the UnLinkableSubslab. It MUST be initialized to NULL. If it
+	 * is not, the code following the `end` label will remove it, even
+	 * though it hasn't been emptied.
+	 */
+	subslab_t *uls = NULL;
 	slablist_t *sl = sm->ss_list;
 	*below = sm->ss_below;
 
@@ -773,6 +785,7 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 	 * If the slab becomes empty we can free it right away.
 	 */
 	if (sm->ss_elems == 0) {
+		uls = sm;
 		goto end;
 	}
 
@@ -827,8 +840,6 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 		goto end;
 	}
 
-
-
 end:;
 
 	if (sl->sl_head == uls) {
@@ -836,6 +847,7 @@ end:;
 	}
 
 	if (uls != NULL) {
+		SLABLIST_RIPPLE_REM_SUBSLAB(sl, uls, *below);
 		unlink_subslab(uls);
 		rm_subarr(uls->ss_arr);
 		rm_subslab(uls);
@@ -1006,7 +1018,9 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *remd, subslab_t *below)
 		slab_t *l = GET_SUBSLAB_ELEM(ss, last);
 		slab_t *f = GET_SUBSLAB_ELEM(ss, 0);
 		ss->ss_min = f->s_min;
+		SLABLIST_SUBSLAB_SET_MIN(ss);
 		ss->ss_max = l->s_max;
+		SLABLIST_SUBSLAB_SET_MAX(ss);
 		ss = ss->ss_below;
 		/*
 		 * And now we update the extrema of the subslabs that contain
@@ -1017,7 +1031,9 @@ ripple_rem_to_sublayers(slablist_t *sl, slab_t *remd, subslab_t *below)
 			subslab_t *ssf = GET_SUBSLAB_ELEM(ss, 0);
 			subslab_t *ssl = GET_SUBSLAB_ELEM(ss, last);
 			ss->ss_min = ssf->ss_min;
+			SLABLIST_SUBSLAB_SET_MIN(ss);
 			ss->ss_max = ssl->ss_max;
+			SLABLIST_SUBSLAB_SET_MAX(ss);
 			ss = ss->ss_below;
 		}
 		epos++;
@@ -1457,12 +1473,14 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
 
+
 	slablist_elem_t rdl;
 	uint64_t off_pos;
 	slab_t *s = NULL;
 	int i;
-	int ret;
+	int ret = 0;
 	slab_t *found = NULL;
+
 
 	/*
 	 * If we have lowered the number of elems to 1/2 a slab, we turn the
