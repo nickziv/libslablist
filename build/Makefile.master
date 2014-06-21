@@ -10,6 +10,11 @@ TEST=			$(PWD)/../../tests
 BENCH=			$(PWD)/../../bench
 # The benchmark results directory
 R_BENCH=		$(PWD)/bench
+# The test results directory
+R_TEST=			$(PWD)/test
+R_TEST_SI=		$(R_TEST)/seqinc
+R_TEST_SD=		$(R_TEST)/seqdec
+R_TEST_R=		$(R_TEST)/rand
 FGDIR=			$(PWD)/fg
 R_BENCH_SD=		$(DS_IMPLS:%=$(R_BENCH)/%)
 BENCH_DRV=		$(BENCH)/main
@@ -51,7 +56,7 @@ CTFCONVERT=		$(CTF)/bin/$(MACH)/ctfconvert
 CTFMERGE=		$(CTF)/bin/$(MACH)/ctfmerge
 CTFSTABS=		$(CTF)/bin/$(MACH)/ctfstabs
 CTFSTRIP=		$(CTF)/bin/$(MACH)/ctfstrip
-DTRACE_LIBS=		$(PREFIX)/include
+DTRACE_LIBS=		$(PREFIX)/include/dtrace/
 DTRACE=			pfexec /usr/sbin/dtrace -L $(DTRACE_LIBS)
 NAWK=			nawk
 NAWK_ARGS=		-v arg1="$(BENCH)" -v arg2="$(R_BENCH)" -v\
@@ -145,6 +150,17 @@ DS_IMPLS_EXT=		uuavl.Z\
 
 DS_IMPLS:=	$(DS_IMPLS_EXT:%.Z=%)
 
+# We dont run find_bubble_up.d because it takes too long to run (72 minutes)
+# when doing `make tests`.
+
+DTESTS=			remove.d\
+			insert.d
+
+TEST_RES_SI:=	$(DTESTS:%.d=$(R_TEST_SI)/%.out)
+TEST_RES_SD:=	$(DTESTS:%.d=$(R_TEST_SD)/%.out)
+TEST_RES_R:=	$(DTESTS:%.d=$(R_TEST_R)/%.out)
+
+TEST_SCR:=	$(DTESTS:%.d=$(TEST)/%.d)
 
 
 

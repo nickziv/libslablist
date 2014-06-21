@@ -19,8 +19,8 @@ $(D_HDRS):
 # error messages.
 #
 fuckit: 
-	echo $(DS_PROV)
-	echo $(FG_TIME_STACKS)
+	echo $(TEST_RES)
+	echo $(TEST_SCR)
 
 .PHONY: $(DS_IMPLS)
 
@@ -45,6 +45,29 @@ $(SO): $(OBJECTS)
 	$(CTFM_POSTPROC)
 
 all: $(SO) $(DRV)
+
+$(R_TEST):
+	-mkdir $@
+
+$(R_TEST_SI): $(R_TEST)
+	-mkdir $@
+
+$(R_TEST_SD): $(R_TEST)
+	-mkdir $@
+
+$(R_TEST_R): $(R_TEST)
+	-mkdir $@
+
+$(TEST_RES_SI): $(R_TEST_SI)/%.out: $(TEST)/%.d $(R_TEST_SI)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt rem seqinc' -s $< -o $@
+
+$(TEST_RES_SD): $(R_TEST_SD)/%.out: $(TEST)/%.d $(R_TEST_SD)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt rem seqdec' -s $< -o $@
+
+$(TEST_RES_R): $(R_TEST_R)/%.out: $(TEST)/%.d $(R_TEST_R)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt rem rand' -s $< -o $@
+
+tests: $(TEST_RES_R) $(TEST_RES_SD) $(TEST_RES_SI)
 
 
 # $(CTFMERGE) -L VERSION -o $@ $(C_OBJECTS)
@@ -203,6 +226,9 @@ clean:
 
 clean_cstyle:
 	rm $(SLDIR)/$(D_HDRS)
+
+clean_tests:
+	pfexec rm -r $(R_TEST)
 
 clean_check:
 	rm $(PLISTS)
