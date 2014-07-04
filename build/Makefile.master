@@ -24,13 +24,13 @@ BENCH_SIZE=		10000000
 
 FG_OUT_SIR=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_rand.out
 FG_SVG_SIR=		$(FG_OUT_SIR:%.out=%.svg)
-FG_CMD_SIR=		./$(DRV) sl $(BENCH_SIZE) intsrt rand
+FG_CMD_SIR=		./$(DRV) sl $(BENCH_SIZE) intsrt rem rand
 FG_OUT_SII=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_seqinc.out
 FG_SVG_SII=		$(FG_OUT_SII:%.out=%.svg)
-FG_CMD_SII=		./$(DRV) sl $(BENCH_SIZE) intsrt seqinc
+FG_CMD_SII=		./$(DRV) sl $(BENCH_SIZE) intsrt rem seqinc
 FG_OUT_SID=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_seqdec.out
 FG_SVG_SID=		$(FG_OUT_SID:%.out=%.svg)
-FG_CMD_SID=		./$(DRV) sl $(BENCH_SIZE) intsrt seqdec
+FG_CMD_SID=		./$(DRV) sl $(BENCH_SIZE) intsrt rem seqdec
 
 
 FG_OUT_OIR=		$(FGDIR)/time/$(BENCH_SIZE)_intord_rand.out

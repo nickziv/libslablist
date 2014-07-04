@@ -30,6 +30,10 @@
 #include <strings.h>
 #include "slablist_impl.h"
 
+#define UNUSED(x) (void)(x)
+#define CTOR_HEAD       UNUSED(ignored); UNUSED(flags)
+
+
 umem_cache_t *cache_slablist;
 umem_cache_t *cache_bm;
 umem_cache_t *cache_lk_slablist;
@@ -44,6 +48,7 @@ umem_cache_t *cache_add_ctx;
 int
 slablist_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	slablist_t *s = buf;
 	bzero(s, sizeof (slablist_t));
 	return (0);
@@ -52,6 +57,7 @@ slablist_ctor(void *buf, void *ignored, int flags)
 int
 bm_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	slablist_bm_t *b = buf;
 	bzero(b, sizeof (slablist_bm_t));
 	return (0);
@@ -60,6 +66,7 @@ bm_ctor(void *buf, void *ignored, int flags)
 int
 lk_slablist_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	lk_slablist_t *s = buf;
 	bzero(s, sizeof (lk_slablist_t));
 	return (0);
@@ -68,6 +75,7 @@ lk_slablist_ctor(void *buf, void *ignored, int flags)
 int
 mt_slablist_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	mt_slablist_t *s = buf;
 	bzero(s, sizeof (mt_slablist_t));
 	return (0);
@@ -76,6 +84,7 @@ mt_slablist_ctor(void *buf, void *ignored, int flags)
 int
 slab_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	slab_t *s = buf;
 	bzero(s, (sizeof (slab_t)));
 	return (0);
@@ -84,6 +93,7 @@ slab_ctor(void *buf, void *ignored, int flags)
 int
 subslab_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	subslab_t *ss = buf;
 	bzero(ss, (sizeof (subslab_t)));
 	return (0);
@@ -92,6 +102,7 @@ subslab_ctor(void *buf, void *ignored, int flags)
 int
 subarr_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	subarr_t *sa = buf;
 	bzero(sa, (sizeof (subarr_t)));
 	return (0);
@@ -101,6 +112,7 @@ subarr_ctor(void *buf, void *ignored, int flags)
 int
 small_list_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	small_list_t *s = buf;
 	bzero(s, sizeof (small_list_t));
 	return (0);
@@ -109,6 +121,7 @@ small_list_ctor(void *buf, void *ignored, int flags)
 int
 add_ctx_ctor(void *buf, void *ignored, int flags)
 {
+	CTOR_HEAD;
 	add_ctx_t *ctx = buf;
 	bzero(ctx, (sizeof (add_ctx_t)));
 	return (0);
