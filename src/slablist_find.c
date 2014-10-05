@@ -294,7 +294,13 @@ slablist_elem_t
 slablist_head(slablist_t *sl)
 {
 	slablist_elem_t ret;
-	ret.sle_p = sl->sl_head;
+	if (IS_SMALL_LIST(sl)) {
+		small_list_t *sh = sl->sl_head;
+		ret = sh->sml_data;
+	} else {
+		slab_t *h = sl->sl_head;
+		ret = h->s_min;
+	}
 	return (ret);
 }
 
@@ -302,7 +308,13 @@ slablist_elem_t
 slablist_end(slablist_t *sl)
 {
 	slablist_elem_t ret;
-	ret.sle_p = sl->sl_end;
+	if (IS_SMALL_LIST(sl)) {
+		small_list_t *sh = sl->sl_end;
+		ret = sh->sml_data;
+	} else {
+		slab_t *h = sl->sl_end;
+		ret = h->s_max;
+	}
 	return (ret);
 }
 
@@ -335,6 +347,7 @@ slablist_next(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 		if (b->sb_node == NULL) {
 			return (-1);
 		}
+		sml = b->sb_node;
 		*e = sml->sml_data;
 		return (0);
 	} else {
@@ -377,8 +390,11 @@ slablist_prev(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 		return (0);
 	}
 	if (IS_SMALL_LIST(sl)) {
+		if (sl->sl_elems == 1 && sl->sl_head == b->sb_node) {
+			return (-1);
+		}
+		sml = sl->sl_head;
 		while (sml != b->sb_node) {
-			sml = sl->sl_head;
 			prev = sml;
 			sml = sml->sml_next;
 		}
@@ -1068,7 +1084,7 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 	slab_t *potential;
 	uint64_t i = 0;
 	slablist_elem_t ret;
-	if (IS_SMALL_LIST(sl)) {
+	if (IS_SMALL_LIST(sl) && SLIST_SORTED(sl->sl_flags)) {
 		small_list_t *sml = sl->sl_head;
 		while (i < sl->sl_elems &&
 		    sl->sl_cmp_elem(key, sml->sml_data) != 0) {

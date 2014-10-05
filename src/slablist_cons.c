@@ -55,9 +55,7 @@ slablist_create(
 	slablist_t *list = mk_slablist();
 	/* TODO: add this list to the master slablist */
 	/* link_slablist(master_list, list); */
-	size_t namesize = strlen(name);
-	list->sl_name = mk_buf(namesize);
-	strcpy(list->sl_name, name);
+	list->sl_name = name;
 	list->sl_cmp_elem = cmpfun;
 	list->sl_bnd_elem = bndfun;
 	list->sl_flags = fl;
@@ -71,6 +69,7 @@ slablist_create(
 	SLABLIST_CREATE(list);
 	return (list);
 }
+
 slablist_bm_t *
 slablist_bm_create()
 {
@@ -177,7 +176,7 @@ link_sml_node(slablist_t *sl, small_list_t *prev, small_list_t *to_link)
 	} else {
 		next = sl->sl_head;
 		sl->sl_head = to_link;
-		SLABLIST_ADD_HEAD(sl);
+		SLABLIST_SET_HEAD(sl, to_link->sml_data);
 		to_link->sml_next = next;
 	}
 
@@ -201,10 +200,16 @@ unlink_sml_node(slablist_t *sl, small_list_t *prev)
 	if (prev == NULL) {
 		to_rem = sl->sl_head;
 		sl->sl_head = to_rem->sml_next;
-		SLABLIST_REM_HEAD(sl);
+		if (to_rem->sml_next != NULL) {
+			SLABLIST_SET_HEAD(sl, to_rem->sml_next->sml_data);
+		}
 	} else {
 		to_rem = prev->sml_next;
 		prev->sml_next = to_rem->sml_next;
+		if (to_rem->sml_next == NULL) {
+			sl->sl_end = prev;
+			SLABLIST_SET_END(sl, prev->sml_data);
+		}
 	}
 
 	sl->sl_elems--;
@@ -230,7 +235,7 @@ link_slab(slab_t *s1, slab_t *s2, int flag)
 		}
 		if (s2 == sl->sl_head) {
 			sl->sl_head = s1;
-			SLABLIST_ADD_HEAD(sl);
+			SLABLIST_SET_HEAD(sl, s1->s_min);
 		}
 	}
 
@@ -241,9 +246,9 @@ link_slab(slab_t *s1, slab_t *s2, int flag)
 		s2->s_next = s1;
 		if (s1->s_next != NULL) {
 			s1->s_next->s_prev = s1;
-		}
-		if (s2 == sl->sl_end) {
+		} else {
 			sl->sl_end = s1;
+			SLABLIST_SET_END(sl, s1->s_max);
 		}
 	}
 
@@ -272,7 +277,7 @@ link_subslab(subslab_t *s1, subslab_t *s2, int flag)
 		}
 		if (s2 == sl->sl_head) {
 			sl->sl_head = s1;
-			SLABLIST_ADD_HEAD(sl);
+			SLABLIST_SET_HEAD(sl, s1->ss_min);
 		}
 	}
 
@@ -286,6 +291,7 @@ link_subslab(subslab_t *s1, subslab_t *s2, int flag)
 		}
 		if (s2 == sl->sl_end) {
 			sl->sl_end = s1;
+			SLABLIST_SET_END(sl, s1->ss_max);
 		}
 	}
 
@@ -311,7 +317,11 @@ unlink_slab(slab_t *s)
 		s->s_next->s_prev = s->s_prev;
 		if (sl->sl_head == s) {
 			sl->sl_head = s->s_next;
-			SLABLIST_REM_HEAD(sl);
+			SLABLIST_SET_HEAD(sl, s->s_next->s_min);
+		}
+		if (sl->sl_end == s) {
+			sl->sl_end = s->s_prev;
+			SLABLIST_SET_END(sl, s->s_prev->s_max);
 		}
 	}
 
@@ -335,7 +345,11 @@ unlink_subslab(subslab_t *s)
 		s->ss_next->ss_prev = s->ss_prev;
 		if (sl->sl_head == s) {
 			sl->sl_head = s->ss_next;
-			SLABLIST_REM_HEAD(sl);
+			SLABLIST_SET_HEAD(sl, s->ss_next->ss_min);
+		}
+		if (sl->sl_end == s) {
+			sl->sl_end = s->ss_prev;
+			SLABLIST_SET_END(sl, s->ss_prev->ss_max);
 		}
 	}
 
@@ -642,10 +656,11 @@ small_list_to_slab(slablist_t *sl)
 	sl->sl_slabs = 1;
 	SLABLIST_SL_INC_SLABS(sl);
 
-	if (SLIST_SORTED(sl->sl_flags)) {
-		s->s_min = s->s_arr[0];
-		s->s_max = s->s_arr[(s->s_elems - 1)];
-	}
+	s->s_min = s->s_arr[0];
+	s->s_max = s->s_arr[(s->s_elems - 1)];
+	SLABLIST_SET_HEAD(sl, s->s_min);
+	SLABLIST_SET_END(sl, s->s_max);
+
 }
 
 /*

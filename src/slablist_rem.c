@@ -91,7 +91,7 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 		}
 
 		/*
-		 * We didn't find a node that matched, so we idicate that
+		 * We didn't find a node that matched, so we indicate that
 		 * nothing was removed, and we return an indication that the
 		 * node was not found.
 		 */
@@ -113,6 +113,7 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 		while (i < mod) {
 			prev = sml;
 			sml = sml->sml_next;
+			i++;
 		}
 		*rdl = sml->sml_data;
 		unlink_sml_node(sl, prev);
@@ -1592,5 +1593,81 @@ slablist_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
 	int ret = slablist_rem_impl(sl, elem, pos, rcb);
+	return (ret);
+}
+
+slablist_t *
+slablist_xtract_simple(slablist_t *sl, char *nm, slablist_elem_t start,
+    slablist_elem_t end)
+{
+	slablist_bm_t *bm = slablist_bm_create();
+	slablist_elem_t e;
+	slablist_elem_t *next = &e;
+	int stat;
+	int first = 0;
+	int last = 0;
+	while (stat == 0 && (!first || !last)) {
+		stat = slablist_next(sl, bm, next);
+		if (next->sle_u == start.sle_u) {
+			first++;
+		}
+		if (next->sle_u == end.sle_u) {
+			last++;
+		}
+	}
+	if (first && last) {
+		slablist_bm_destroy(bm);
+		bm = slablist_bm_create();
+		int pos = 0;
+		slablist_t *nsl = slablist_create(nm, sl->sl_cmp_elem,
+		    sl->sl_bnd_elem, sl->sl_flags);
+		while (!first) {
+			stat = slablist_next(sl, bm, next);
+			pos++;
+			if (next->sle_u == first) {
+				first++;
+				slablist_add(nsl, *next, 0);
+			}
+		}
+		while (!last) {
+			stat = slablist_next(sl, bm, next);
+			slablist_add(nsl, *next, 0);
+			if (next->sle_u == last) {
+				last++;
+			}
+		}
+		if (!SLIST_SORTED(sl->sl_flags)) {
+			uint64_t e = slablist_get_elems(nsl);
+			uint64_t i = 0;
+			slablist_elem_t ignored;
+			while (i < e) {
+				slablist_rem(sl, ignored, pos, NULL);
+				i++;
+			}
+		} else {
+			slablist_rem_range(sl, start, end, NULL);
+		}
+		return (nsl);
+	}
+	return (NULL);
+}
+
+/*
+ * This function takes a slablist (sorted or ordered), and given a starting and
+ * ending element, removes {start...end} in sl, and return a slablist that
+ * contains all of {start...end}. If either `start` or `end` is not in `sl`, we
+ * return NULL. If `end` comes before `start` we return NULL.
+ */
+slablist_t *
+slablist_xtract(slablist_t *sl, char *nm, slablist_elem_t start, slablist_elem_t end)
+{
+	/*
+	 * We use a simple function, which was easy to implement, but is
+	 * sub-optimal. An optimal function would take advantage of the slab
+	 * list's inherent structural advantage --- slabs can be unlinked and
+	 * relinked whole-sale, removing the need to call slablist_add() which
+	 * re-creates those slabs and nodes from scratch.
+	 */
+	slablist_t *ret = slablist_xtract_simple(sl, nm, start, end);
 	return (ret);
 }

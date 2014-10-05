@@ -30,8 +30,8 @@
 #include <strings.h>
 #include "slablist_impl.h"
 
-#define UNUSED(x) (void)(x)
-#define CTOR_HEAD       UNUSED(ignored); UNUSED(flags)
+#define	UNUSED(x) (void)(x)
+#define	CTOR_HEAD	UNUSED(ignored); UNUSED(flags)
 
 
 umem_cache_t *cache_slablist;

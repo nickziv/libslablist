@@ -59,10 +59,13 @@ typedef int slablist_cmp_t(slablist_elem_t, slablist_elem_t);
 typedef int slablist_bnd_t(slablist_elem_t, slablist_elem_t, slablist_elem_t);
 typedef slablist_elem_t slablist_fold_t(slablist_elem_t, slablist_elem_t *, uint64_t);
 typedef void slablist_map_t(slablist_elem_t *, uint64_t);
+
 typedef void slablist_rem_cb_t(slablist_elem_t);
 
 
 extern void slablist_map(slablist_t *, slablist_map_t);
+extern void slablist_map_range(slablist_t *sl, slablist_map_t f, slablist_elem_t min,
+    slablist_elem_t max);
 extern slablist_bm_t *slablist_bm_create();
 extern void slablist_bm_destroy(slablist_bm_t *);
 extern int slablist_next(slablist_t *, slablist_bm_t *, slablist_elem_t *);
@@ -148,3 +151,5 @@ extern int slablist_rem_eq(slablist_t *, slablist_elem_t);
 
 extern void slablist_reverse(slablist_t *);
 //extern void slablist_mt_reverse(mt_slablist_t *);
+
+extern slablist_t *slablist_xtract(slablist_t *, char *, slablist_elem_t, slablist_elem_t);

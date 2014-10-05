@@ -64,7 +64,9 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 	 */
 	if (sl->sl_head == NULL) {
 		sl->sl_head = mk_sml_node();
-		SLABLIST_ADD_HEAD(sl);
+		SLABLIST_SET_HEAD(sl, elem);
+		sl->sl_end = sl->sl_head;
+		SLABLIST_SET_END(sl, elem);
 		((small_list_t *)sl->sl_head)->sml_data = elem;
 		sl->sl_elems++;
 		SLABLIST_SL_INC_ELEMS(sl);
@@ -128,6 +130,8 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 		 */
 		if (sml == NULL) {
 			nsml = mk_sml_node();
+			sl->sl_end = nsml;
+			SLABLIST_SET_END(sl, elem);
 			nsml->sml_data = elem;
 			link_sml_node(sl, prev, nsml);
 			ret = SL_SUCCESS;
@@ -149,6 +153,8 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 	nsml = mk_sml_node();
 	nsml->sml_data = elem;
 	link_sml_node(sl, sml, nsml);
+	sl->sl_end = nsml;
+	SLABLIST_SET_END(sl, elem);
 
 end:;
 
@@ -1413,13 +1419,17 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 
 		if (s->s_elems < SELEM_MAX) {
 			s->s_arr[s->s_elems] = elem;
+			s->s_max = elem;
 			s->s_elems++;
+			SLABLIST_SET_END(sl, elem);
 			SLABLIST_SLAB_INC_ELEMS(s);
 		} else {
 			slab_t *ns = mk_slab();
-			link_slab(ns, s, SLAB_LINK_AFTER);
 			SLABLIST_SLAB_MK(sl);
 			ns->s_arr[0] = elem;
+			ns->s_min = elem;
+			ns->s_max = elem;
+			link_slab(ns, s, SLAB_LINK_AFTER);
 			ns->s_elems++;
 			SLABLIST_SLAB_INC_ELEMS(ns);
 		}

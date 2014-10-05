@@ -423,7 +423,7 @@ typedef struct rem_ctx {
 struct slablist_bm {
 	slablist_t		*sb_list;
 	void			*sb_node;
-	uint8_t			sb_index;
+	int8_t			sb_index;
 };
 
 #define IS_SMALL_LIST(sl) (sl->sl_slabs == 0)

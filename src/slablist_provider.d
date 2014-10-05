@@ -38,7 +38,10 @@ provider slablist {
 	probe add_begin(slablist_t *sl, slablist_elem_t e, uint64_t r) :
 		(slinfo_t *sl, slablist_elem_t e, uint64_t r);
 	probe add_end(int);
-	probe add_head(slablist_t *sl) : (slinfo_t *sl);
+	probe set_head(slablist_t *sl, slablist_elem_t e) :
+		(slinfo_t *sl, slablist_elem_t e);
+	probe set_end(slablist_t *sl, slablist_elem_t e) :
+		(slinfo_t *sl, slablist_elem_t e);
 	probe slab_ai(slablist_t *sl, slab_t *s, slablist_elem_t e) :
 		(slinfo_t *sl, slabinfo_t *s, slablist_elem_t e);
 	probe slab_aisn(slablist_t *sl, slab_t *s, slablist_elem_t e) :
@@ -142,7 +145,6 @@ provider slablist {
 		subslabinfo_t *s2);
 	probe rem_begin(slablist_t *sl, slablist_elem_t e, uint64_t p) :
 		(slinfo_t *sl, slablist_elem_t e, uint64_t p);
-	probe rem_head(slablist_t *sl) : (slinfo_t *sl);
 	probe rem_end(int);
 	probe rem_range_begin(slablist_t *sl, slablist_elem_t min, slablist_elem_t max) :
 		(slinfo_t *sl, slablist_elem_t min, slablist_elem_t max);
