@@ -1091,9 +1091,14 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 			sml = sml->sml_next;
 			i++;
 		}
-		*found = sml->sml_data;
-		SLABLIST_FIND_END(SL_SUCCESS, *found);
-		return (SL_SUCCESS);
+		if (sml != NULL) {
+			*found = sml->sml_data;
+			SLABLIST_FIND_END(SL_SUCCESS, *found);
+			return (SL_SUCCESS);
+		} else {
+			SLABLIST_FIND_END(SL_ENFOUND, *found);
+			return (SL_ENFOUND);
+		}
 	}
 
 	if (SLIST_SORTED(sl->sl_flags)) {
