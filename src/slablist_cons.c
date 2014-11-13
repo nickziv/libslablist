@@ -411,8 +411,6 @@ void
 slablist_destroy(slablist_t *sl)
 {
 	SLABLIST_DESTROY(sl);
-	size_t namesz = strlen(sl->sl_name);
-	rm_buf(sl->sl_name, namesz);
 	small_list_t *sml;
 	small_list_t *smln;
 
