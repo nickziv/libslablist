@@ -50,7 +50,7 @@ typedef union slablist_elem {
 	int64_t		sle_i;
 	char		sle_c[8];
 } slablist_elem_t;
-typedef slablist_elem_t elem_t;
+typedef slablist_elem_t selem_t;
 
 struct slablist;
 typedef struct slablist slablist_t;
