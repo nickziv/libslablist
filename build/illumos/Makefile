@@ -221,11 +221,7 @@ check: $(PLISTS)
 	echo CHECK DONE
 
 clean:
-	rm $(SLDIR)/$(D_HDRS)
 	rm $(OBJECTS) $(SO)
-
-clean_cstyle:
-	rm $(SLDIR)/$(D_HDRS)
 
 clean_tests:
 	pfexec rm -r $(R_TEST)
@@ -238,4 +234,3 @@ clean_drv:
 	rm $(DS_D_OBJECTS)
 	rm $(DRV_OBJECT)
 	rm $(DS_OBJECTS)
-	rm $(DSDIR)/$(DS_D_HDRS)
