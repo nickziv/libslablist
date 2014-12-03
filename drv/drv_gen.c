@@ -1,11 +1,15 @@
+#ifdef UUTIL
 #include "libuutil.h"
+#endif
 #include "drv.h"
 #include "drv_prov.h"
 
+#ifdef UUTIL
 typedef struct node {
 	uu_avl_node_t n;
 	slablist_elem_t e;
 } node_t;
+#endif
 
 #ifdef MYSKL
 typedef struct myskl_node {
@@ -23,14 +27,18 @@ typedef struct prb_table prb_table_t;
 typedef struct btree btree_t;
 typedef struct skiplist skiplist_t;
 typedef struct rbtree redblack_t;
+#ifdef UUTIL
 typedef struct uu_avl_cont {
 	uu_avl_t	*uuc_avl;
 	uu_avl_pool_t	*uuc_avl_pool;
 } uu_avl_cont_t;
+#endif
 
 typedef union container {
 	slablist_t	*sl;
+#ifdef UUTIL
 	uu_avl_cont_t	uuavl;
+#endif
 	avl_table_t	*gnuavl;
 	pavl_table_t	*gnupavl;
 	tavl_table_t	*gnutavl;
@@ -123,6 +131,7 @@ bndfun(slablist_elem_t e, slablist_elem_t min, slablist_elem_t max)
         return (0);
 }
 
+#ifdef UUTIL
 int
 cmpfun(const void *z1, const void *z2, void *private)
 {
@@ -140,6 +149,7 @@ cmpfun(const void *z1, const void *z2, void *private)
 
 	return (0);
 }
+#endif
 
 int
 bt_cmpfun(void *z1, void *z2)
@@ -183,11 +193,17 @@ cmpfun_str(slablist_elem_t *v1, slablist_elem_t *v2)
 */
 
 
+#ifdef UMEM
+#ifdef UUTIL
 umem_cache_t *cache_node;
+#endif
 #ifdef MYSKL
 umem_cache_t *cache_myskl_node;
 #endif
+#endif /* UMEM */
 
+#ifdef UMEM
+#ifdef UUTIL
 int
 node_ctor(void *buf, void *ignored, int flags)
 {
@@ -195,6 +211,8 @@ node_ctor(void *buf, void *ignored, int flags)
 	bzero(n, sizeof (node_t));
 	return (0);
 }
+#endif
+#endif
 
 #ifdef MYSKL
 int
@@ -206,6 +224,8 @@ myskl_node_ctor(void *buf, void *ignored, int flags)
 }
 #endif
 
+#ifdef UMEM
+#ifdef UUTIL
 void
 uuavl_umem_init()
 {
@@ -219,6 +239,7 @@ uuavl_umem_init()
 		NULL,
 		0);
 }
+#endif
 
 #ifdef MYSKL
 void
@@ -258,7 +279,9 @@ mk_myskl_node()
 	return (r);
 }
 #endif
+#endif /* UMEM */
 
+#ifdef UUTIL
 void
 uuavl_op(container_t *c, slablist_elem_t elem)
 {
@@ -286,6 +309,7 @@ uuavl_rem(container_t *c, slablist_elem_t elem, uint64_t unused,
 	rm_node(node);
 	return (0);
 }
+#endif
 
 void
 gnuavl_op(container_t *c, slablist_elem_t elem)
@@ -394,7 +418,9 @@ void
 set_add_callbacks(void)
 {
 	sadd_f[ST_SL] = &sl_op;
+#ifdef UUTIL
 	sadd_f[ST_UUAVL] = &uuavl_op;
+#endif
 	sadd_f[ST_GNUAVL] = &gnuavl_op;
 	sadd_f[ST_GNUPAVL] = &gnupavl_op;
 	sadd_f[ST_GNURTAVL] = &gnurtavl_op;
@@ -419,7 +445,9 @@ void
 set_rem_callbacks(void)
 {
 	srem_f[ST_SL] = &sl_rem;
+#ifdef UUTIL
 	srem_f[ST_UUAVL] = &uuavl_rem;
+#endif
 /*
 	srem_f[ST_GNUAVL] = &gnuavl_rem;
 	srem_f[ST_GNUPAVL] = &gnupavl_rem;
@@ -649,6 +677,11 @@ main(int ac, char *av[])
 		struct_type = ST_SL;
 	} else if (strcmp("uuavl", av[1]) == 0) {
 		struct_type = ST_UUAVL;
+#ifndef UUTIL
+		printf("%s is not supported on this particular version.\n",
+			av[1]);
+		exit(0);
+#endif
 	} else if (strcmp("gnuavl", av[1]) == 0) {
 		struct_type = ST_GNUAVL;
 	} else if (strcmp("gnupavl", av[1]) == 0) {
@@ -676,8 +709,18 @@ main(int ac, char *av[])
 	} else if (strcmp("myskl_16", av[1]) == 0) {
 		struct_type = ST_MYSKL;
 		maxlvl = 16;
+#ifndef MYSKL
+		printf("%s is not supported on this particular version.\n",
+			av[1]);
+		exit(0);
+#endif
 	} else if (strcmp("redblack", av[1]) == 0) {
 		struct_type = ST_REDBLACK;
+#ifndef LIBREDBLACK
+		printf("%s is not supported on this particular version.\n",
+			av[1]);
+		exit(0);
+#endif
 	}
 	while (aci < ac) {
 		if (strcmp("intsrt", av[aci]) == 0) {
@@ -748,17 +791,21 @@ main(int ac, char *av[])
 	if (intord || strord) {
 		sl_flag = SL_ORDERED;
 	}
+#ifdef UUTIL
 	uuavl_umem_init();
+#endif
 #ifdef MYSKL
 	myskl_umem_init();
 #endif
 	uint64_t maxops = times;
+#ifdef UUTIL
 	uu_avl_pool_t *lp = uu_avl_pool_create("lsp", sizeof (node_t), 0,
 		cmpfun, 0);
 	uu_avl_t *uuavl_str_s;
 	uu_avl_t *uuavl_int_s;
 	uu_avl_t *uuavl_str_o;
 	uu_avl_t *uuavl_int_o;
+#endif
 	avl_table_t *gnuavl_int_s;
 	pavl_table_t *gnupavl_int_s;
 	tavl_table_t *gnutavl_int_s;
@@ -778,6 +825,7 @@ main(int ac, char *av[])
 		cis.sl = slablist_create("intlistsrt", sl_cmpfun, bndfun, sl_flag);
 		break;
 	case ST_UUAVL:
+#ifdef UUTIL
 		cis.uuavl.uuc_avl_pool = uu_avl_pool_create("lsp", sizeof (node_t), 0,
 			cmpfun, 0);
 
@@ -790,6 +838,7 @@ main(int ac, char *av[])
 		cis.uuavl.uuc_avl = uu_avl_create(cis.uuavl.uuc_avl_pool, NULL, 0);
 		cso.uuavl.uuc_avl = uu_avl_create(cis.uuavl.uuc_avl_pool, NULL, 0);
 		cio.uuavl.uuc_avl = uu_avl_create(cis.uuavl.uuc_avl_pool, NULL, 0);
+#endif
 		break;
 
 	case ST_GNUAVL:

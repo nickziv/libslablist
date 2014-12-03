@@ -12,7 +12,9 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <strings.h>
+#ifdef UMEM
 #include <umem.h>
+#endif
 #include <slablist.h>
 #ifdef MYSKL
 #include <myskl.h>
@@ -28,7 +30,9 @@
 #include "prb.h"
 #include "bst.h"
 #include "pbst.h"
+#ifdef UUTIL
 #include "libuutil.h"
+#endif
 #include "btree.h"
 #include "btreepriv.h"
 #include "skiplist.h"
@@ -133,7 +137,11 @@ get_data_8b(int fd)
 char *
 mk_str(size_t sz)
 {
+#ifdef UMEM
 	return (umem_zalloc(sz, UMEM_DEFAULT));
+#else
+	return (calloc(1, sz));
+#endif
 }
 
 void
@@ -141,7 +149,11 @@ rm_str(char *str)
 {
 	size_t sz = strlen(str);
 	sz++;
+#ifdef UMEM
 	umem_free(str, sz);
+#else
+	free(str);
+#endif
 }
 
 char *

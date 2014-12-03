@@ -34,6 +34,7 @@
 #define	CTOR_HEAD	UNUSED(ignored); UNUSED(flags)
 
 
+#ifdef UMEM
 umem_cache_t *cache_slablist;
 umem_cache_t *cache_bm;
 umem_cache_t *cache_lk_slablist;
@@ -44,7 +45,6 @@ umem_cache_t *cache_subarr;
 umem_cache_t *cache_small_list;
 umem_cache_t *cache_add_ctx;
 
-#ifdef UMEM
 int
 slablist_ctor(void *buf, void *ignored, int flags)
 {

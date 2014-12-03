@@ -1,30 +1,31 @@
 include ../Makefile.master
 
-PREFIX=			$(ILLUMOS_PREFIX)
-DSLDFLAGS=		$(DSLDF_ILLUMOS)
-LIBS+=			-lumem
-DSLIBS+=		-lumem -luutil
-CFLAGS+=		-D UMEM
-DSCFLAGS+=		-D UUTIL -D UMEM
-UMEM_CFLAGS=		$(CFLAGS) "-Wno-unused-parameter"
-LDFLAGS+=		-h libslablist.so.1
+PREFIX=		$(LINUX_PREFIX)
+LIBS+=
+DSLIBS+=
+CFLAGS+=
+UMEM_CFLAGS=	$(CFLAGS) "-Wno-unused-parameter"
+DSLDFLAGS=	$(DSLDF_LINUX)
 
 SL_PROV=	slablist_provider.d
 DS_PROV=	struc_provider.d
 
-OBJECTS=	$(C_OBJECTS) $(D_OBJECTS)
+OBJECTS=	$(C_OBJECTS)
+DS_D_OBJECTS=
+D_OBJECT=
 
-
-$(D_HDRS): 
-	$(DTRACEH) $(SLDIR)/$(D_SCR) -o $(SLDIR)/$(D_HDRS)
 
 #
 # This is used for debugging (like expanding variables), because Make sucks at
 # error messages.
 #
 fuckit: 
-	echo $(TEST_RES)
-	echo $(TEST_SCR)
+	echo $(DTRACE)
+	echo $(DTRACE_LIBS)
+	echo $(DSLDFLAGS)
+
+#echo $(TEST_RES)
+#echo $(TEST_SCR)
 
 .PHONY: $(DS_IMPLS)
 
@@ -32,7 +33,7 @@ fuckit:
 
 #.PHONY: $(C_SRCS)
 
-$(C_SRCS): %.c: $(D_HDRS)
+$(C_SRCS): %.c:
 
 $(C_OBJECTS): %.o: %.c $(C_HDRS)
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -40,9 +41,6 @@ $(C_OBJECTS): %.o: %.c $(C_HDRS)
 #$(CTFCONVERT) -i -L VERSION $@
 
 objs: $(OBJECTS)
-
-$(D_OBJECTS): $(C_OBJECTS)
-	$(DTRACEG) $(SLDIR)/$(SL_PROV) $(C_OBJECTS)
 
 $(SO): $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(SO) $(OBJECTS) $(LIBS)
@@ -78,27 +76,22 @@ tests: $(TEST_RES_R) $(TEST_RES_SD) $(TEST_RES_SI)
 
 
 uninstall:
-	pfexec rm -r $(PREFIX) 2> /dev/null
+	sudo rm -r $(PREFIX) 2> /dev/null
 
 install: 
-	-pfexec rm -r $(PREFIX) 2> /dev/null
-	pfexec mkdir $(PREFIX)
-	pfexec mkdir $(PREFIX)/lib/
-	pfexec mkdir $(PREFIX)lib/64
-	pfexec cp $(SO) $(PREFIX)/lib/64/
-	pfexec ln -s $(PREFIX)/lib/64/$(SO) $(PREFIX)/lib/64/libslablist.so
-	pfexec mkdir $(PREFIX)/include
-	pfexec mkdir $(PREFIX)/include/dtrace
-	pfexec cp $(SLDIR)/slablist.h $(PREFIX)/include/
-	pfexec cp $(SLDIR)/slablist.d $(PREFIX)/include/dtrace/
+	-sudo rm -r $(PREFIX) 2> /dev/null
+	sudo mkdir $(PREFIX)
+	sudo mkdir $(PREFIX)/lib/
+	sudo cp $(SO) $(PREFIX)/lib/
+	sudo ln -s $(PREFIX)/lib/$(SO) $(PREFIX)/lib/libslablist.so
+	sudo mkdir $(PREFIX)/include
+	sudo mkdir $(PREFIX)/include/dtrace
+	sudo cp $(SLDIR)/slablist.h $(PREFIX)/include/
+	sudo cp $(SLDIR)/slablist.d $(PREFIX)/include/dtrace/
 
-$(DS_D_HDRS):
-	$(DTRACEH) $(DSDIR)/struc_provider.d -o $(DSDIR)/struc_provider.h
+$(DS_SRCS): %.c:
 
-$(DS_SRCS): %.c: $(DS_D_HDRS)
-
-$(DRV_SRCS): %.c: $(DS_D_HDRS)
-
+$(DRV_SRCS): %.c:
 
 
 $(DS_OBJECTS): %.o: %.c
@@ -108,10 +101,7 @@ $(DS_OBJECTS): %.o: %.c
 $(DRV_OBJECT): %.o: %.c $(DS_OBJECTS)
 	$(CC) $(DSCFLAGS) $(DSCINC) -o $@ -c $(DRV_SRCS)
 
-$(DS_D_OBJECTS): $(DRV_OBJECT)
-	$(DTRACEG) $(DSDIR)/$(DS_PROV) $(DRV_OBJECT)
-
-$(DRV): install $(DRV_OBJECT) $(DS_D_OBJECTS) $(DS_OBJECTS)
+$(DRV): install $(DRV_OBJECT) $(DS_OBJECTS)
 	$(CC) $(DSCFLAGS) -o $@ $(DS_OBJECTS) $(DS_D_OBJECTS) $(DRV_OBJECT) $(DSLDFLAGS) $(DSLIBS)
 
 $(PLISTS): %.plist: %.c $(D_HDRS)
@@ -212,14 +202,14 @@ $(FG_SVG_OID): $(FG_OUT_OID)
 flamegraphs: $(FG_SVGS)
 
 clean_flamegraphs:
-	pfexec rm -r $(FGDIR)
+	rm -r $(FGDIR)
 
 clean_bench:
-	pfexec rm -r $(R_BENCH)
+	rm -r $(R_BENCH)
 
 clean_plot:
-	pfexec rm -r imgs
-	pfexec rm -r rcode
+	rm -r imgs
+	rm -r rcode
 
 check: $(PLISTS)
 	echo CHECK DONE
@@ -228,13 +218,12 @@ clean:
 	rm $(OBJECTS) $(SO)
 
 clean_tests:
-	pfexec rm -r $(R_TEST)
+	rm -r $(R_TEST)
 
 clean_check:
 	rm $(PLISTS)
 
 clean_drv:
 	-rm $(DRV)
-	-rm $(DS_D_OBJECTS)
 	-rm $(DRV_OBJECT)
 	-rm $(DS_OBJECTS)

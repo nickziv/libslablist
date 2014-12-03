@@ -19,7 +19,8 @@ FGDIR=			$(PWD)/fg
 R_BENCH_SD=		$(DS_IMPLS:%=$(R_BENCH)/%)
 BENCH_DRV=		$(BENCH)/main
 BENCH_PLOT=		$(BENCH)/rplots
-PREFIX=			/opt/libslablist/
+ILLUMOS_PREFIX=		/opt/libslablist/
+LINUX_PREFIX=		/opt/libslablist
 BENCH_SIZE=		10000000
 
 FG_OUT_SIR=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_rand.out
@@ -78,10 +79,12 @@ CC=			gcc
 CFLAGS=			-m64 -fPIC -W -Wall
 DSCFLAGS=		-m64
 DSCINC=			-I /opt/libslablist/include -I /opt/myskl/include -I /opt/libredblack/include
-LDFLAGS=		-h libslablist.so.1 -shared
-DSLDFLAGS=		-R $(PREFIX)/lib/64:$(PREFIX)/lib
+LDFLAGS=		-shared
+DSLDF_ILLUMOS=		-R $(PREFIX)/lib/64:$(PREFIX)/lib -L $(PREFIX)/lib/64
+DSLDF_LINUX=		-Wl,-rpath,$(PREFIX)/lib/ -L $(PREFIX)/lib/64
+DSLDFLAGS=		-R $(PREFIX)/lib/64:$(PREFIX)/lib -L $(PREFIX)/lib/64
 LIBS=			-lc
-DSLIBS=			-lc -luutil -L $(PREFIX)/lib/64 -lslablist
+DSLIBS=			-lc -lslablist
 
 C_SRCS=			$(SLDIR)/slablist_add.c\
 			$(SLDIR)/slablist_rem.c\
