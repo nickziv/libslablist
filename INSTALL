@@ -1,3 +1,5 @@
+ILLUMOS:
+
 To install:
 
 	cd build/illumos
@@ -12,3 +14,23 @@ To uninstall
 The install won't work, if you don't have the Primary Administrator role on
 Illumos (makefiles use pfexec a lot).  If you don't have this role, you will
 need to change the PREFIX variable in build/Makefile.master.
+
+LINUX: 
+
+WARNING, the code for linux is very alpha and may have problems. It hasn't be
+tested sufficiently for me to recommend its usage for anything other than
+development and debugging. This area could use some love.
+
+To install:
+
+	cd build/linux
+	make all
+	make install
+
+To uninstall
+
+	cd build/linux
+	make uninstall
+
+The install won't work, if you don't have sudo access. If you don't have this
+access, you will need to change the PREFIX variable in build/Makefile.master.
