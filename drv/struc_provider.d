@@ -29,5 +29,9 @@ provider struc {
 	probe rem_begin(void *sl, uint64_t e, uint64_t r) :
 		(void *sl, uint64_t e, uint64_t r);
 	probe rem_end(int);
+	probe foldr_begin();
+	probe foldr_end();
+	probe foldl_begin();
+	probe foldl_end();
 };
 

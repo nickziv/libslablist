@@ -362,18 +362,87 @@ sl_rem(container_t *c, slablist_elem_t elem, uint64_t pos,
 }
 
 
+selem_t
+sl_sumr(selem_t z, selem_t *e, uint64_t sz)
+{
+	selem_t r;
+	r.sle_u = z.sle_u;
+	uint64_t i = 0;
+	while (i < sz) {
+		r.sle_u += e[i].sle_u;
+		i++;
+	}
+	return (r);
+}
+
+selem_t
+sl_suml(selem_t z, selem_t *e, uint64_t sz)
+{
+	selem_t r;
+	r.sle_u = z.sle_u;
+	uint64_t i = sz - 1;
+	while (i >= 0) {
+		r.sle_u += e[i].sle_u;
+		i--;
+	}
+	return (r);
+}
+
+void
+sl_foldr(container_t *c)
+{
+	selem_t z;
+	selem_t sum;
+	z.sle_u = 0;
+	sum = slablist_foldr(c->sl, sl_sumr, z);
+}
+
+void
+sl_foldl(container_t *c)
+{
+	selem_t z;
+	selem_t sum;
+	z.sle_u = 0;
+	sum = slablist_foldl(c->sl, sl_suml, z);
+}
+
 /*
+ * We implement the uuavl folds manually using uu_avl_walk_next, instead of
+ * using uu_avl_walk, because uu_avl_walk callbacks have no obvious way of
+ * keeping a running sum or anything like that, which is kind of the whole
+ * point of a fold. On the bright side, we have inlined the summing. By virtue
+ * of operating on single nodes, we can use the same code to fold left and
+ * right. Just the flag argument changes.
+ */
+#ifdef UUTIL
 void
-sl_foldr(container_t *c, slablist_fold_cb_t *fcb)
+uuavl_foldr(container_t *c)
 {
-
+	uu_avl_walk_t *wp = uu_avl_walk_start(c->uuavl.uuc_avl, 0);
+	void *e;
+	uint64_t sum = 0;
+	node_t *n;
+	while ((e = uu_avl_walk_next(wp)) != NULL) {
+		n = (node_t *)e;
+		sum += n->e.sle_u;
+	}
+	uu_avl_walk_end(wp);
 }
+
 void
-sl_foldl(container_t *c, slablist_fold_cb_t *fcb)
+uuavl_foldl(container_t *c)
 {
-
+	uu_avl_walk_t *wp = uu_avl_walk_start(c->uuavl.uuc_avl, UU_WALK_REVERSE);
+	void *e;
+	uint64_t sum = 0;
+	node_t *n;
+	while ((e = uu_avl_walk_next(wp)) != NULL) {
+		n = (node_t *)e;
+		sum += n->e.sle_u;
+	}
+	uu_avl_walk_end(wp);
 }
-*/
+#endif
 
 void
 jmpcbt_op(container_t *c, slablist_elem_t elem)
@@ -407,12 +476,15 @@ redblack_op(container_t *c, slablist_elem_t elem)
 #endif
 
 typedef void (*struct_subr_t)(container_t *, slablist_elem_t);
+typedef void (*struct_subr_fold_t)(container_t *c);
 typedef int (*struct_subr_rem_t)(container_t *, slablist_elem_t, uint64_t,
     slablist_rem_cb_t *);
 
 
 struct_subr_t sadd_f[12];
 struct_subr_rem_t srem_f[12];
+struct_subr_fold_t sfdl_f[12];
+struct_subr_fold_t sfdr_f[12];
 
 void
 set_add_callbacks(void)
@@ -441,6 +513,7 @@ set_add_callbacks(void)
 #endif
 
 }
+
 void
 set_rem_callbacks(void)
 {
@@ -472,20 +545,71 @@ set_rem_callbacks(void)
 }
 
 void
+set_foldr_callbacks(void)
+{
+	sfdr_f[ST_SL] = &sl_foldr;
+#ifdef UUTIL
+	sfdr_f[ST_UUAVL] = &uuavl_foldr;
+#endif
+	/*
+	 * TODO implement the rest of these...
+	 */
+	sfdr_f[ST_GNUAVL] = NULL;
+	sfdr_f[ST_GNUPAVL] = NULL;
+	sfdr_f[ST_GNURTAVL] = NULL;
+	sfdr_f[ST_GNUTAVL] = NULL;
+	sfdr_f[ST_GNURB] = NULL;
+	sfdr_f[ST_GNUPRB] = NULL;
+	sfdr_f[ST_JMPCBT] = NULL;
+	sfdr_f[ST_JMPCSKL] = NULL;
+#ifdef MYSKL
+	sfdr_f[ST_MYSKL] = NULL;
+#else
+	sfdr_f[ST_MYSKL] = NULL;
+#endif
+#ifdef LIBREDBLACK
+	sfdr_f[ST_REDBLACK] = NULL;
+#else
+	sfdr_f[ST_REDBLACK] = NULL;
+#endif
+
+}
+
+void
+set_foldl_callbacks(void)
+{
+	sfdl_f[ST_SL] = &sl_foldl;
+#ifdef UUTIL
+	sfdl_f[ST_UUAVL] = &uuavl_foldl;
+#endif
+	/*
+	 * TODO implement the rest of these...
+	 */
+	sfdl_f[ST_GNUAVL] = NULL;
+	sfdl_f[ST_GNUPAVL] = NULL;
+	sfdl_f[ST_GNURTAVL] = NULL;
+	sfdl_f[ST_GNUTAVL] = NULL;
+	sfdl_f[ST_GNURB] = NULL;
+	sfdl_f[ST_GNUPRB] = NULL;
+	sfdl_f[ST_JMPCBT] = NULL;
+	sfdl_f[ST_JMPCSKL] = NULL;
+#ifdef MYSKL
+	sfdl_f[ST_MYSKL] = NULL;
+#else
+	sfdl_f[ST_MYSKL] = NULL;
+#endif
+#ifdef LIBREDBLACK
+	sfdl_f[ST_REDBLACK] = NULL;
+#else
+	sfdl_f[ST_REDBLACK] = NULL;
+#endif
+}
+
+void
 do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
     int do_dups)
 {
 
-#ifndef MYSKL
-	if (t == ST_MYSKL) {
-		return;
-	}
-#endif
-#ifndef LIBREDBACK
-	if (t == ST_REDBLACK) {
-		return;
-	}
-#endif
 	/*
 	 * Currently slab lists are the only structure that can support
 	 * _either_ sorted or ordered data.
@@ -496,6 +620,8 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 
 	set_add_callbacks();
 	set_rem_callbacks();
+	set_foldr_callbacks();
+	set_foldl_callbacks();
 	uint64_t ops = 0;
 	slablist_elem_t elem;
 	while (ops < maxops) {
@@ -584,6 +710,30 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 
 		ops++;
 	}
+}
+
+void
+do_foldrs(container_t *ls, struct_type_t t, int str)
+{
+	if (str) {
+		/* bail, till we figure out what to do */
+		return;
+	}
+	STRUC_FOLDR_BEGIN();
+	(*sfdr_f[t])(ls);
+	STRUC_FOLDR_END();
+}
+
+void
+do_foldls(container_t *ls, struct_type_t t, int str)
+{
+	if (str) {
+		/* bail, till we figure out what to do */
+		return;
+	}
+	STRUC_FOLDL_BEGIN();
+	(*sfdl_f[t])(ls);
+	STRUC_FOLDL_END();
 }
 
 void
@@ -892,10 +1042,10 @@ main(int ac, char *av[])
 			do_free_remaining(&cis, struct_type, INT, SRT, maxops);
 		}
 		if (do_foldr) {
-			//do_foldrs(&cis, struct_type, INT, SRT);
+			do_foldrs(&cis, struct_type, INT);
 		}
 		if (do_foldl) {
-			//do_foldls(&cis, struct_type, INT, SRT);
+			do_foldls(&cis, struct_type, INT);
 		}
 	}
 	if (strord) {

@@ -31,6 +31,42 @@ extern "C" {
 #define	STRUC_ADD_END_ENABLED() \
 	__dtraceenabled_struc___add_end(0)
 #endif
+#define	STRUC_FOLDL_BEGIN() \
+	__dtrace_struc___foldl_begin()
+#ifndef	__sparc
+#define	STRUC_FOLDL_BEGIN_ENABLED() \
+	__dtraceenabled_struc___foldl_begin()
+#else
+#define	STRUC_FOLDL_BEGIN_ENABLED() \
+	__dtraceenabled_struc___foldl_begin(0)
+#endif
+#define	STRUC_FOLDL_END() \
+	__dtrace_struc___foldl_end()
+#ifndef	__sparc
+#define	STRUC_FOLDL_END_ENABLED() \
+	__dtraceenabled_struc___foldl_end()
+#else
+#define	STRUC_FOLDL_END_ENABLED() \
+	__dtraceenabled_struc___foldl_end(0)
+#endif
+#define	STRUC_FOLDR_BEGIN() \
+	__dtrace_struc___foldr_begin()
+#ifndef	__sparc
+#define	STRUC_FOLDR_BEGIN_ENABLED() \
+	__dtraceenabled_struc___foldr_begin()
+#else
+#define	STRUC_FOLDR_BEGIN_ENABLED() \
+	__dtraceenabled_struc___foldr_begin(0)
+#endif
+#define	STRUC_FOLDR_END() \
+	__dtrace_struc___foldr_end()
+#ifndef	__sparc
+#define	STRUC_FOLDR_END_ENABLED() \
+	__dtraceenabled_struc___foldr_end()
+#else
+#define	STRUC_FOLDR_END_ENABLED() \
+	__dtraceenabled_struc___foldr_end(0)
+#endif
 #define	STRUC_REM_BEGIN(arg0, arg1, arg2) \
 	__dtrace_struc___rem_begin(arg0, arg1, arg2)
 #ifndef	__sparc
@@ -63,6 +99,30 @@ extern int __dtraceenabled_struc___add_end(void);
 #else
 extern int __dtraceenabled_struc___add_end(long);
 #endif
+extern void __dtrace_struc___foldl_begin(void);
+#ifndef	__sparc
+extern int __dtraceenabled_struc___foldl_begin(void);
+#else
+extern int __dtraceenabled_struc___foldl_begin(long);
+#endif
+extern void __dtrace_struc___foldl_end(void);
+#ifndef	__sparc
+extern int __dtraceenabled_struc___foldl_end(void);
+#else
+extern int __dtraceenabled_struc___foldl_end(long);
+#endif
+extern void __dtrace_struc___foldr_begin(void);
+#ifndef	__sparc
+extern int __dtraceenabled_struc___foldr_begin(void);
+#else
+extern int __dtraceenabled_struc___foldr_begin(long);
+#endif
+extern void __dtrace_struc___foldr_end(void);
+#ifndef	__sparc
+extern int __dtraceenabled_struc___foldr_end(void);
+#else
+extern int __dtraceenabled_struc___foldr_end(long);
+#endif
 extern void __dtrace_struc___rem_begin(void *, uint64_t, uint64_t);
 #ifndef	__sparc
 extern int __dtraceenabled_struc___rem_begin(void);
@@ -82,6 +142,14 @@ extern int __dtraceenabled_struc___rem_end(long);
 #define	STRUC_ADD_BEGIN_ENABLED() (0)
 #define	STRUC_ADD_END(arg0)
 #define	STRUC_ADD_END_ENABLED() (0)
+#define	STRUC_FOLDL_BEGIN()
+#define	STRUC_FOLDL_BEGIN_ENABLED() (0)
+#define	STRUC_FOLDL_END()
+#define	STRUC_FOLDL_END_ENABLED() (0)
+#define	STRUC_FOLDR_BEGIN()
+#define	STRUC_FOLDR_BEGIN_ENABLED() (0)
+#define	STRUC_FOLDR_END()
+#define	STRUC_FOLDR_END_ENABLED() (0)
 #define	STRUC_REM_BEGIN(arg0, arg1, arg2)
 #define	STRUC_REM_BEGIN_ENABLED() (0)
 #define	STRUC_REM_END(arg0)
