@@ -445,6 +445,162 @@ uuavl_foldl(container_t *c)
 #endif
 
 void
+gnuavl_foldr(container_t *c)
+{
+	struct avl_traverser trav;
+	avl_t_init(&trav, c->gnuavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = avl_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnuavl_foldl(container_t *c)
+{
+	struct avl_traverser trav;
+	avl_t_init(&trav, c->gnuavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = avl_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnupavl_foldr(container_t *c)
+{
+	struct pavl_traverser trav;
+	pavl_t_init(&trav, c->gnupavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = pavl_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnupavl_foldl(container_t *c)
+{
+	struct pavl_traverser trav;
+	pavl_t_init(&trav, c->gnupavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = pavl_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnurtavl_foldr(container_t *c)
+{
+	struct rtavl_traverser trav;
+	rtavl_t_init(&trav, c->gnurtavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = rtavl_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnurtavl_foldl(container_t *c)
+{
+	struct rtavl_traverser trav;
+	rtavl_t_init(&trav, c->gnurtavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = rtavl_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnutavl_foldr(container_t *c)
+{
+	struct tavl_traverser trav;
+	tavl_t_init(&trav, c->gnutavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = tavl_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnutavl_foldl(container_t *c)
+{
+	struct tavl_traverser trav;
+	tavl_t_init(&trav, c->gnutavl);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = tavl_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnurb_foldr(container_t *c)
+{
+	struct rb_traverser trav;
+	rb_t_init(&trav, c->gnurb);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = rb_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnurb_foldl(container_t *c)
+{
+	struct rb_traverser trav;
+	rb_t_init(&trav, c->gnurb);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = rb_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnuprb_foldr(container_t *c)
+{
+	struct prb_traverser trav;
+	prb_t_init(&trav, c->gnuprb);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = prb_t_next(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
+gnuprb_foldl(container_t *c)
+{
+	struct prb_traverser trav;
+	prb_t_init(&trav, c->gnuprb);
+	void *node;
+	uint64_t sum = 0;
+	while ((node = prb_t_prev(&trav)) != NULL) {
+		uint64_t num  = (uint64_t)node;
+		sum += num;
+	}
+}
+
+void
 jmpcbt_op(container_t *c, slablist_elem_t elem)
 {
 	bt_insert(c->jmpc_btree, elem.sle_p);
@@ -551,15 +707,12 @@ set_foldr_callbacks(void)
 #ifdef UUTIL
 	sfdr_f[ST_UUAVL] = &uuavl_foldr;
 #endif
-	/*
-	 * TODO implement the rest of these...
-	 */
-	sfdr_f[ST_GNUAVL] = NULL;
-	sfdr_f[ST_GNUPAVL] = NULL;
-	sfdr_f[ST_GNURTAVL] = NULL;
-	sfdr_f[ST_GNUTAVL] = NULL;
-	sfdr_f[ST_GNURB] = NULL;
-	sfdr_f[ST_GNUPRB] = NULL;
+	sfdr_f[ST_GNUAVL] = gnuavl_foldr;
+	sfdr_f[ST_GNUPAVL] = gnupavl_foldr;
+	sfdr_f[ST_GNURTAVL] = gnurtavl_foldr;
+	sfdr_f[ST_GNUTAVL] = gnutavl_foldr;
+	sfdr_f[ST_GNURB] = gnurb_foldr;
+	sfdr_f[ST_GNUPRB] = gnuprb_foldr;
 	sfdr_f[ST_JMPCBT] = NULL;
 	sfdr_f[ST_JMPCSKL] = NULL;
 #ifdef MYSKL
@@ -582,15 +735,15 @@ set_foldl_callbacks(void)
 #ifdef UUTIL
 	sfdl_f[ST_UUAVL] = &uuavl_foldl;
 #endif
+	sfdl_f[ST_GNUAVL] = gnuavl_foldl;
 	/*
 	 * TODO implement the rest of these...
 	 */
-	sfdl_f[ST_GNUAVL] = NULL;
-	sfdl_f[ST_GNUPAVL] = NULL;
-	sfdl_f[ST_GNURTAVL] = NULL;
-	sfdl_f[ST_GNUTAVL] = NULL;
-	sfdl_f[ST_GNURB] = NULL;
-	sfdl_f[ST_GNUPRB] = NULL;
+	sfdl_f[ST_GNUPAVL] = gnupavl_foldl;
+	sfdl_f[ST_GNURTAVL] = gnurtavl_foldl;
+	sfdl_f[ST_GNUTAVL] = gnutavl_foldl;
+	sfdl_f[ST_GNURB] = gnurb_foldl;
+	sfdl_f[ST_GNUPRB] = gnuprb_foldl;
 	sfdl_f[ST_JMPCBT] = NULL;
 	sfdl_f[ST_JMPCSKL] = NULL;
 #ifdef MYSKL
@@ -622,9 +775,9 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 	set_rem_callbacks();
 	set_foldr_callbacks();
 	set_foldl_callbacks();
-	uint64_t ops = 0;
+	uint64_t ops = 1;
 	slablist_elem_t elem;
-	while (ops < maxops) {
+	while (ops <= maxops) {
 		if (str) {
 			elem.sle_p = get_str(fd);
 		} else {
@@ -644,7 +797,7 @@ do_ops(container_t *ls, struct_type_t t, uint64_t maxops, int str, int ord,
 				 * See comment in prev if-block.
 				 */
 				rd = get_data(fd);
-				rd = maxops - ops;
+				rd = (maxops + 1) - ops;
 			}
 			elem.sle_u = rd;
 		}
