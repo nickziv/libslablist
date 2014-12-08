@@ -224,3 +224,22 @@ printskiplist(struct skiplist *sl)
 		puts("NULL");
 	}
 }
+
+/*
+ * A right fold. Unfortunately, because of how Skip Lists were originally
+ * conceived, there is no way to support left folds. Though I am sure that in
+ * principle in is possible to make a 'doubly-linked' skip list, which would
+ * support left folds.
+ */
+
+void *
+skl_foldr(struct skiplist *sl, skl_fold_t *cb, void *zero)
+{
+	struct skiplist_node *n = sl->head->list[0];
+	void *running = zero;
+	while (n != NULL) {
+		running = cb(running, n->key);
+		n = n->list[0];
+	}
+	return (running);
+}

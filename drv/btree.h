@@ -26,6 +26,7 @@
  *	$Id: btree.h,v 1.4.2.1 2001/03/28 06:17:12 jmg Exp $
  *
  */
+#include <unistd.h>
 
 #ifndef _BTREE_H_
 #define _BTREE_H_
@@ -37,6 +38,8 @@ struct btree;
 typedef void *bt_data_t;
 typedef int (*bt_cmp_t)(bt_data_t, bt_data_t);
 
+typedef bt_data_t bt_fold_t(bt_data_t, bt_data_t *, uint64_t);
+
 struct btree *bt_create(bt_cmp_t , int nodesize);
 void bt_insert(struct btree *, bt_data_t);
 void bt_dumptree(struct btree *);
@@ -46,5 +49,7 @@ int bt_checktree(struct btree *, bt_data_t min, bt_data_t max);
 void *bt_max(struct btree *);
 void *bt_min(struct btree *);
 void *bt_find(struct btree *, bt_data_t);
+bt_data_t bt_foldr(struct btree *, bt_fold_t *, bt_data_t);
+bt_data_t bt_foldl(struct btree *, bt_fold_t *, bt_data_t);
 
 #endif /* _BTREE_H_ */

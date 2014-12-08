@@ -667,16 +667,14 @@ findnodekey(struct btree *btr, struct btreenode *x, bt_data_t k)
  * correspond to inorder and reverse-inorder tree-traversal). So I'll have to
  * implement this before I can do any kind of benchmark.
  */
-typedef bt_data_t bt_fold_t(bt_data_t, bt_data_t *, uint64_t);
-
 bt_data_t
-bt_foldr(struct btree *btr, bt_fold_t *cb)
+bt_foldr(struct btree *btr, bt_fold_t *cb, bt_data_t zero)
 {
 
 }
 
 bt_data_t
-bt_foldl(struct btree *btr, bt_fold_t *cb)
+bt_foldl(struct btree *btr, bt_fold_t *cb, bt_data_t zero)
 {
 
 }

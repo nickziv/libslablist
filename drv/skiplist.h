@@ -32,11 +32,14 @@
 
 struct skiplist;
 
+typedef void *skl_fold_t(void *, void *);
+
 struct skiplist *createskiplist(int (*)(void *, void *), int maxlvl, int chunk,
 				void *min, void *max);
 int insertkey(struct skiplist *sl, void *k);
 void *searchkey(struct skiplist *sl, void *k);
 void printskiplist(struct skiplist *sl);
 void *deletekey(struct skiplist *sl, void *k);
+void *skl_foldr(struct skiplist *sl, skl_fold_t *cb, void *z);
 
 #endif /* _SKIPLIST_H_ */

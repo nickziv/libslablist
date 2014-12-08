@@ -406,6 +406,22 @@ sl_foldl(container_t *c)
 	sum = slablist_foldl(c->sl, sl_suml, z);
 }
 
+void *
+skl_sum(void *z, void *e)
+{
+	uint64_t zz = (uint64_t)z;
+	uint64_t ee = (uint64_t)e;
+	uint64_t ret = zz + ee;
+	return ((void *)ret);
+}
+
+void
+jmpcskl_foldr(container_t *c)
+{
+	uint64_t z = 0;
+	void *sum = skl_foldr(c->jmpc_skl, skl_sum, (void *)z);
+}
+
 /*
  * We implement the uuavl folds manually using uu_avl_walk_next, instead of
  * using uu_avl_walk, because uu_avl_walk callbacks have no obvious way of
@@ -714,7 +730,7 @@ set_foldr_callbacks(void)
 	sfdr_f[ST_GNURB] = gnurb_foldr;
 	sfdr_f[ST_GNUPRB] = gnuprb_foldr;
 	sfdr_f[ST_JMPCBT] = NULL;
-	sfdr_f[ST_JMPCSKL] = NULL;
+	sfdr_f[ST_JMPCSKL] = jmpcskl_foldr;
 #ifdef MYSKL
 	sfdr_f[ST_MYSKL] = NULL;
 #else
@@ -872,6 +888,13 @@ do_foldrs(container_t *ls, struct_type_t t, int str)
 		/* bail, till we figure out what to do */
 		return;
 	}
+
+	/*
+	 * Bail if this structure has no fold function.
+	 */
+	if (sfdr_f[t] == NULL) {
+		return;
+	}
 	STRUC_FOLDR_BEGIN();
 	(*sfdr_f[t])(ls);
 	STRUC_FOLDR_END();
@@ -882,6 +905,12 @@ do_foldls(container_t *ls, struct_type_t t, int str)
 {
 	if (str) {
 		/* bail, till we figure out what to do */
+		return;
+	}
+	/*
+	 * Bail if this structure has no fold function.
+	 */
+	if (sfdl_f[t] == NULL) {
 		return;
 	}
 	STRUC_FOLDL_BEGIN();
