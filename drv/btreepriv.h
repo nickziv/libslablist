@@ -35,8 +35,11 @@
 struct btree {
 	struct	btreenode *root;
 	bt_cmp_t	cmp;
+	/* the offset between the start of the btreenode and its keys */
 	int	keyoff;
+	/* the offset between the start of the btreenode and its child-ptrs */
 	int	nodeptroff;
+	/* number of keys per node */
 	int	nkeys;
 	int	t;
 	int	nbits;
