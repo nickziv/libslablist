@@ -38,7 +38,7 @@ struct btree;
 typedef void *bt_data_t;
 typedef int (*bt_cmp_t)(bt_data_t, bt_data_t);
 
-typedef bt_data_t bt_fold_t(bt_data_t, bt_data_t *, uint64_t);
+typedef bt_data_t bt_fold_t(bt_data_t, bt_data_t);
 
 struct btree *bt_create(bt_cmp_t , int nodesize);
 void bt_insert(struct btree *, bt_data_t);

@@ -661,20 +661,42 @@ findnodekey(struct btree *btr, struct btreenode *x, bt_data_t k)
 	return NULL;
 }
 
-/*
- * TODO
- * This B-Tree implementation doesn't have right or left folds (which
- * correspond to inorder and reverse-inorder tree-traversal). So I'll have to
- * implement this before I can do any kind of benchmark.
- */
+bt_data_t
+inorder_traverse(struct btree *btr, struct btreenode *n, bt_fold_t *cb, bt_data_t zero)
+{
+	int i = 0;
+	while (i < n->n) {
+		if (!(n->leaf)) {
+			zero = inorder_traverse(btr, NODES(btr, n)[i], cb, zero);
+		}
+		zero = cb(zero, KEYS(btr, n)[i]);
+		i++;
+	}
+	return (zero);
+}
+
+bt_data_t
+rev_inorder_traverse(struct btree *btr, struct btreenode *n, bt_fold_t *cb, bt_data_t zero)
+{
+	int i = n->n;
+	while (i > 0) {
+		if (!(n->leaf)) {
+			zero = rev_inorder_traverse(btr, NODES(btr, n)[i], cb, zero);
+		}
+		zero = cb(zero, KEYS(btr, n)[i]);
+		i--;
+	}
+	return (zero);
+}
+
 bt_data_t
 bt_foldr(struct btree *btr, bt_fold_t *cb, bt_data_t zero)
 {
-
+	return (inorder_traverse(btr, btr->root, cb, zero));
 }
 
 bt_data_t
 bt_foldl(struct btree *btr, bt_fold_t *cb, bt_data_t zero)
 {
-
+	return (rev_inorder_traverse(btr, btr->root, cb, zero));
 }

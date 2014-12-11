@@ -422,6 +422,30 @@ jmpcskl_foldr(container_t *c)
 	void *sum = skl_foldr(c->jmpc_skl, skl_sum, (void *)z);
 }
 
+void *
+bt_sum(bt_data_t z, bt_data_t e)
+{
+	uint64_t zz = (uint64_t)z;
+	uint64_t ee = (uint64_t)e;
+	uint64_t ret = zz + ee;
+	bt_data_t btret = (bt_data_t)ret;
+	return (btret);
+}
+
+void
+jmpcbt_foldr(container_t *c)
+{
+	bt_data_t z = 0;
+	bt_data_t sum = bt_foldr(c->jmpc_btree, bt_sum, z);
+}
+
+void
+jmpcbt_foldl(container_t *c)
+{
+	bt_data_t z = 0;
+	bt_data_t sum = bt_foldl(c->jmpc_btree, bt_sum, z);
+}
+
 /*
  * We implement the uuavl folds manually using uu_avl_walk_next, instead of
  * using uu_avl_walk, because uu_avl_walk callbacks have no obvious way of
@@ -729,7 +753,7 @@ set_foldr_callbacks(void)
 	sfdr_f[ST_GNUTAVL] = gnutavl_foldr;
 	sfdr_f[ST_GNURB] = gnurb_foldr;
 	sfdr_f[ST_GNUPRB] = gnuprb_foldr;
-	sfdr_f[ST_JMPCBT] = NULL;
+	sfdr_f[ST_JMPCBT] = jmpcbt_foldr;
 	sfdr_f[ST_JMPCSKL] = jmpcskl_foldr;
 #ifdef MYSKL
 	sfdr_f[ST_MYSKL] = NULL;
@@ -760,7 +784,7 @@ set_foldl_callbacks(void)
 	sfdl_f[ST_GNUTAVL] = gnutavl_foldl;
 	sfdl_f[ST_GNURB] = gnurb_foldl;
 	sfdl_f[ST_GNUPRB] = gnuprb_foldl;
-	sfdl_f[ST_JMPCBT] = NULL;
+	sfdl_f[ST_JMPCBT] = jmpcbt_foldl;
 	sfdl_f[ST_JMPCSKL] = NULL;
 #ifdef MYSKL
 	sfdl_f[ST_MYSKL] = NULL;
