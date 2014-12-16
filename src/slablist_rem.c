@@ -1604,8 +1604,8 @@ slablist_xtract_simple(slablist_t *sl, char *nm, slablist_elem_t start,
 	slablist_elem_t e;
 	slablist_elem_t *next = &e;
 	int stat;
-	int first = 0;
-	int last = 0;
+	uint64_t first = 0;
+	uint64_t last = 0;
 	while (stat == 0 && (!first || !last)) {
 		stat = slablist_next(sl, bm, next);
 		if (next->sle_u == start.sle_u) {
