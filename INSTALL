@@ -3,7 +3,7 @@ ILLUMOS:
 To install:
 
 	cd build/illumos
-	make all
+	make libslablist.so.1
 	make install
 
 To uninstall
@@ -24,7 +24,7 @@ development and debugging. This area could use some love.
 To install:
 
 	cd build/linux
-	make all
+	make libslablist.so.1
 	make install
 
 To uninstall

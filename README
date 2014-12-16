@@ -24,7 +24,7 @@ sometimes referred to as BJNF (Bill Joy Normal Form).
 To install:
 
 	cd build/illumos
-	make all
+	make libslablist.so.1
 	make install
 
 Support for FreeBSD is forthcoming.
