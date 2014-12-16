@@ -476,6 +476,7 @@ ripple_inc_usr_elems(subslab_t *found)
 static subslab_t *
 sub_addsn(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
+	(void)mk; /* we will use this in the future */
 	uint16_t lst_index = s->ss_elems - 1;
 	uint16_t b4_lst_index = s->ss_elems - 2;
 	slab_t *lst_slab = NULL;
@@ -565,6 +566,7 @@ addsp(slab_t *s, slablist_elem_t elem, int q)
 static subslab_t *
 sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
+	(void)mk; /* we will use this in the future */
 	/*
 	 * Whenever this function gets called we assume the `s` is FULL.
 	 */
@@ -667,7 +669,7 @@ subslab_update_extrema(subslab_t *p)
 }
 
 void
-ripple_update_extrema(slablist_t *sl, subslab_t *p)
+ripple_update_extrema(subslab_t *p)
 {
 	while (p != NULL) {
 		subslab_update_extrema(p);
@@ -690,7 +692,7 @@ ripple_ai(slab_t *s)
 		return;
 	}
 	subslab_t *p = s->s_below;
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	ripple_inc_usr_elems(s->s_below);
 }
 
@@ -701,7 +703,7 @@ ripple_aa(slab_t *s)
 		return;
 	}
 	subslab_t *p = s->s_below;
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	ripple_inc_usr_elems(s->s_next->s_below);
 }
 
@@ -712,7 +714,7 @@ ripple_ab(slab_t *s)
 		return;
 	}
 	subslab_t *p = s->s_below;
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	ripple_inc_usr_elems(s->s_prev->s_below);
 }
 
@@ -723,7 +725,7 @@ ripple_aisn(slab_t *s)
 		return;
 	}
 	subslab_t *p = s->s_next->s_below;
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	ripple_inc_usr_elems(s->s_next->s_below);
 }
 
@@ -734,7 +736,7 @@ ripple_aisp(slab_t *s)
 		return;
 	}
 	subslab_t *p = s->s_prev->s_below;
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	ripple_inc_usr_elems(s->s_prev->s_below);
 }
 
@@ -754,7 +756,7 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 	/*
 	 * We update the extrema.
 	 */
-	ripple_update_extrema(s->s_list, p);
+	ripple_update_extrema(p);
 	if (n->s_below != NULL) {
 		status = sl->sl_bnd_elem(n->s_min, n->s_below->ss_min,
 				n->s_below->ss_max);
@@ -785,7 +787,7 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 		 * We update the extrema again (who knows what may have
 		 * changed).
 		 */
-		ripple_update_extrema(s->s_list, p);
+		ripple_update_extrema(p);
 		ripple_inc_usr_elems(n->s_below);
 		if (!broke || skip_loop) {
 			rm_add_ctx(t);

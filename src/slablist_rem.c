@@ -146,7 +146,7 @@ end:;
 	return (ret);
 }
 
-extern void ripple_update_extrema(slablist_t *, subslab_t *);
+extern void ripple_update_extrema(subslab_t *);
 
 static void
 sub_move_to_next(subslab_t *s, subslab_t *sn)
@@ -305,9 +305,9 @@ sub_move_to_next(subslab_t *s, subslab_t *sn)
 	SLABLIST_SUBSLAB_SET_MIN(sn);
 	if (sn->ss_below != NULL) {
 		if (s->ss_elems > 0) {
-			ripple_update_extrema(s->ss_list, s->ss_below);
+			ripple_update_extrema(s->ss_below);
 		}
-		ripple_update_extrema(sn->ss_list, sn->ss_below);
+		ripple_update_extrema(sn->ss_below);
 	}
 }
 
@@ -454,9 +454,9 @@ sub_move_to_prev(subslab_t *s, subslab_t *sp)
 	}
 	if (sp->ss_below != NULL) {
 		if (s->ss_elems > 0) {
-			ripple_update_extrema(s->ss_list, s->ss_below);
+			ripple_update_extrema(s->ss_below);
 		}
-		ripple_update_extrema(sp->ss_list, sp->ss_below);
+		ripple_update_extrema(sp->ss_below);
 	}
 	SLABLIST_SUBSLAB_INC_ELEMS(sp);
 	SLABLIST_SUBSLAB_DEC_ELEMS(s);
@@ -561,8 +561,8 @@ move_to_next(slab_t *s, slab_t *sn)
 	SLABLIST_SLAB_DEC_ELEMS(s);
 	SLABLIST_SLAB_SET_MAX(s);
 	SLABLIST_SLAB_SET_MIN(sn);
-	ripple_update_extrema(s->s_list, s->s_below);
-	ripple_update_extrema(sn->s_list, sn->s_below);
+	ripple_update_extrema(s->s_below);
+	ripple_update_extrema(sn->s_below);
 }
 
 /*
@@ -657,8 +657,8 @@ move_to_prev(slab_t *s, slab_t *sp)
 	SLABLIST_SLAB_DEC_ELEMS(s);
 	SLABLIST_SLAB_SET_MAX(sp);
 	SLABLIST_SLAB_SET_MIN(s);
-	ripple_update_extrema(s->s_list, s->s_below);
-	ripple_update_extrema(sp->s_list, sp->s_below);
+	ripple_update_extrema(s->s_below);
+	ripple_update_extrema(sp->s_below);
 }
 
 /*
@@ -980,7 +980,7 @@ remove_slab(uint64_t i, subslab_t *s)
  * removing any references to the slab that has been freed.
  */
 void
-ripple_rem_to_sublayers(slablist_t *sl, slab_t *remd, subslab_t *below)
+ripple_rem_to_sublayers(slab_t *remd, subslab_t *below)
 {
 	subslab_t *e[3];
 	e[0] = below;
@@ -1087,7 +1087,7 @@ slablist_reap(slablist_t *sl)
 				 * down.
 				 */
 				if (sl->sl_sublayers) {
-					ripple_rem_to_sublayers(sl, rmd, below);
+					ripple_rem_to_sublayers(rmd, below);
 				}
 			}
 		}
@@ -1270,7 +1270,7 @@ skip_cb:;
 	s->s_max = s->s_arr[(s->s_elems - 1)];
 	update_below_usr_elems(s->s_below, j - i + 1);
 	if (s->s_below != NULL && s->s_below->ss_elems > 0) {
-		ripple_update_extrema(s->s_list, s->s_below);
+		ripple_update_extrema(s->s_below);
 	}
 	if (SLABLIST_TEST_REM_RANGE_ENABLED()) {
 		int fail = test_rem_range(s);
@@ -1298,7 +1298,7 @@ decruftify_slab(slab_t *s, slablist_elem_t min, slablist_elem_t max,
 		}
 skip_cb:;
 		update_below_usr_elems(s->s_below, s->s_elems);
-		ripple_update_extrema(s->s_list, s->s_below);
+		ripple_update_extrema(s->s_below);
 		s->s_list->sl_elems -= s->s_elems;
 		unlink_slab(s);
 		rm_slab(s);
@@ -1551,7 +1551,7 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 	subslab_t *below = NULL;
 	remd = slab_generic_rem(s, &below);
 	if (sl->sl_sublayers) {
-		ripple_rem_to_sublayers(sl, remd, below);
+		ripple_rem_to_sublayers(remd, below);
 		slablist_t *subl = sl->sl_baselayer;
 		slablist_t *supl = subl->sl_superlayer;
 		/*
