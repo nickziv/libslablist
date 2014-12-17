@@ -1282,8 +1282,8 @@ void
 decruftify_slab(slab_t *s, slablist_elem_t min, slablist_elem_t max,
     slablist_rem_cb_t f)
 {
-	int i;
 	int j;
+	int i = 0;
 	if (is_slab_range(s, min, max)) {
 		if (s->s_below != NULL) {
 			j = sublayer_slab_ptr_srch(s, s->s_below);
@@ -1603,7 +1603,7 @@ slablist_xtract_simple(slablist_t *sl, char *nm, slablist_elem_t start,
 	slablist_bm_t *bm = slablist_bm_create();
 	slablist_elem_t e;
 	slablist_elem_t *next = &e;
-	int stat;
+	int stat = 0;
 	uint64_t first = 0;
 	uint64_t last = 0;
 	while (stat == 0 && (!first || !last)) {
