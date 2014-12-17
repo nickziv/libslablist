@@ -321,6 +321,10 @@ unlink_slab(slab_t *s)
 	SLABLIST_UNLINK_SLAB(sl, s);
 	if (s->s_prev != NULL) {
 		s->s_prev->s_next = s->s_next;
+		if (sl->sl_end == s) {
+			sl->sl_end = s->s_prev;
+			SLABLIST_SET_END(sl, s->s_prev->s_max);
+		}
 	}
 
 	if (s->s_next != NULL) {
@@ -328,10 +332,6 @@ unlink_slab(slab_t *s)
 		if (sl->sl_head == s) {
 			sl->sl_head = s->s_next;
 			SLABLIST_SET_HEAD(sl, s->s_next->s_min);
-		}
-		if (sl->sl_end == s) {
-			sl->sl_end = s->s_prev;
-			SLABLIST_SET_END(sl, s->s_prev->s_max);
 		}
 	}
 
@@ -349,6 +349,10 @@ unlink_subslab(subslab_t *s)
 	SLABLIST_UNLINK_SUBSLAB(sl, s);
 	if (s->ss_prev != NULL) {
 		s->ss_prev->ss_next = s->ss_next;
+		if (sl->sl_end == s) {
+			sl->sl_end = s->ss_prev;
+			SLABLIST_SET_END(sl, s->ss_prev->ss_max);
+		}
 	}
 
 	if (s->ss_next != NULL) {
@@ -356,10 +360,6 @@ unlink_subslab(subslab_t *s)
 		if (sl->sl_head == s) {
 			sl->sl_head = s->ss_next;
 			SLABLIST_SET_HEAD(sl, s->ss_next->ss_min);
-		}
-		if (sl->sl_end == s) {
-			sl->sl_end = s->ss_prev;
-			SLABLIST_SET_END(sl, s->ss_prev->ss_max);
 		}
 	}
 

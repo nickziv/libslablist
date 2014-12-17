@@ -756,7 +756,13 @@ slab_generic_rem(slab_t *sm, subslab_t **below)
 
 end:;
 
-	if (sl->sl_head == uls) {
+	/*
+	 * Practically speaking, `sl_head` is never NULL by the time we get
+	 * here. However, we want to keep the clang static analyzer quiet, so
+	 * we insert a NULL-check anyway. We do the same in the sublslab
+	 * analogue of this code.
+	 */
+	if (sl->sl_head != NULL && sl->sl_head == uls) {
 		sl->sl_head = uls->s_next;
 	}
 
@@ -843,7 +849,13 @@ subslab_generic_rem(subslab_t *sm, subslab_t **below)
 
 end:;
 
-	if (sl->sl_head == uls) {
+	/*
+	 * Practically speaking, `sl_head` is never NULL by the time we get
+	 * here. However, we want to keep the clang static analyzer quiet, so
+	 * we insert a NULL-check anyway. We do the same in the slab analogue
+	 * of this code.
+	 */
+	if (sl->sl_head != NULL && sl->sl_head == uls) {
 		sl->sl_head = uls->ss_next;
 	}
 

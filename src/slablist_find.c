@@ -275,7 +275,7 @@ slablist_elem_t
 slablist_get(slablist_t *sl, uint64_t pos)
 {
 	slablist_elem_t ret;
-	uint64_t off_pos;
+	uint64_t off_pos = 0;
 	slab_t *s;
 	small_list_t *sml = NULL;
 	if (IS_SMALL_LIST(sl)) {
@@ -372,7 +372,7 @@ slablist_prev(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 {
 	b->sb_list = sl;
 	slab_t *s;
-	small_list_t *prev;
+	small_list_t *prev = NULL;
 	small_list_t *sml = NULL;
 	int i;
 	if (b->sb_node == NULL) {
@@ -1020,7 +1020,7 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 {
 	SLABLIST_BUBBLE_UP_BEGIN(sl);
 
-	int fs;
+	int fs = 0;
 	int layers = 1;
 	int f = 0;
 	subslab_t *found = NULL;
@@ -1091,7 +1091,7 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 {
 
 	SLABLIST_FIND_BEGIN(sl, key);
-	slab_t *potential;
+	slab_t *potential = NULL;
 	uint64_t i = 0;
 	slablist_elem_t ret;
 	if (IS_SMALL_LIST(sl) && SLIST_SORTED(sl->sl_flags)) {
@@ -1154,6 +1154,11 @@ typedef struct subseq {
 slablist_elem_t
 subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
 {
+/*
+ * Because this code sets off clang analyzer warnings, we make is 'hidden' or
+ * 'ignored' via the undefined macro below.
+ */
+#ifdef SUBSEQ_NO_IGNORE
 	subseq_t *seq = acc.sle_p;
 	slablist_t *sl = seq->sseq_sub1;
 	slablist_elem_t *seq_arr = seq->sseq_sub2;
@@ -1221,6 +1226,7 @@ subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
 		}
 	}
 	return (acc);
+#endif
 }
 
 /*
