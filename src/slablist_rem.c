@@ -1529,7 +1529,7 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 		 * return.
 		 */
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) != 0) {
-			rdl.sle_u = NULL;
+			rdl.sle_u = 0;
 
 			ret = SL_ENFOUND;
 			goto end;
