@@ -1622,7 +1622,7 @@ slablist_xtract_simple(slablist_t *sl, char *nm, slablist_elem_t start,
 		slablist_t *nsl = slablist_create(nm, sl->sl_cmp_elem,
 		    sl->sl_bnd_elem, sl->sl_flags);
 		while (!first) {
-			stat = slablist_next(sl, bm, next);
+			(void)slablist_next(sl, bm, next);
 			pos++;
 			if (next->sle_u == first) {
 				first++;
@@ -1630,7 +1630,7 @@ slablist_xtract_simple(slablist_t *sl, char *nm, slablist_elem_t start,
 			}
 		}
 		while (!last) {
-			stat = slablist_next(sl, bm, next);
+			(void)slablist_next(sl, bm, next);
 			slablist_add(nsl, *next, 0);
 			if (next->sle_u == last) {
 				last++;
