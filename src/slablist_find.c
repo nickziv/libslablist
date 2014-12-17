@@ -140,7 +140,6 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 
 	slablist_t *bl = sl->sl_baselayer;
 	subslab_t *b = bl->sl_head;
-	subslab_t *bprev = NULL;
 	uint16_t layers = bl->sl_layer;
 	uint16_t layer = 0;
 	/*
@@ -385,7 +384,18 @@ slablist_prev(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 			s = sl->sl_end;
 			b->sb_node = s;
 			b->sb_index = s->s_elems - 1;
-			*e = s->s_arr[(b->sb_index)];
+			/*
+			 * Unless we cast the index to type `int`, GCC will
+			 * spew some warnings about a subscript of type 'char'.
+			 * The subcript is of type int8_t, and GCC is warning
+			 * us that we might end up with a negative index. We
+			 * use the negative index later on in the code to
+			 * determine if we've passed the beginning of a slab.
+			 * So, GCC has the best intentions, but this is a
+			 * non-issue. We're just tricking it into thinking that
+			 * everything is OK.
+			 */
+			*e = s->s_arr[(int)(b->sb_index)];
 		}
 		return (0);
 	}

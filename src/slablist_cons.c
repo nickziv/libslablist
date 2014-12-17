@@ -33,7 +33,14 @@
 #include "slablist_provider.h"
 
 static int init = 0;
-static slablist_t *lst_sl = NULL;
+/*
+ * Originally, it was intended that there would be a 'master' slablist that
+ * held references to all of the slablists for accounting and statistics
+ * purposes. This was never implemented, and the lines of code below are
+ * vestiges of that vision. Though the dream lives on, and may be implemented
+ * if a very compelling case can be made for it.
+ */
+/* static slablist_t *lst_sl = NULL; */
 /* static pthread_mutex_t lst_sl_lk; */
 extern int slablist_umem_init();
 
@@ -115,12 +122,15 @@ slablist_set_attach_req(slablist_t *sl, uint64_t req)
 {
 	/*
 	 * Set the sublayer_req value, which can never be larger than the
-	 * number of elems that can fit in a subslab.
+	 * number of elems that can fit in a subslab NOR the maximum value of
+	 * the sl_req_sublayer member (2^w where w is the number of bits that
+	 * member can hold). So if we make that member 16-bit, we will expect
+	 * SL_REQ_MAX to be equivalent to SUBELEM_MAX.
 	 */
-	if (req <= SUBELEM_MAX) {
+	if (req <= SL_REQ_MAX) {
 		sl->sl_req_sublayer = req;
 	} else {
-		sl->sl_req_sublayer = SUBELEM_MAX;
+		sl->sl_req_sublayer = SL_REQ_MAX;
 	}
 }
 
@@ -848,7 +858,6 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 		node++;
 	}
 
-	node;
 	int i = 0;
 	int j = nodes - 1;
 	while (sl->sl_cmp_elem(elems[i], min) < 0) {

@@ -110,6 +110,7 @@
 #define	FS_UNDER_RANGE	-1
 #define	FS_OVER_RANGE	1
 
+#define	SL_REQ_MAX	(255)
 #define	SUBELEM_MAX	(512)
 #define	SELEM_MAX	(121)
 #define	SMELEM_MAX	(60)
