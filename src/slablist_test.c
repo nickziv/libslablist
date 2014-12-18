@@ -577,7 +577,8 @@ test_add_elem(slab_t *s, slablist_elem_t elem, uint64_t i)
 }
 /*
  * This function tests that a slab is consistent within the context of the
- * add_elem() function.
+ * add_elem() function. Bear in mind that one and only one of `s1` or `s2`
+ * _must_ be NULL.
  */
 int
 test_add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
@@ -615,7 +616,7 @@ test_add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	}
 
 	int h = i - 1;
-	if (s2 != NULL) {
+	if (s1 == NULL) {
 		goto ss_test;
 	}
 
@@ -643,23 +644,30 @@ test_add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	return (0);
 
 ss_test:;
+	/*
+	 * We put this superfluous check here, so that clang's static analyzer
+	 * keeps quiet.
+	 */
+	if (s2 == NULL) {
+		return (0);
+	}
 	subslab_t *snext = GET_SUBSLAB_ELEM(s, i);
 	subslab_t *sprev = GET_SUBSLAB_ELEM(s, h);
 	if (i > 0 && i <= (elems - 1)) {
-		if (sl->sl_cmp_elem(s1->s_max, snext->ss_max) > 0 ||
-		    sl->sl_cmp_elem(s1->s_max, sprev->ss_max) < 0) {
+		if (sl->sl_cmp_elem(s2->ss_max, snext->ss_max) > 0 ||
+		    sl->sl_cmp_elem(s2->ss_max, sprev->ss_max) < 0) {
 			return (E_TEST_INS_SLAB_OUT_ORD);
 		}
 	}
 
 	if (i == elems && elems > 0) {
-		if (sl->sl_cmp_elem(s1->s_max, sprev->ss_max) < 0) {
+		if (sl->sl_cmp_elem(s2->ss_max, sprev->ss_max) < 0) {
 			return (E_TEST_INS_SLAB_OUT_ORD);
 		}
 	}
 
 	if (i == 0 && elems > 0) {
-		if (sl->sl_cmp_elem(s1->s_max, snext->ss_max) > 0) {
+		if (sl->sl_cmp_elem(s2->ss_max, snext->ss_max) > 0) {
 			return (E_TEST_INS_SLAB_OUT_ORD);
 		}
 	}
