@@ -380,9 +380,9 @@ sl_suml(selem_t z, selem_t *e, uint64_t sz)
 {
 	selem_t r;
 	r.sle_u = z.sle_u;
-	uint64_t i = sz - 1;
-	while (i >= 0) {
-		r.sle_u += e[i].sle_u;
+	uint64_t i = sz;
+	while (i > 0) {
+		r.sle_u += e[(i - 1)].sle_u;
 		i--;
 	}
 	return (r);

@@ -148,7 +148,31 @@ $(DS_BENCHES_S_I): $(R_BENCH)/%/$(MACH_NAME)_$(TPHSI)_$(BENCH_SIZE): %
 	$(DTRACE) -c './$(DRV) $< $(BENCH_SIZE) intsrt seqinc' -s $(BENCH_GEN_THR_HEAP) -o $@
 	$(AWK) -f $(BENCH_PPROC) $(R_BENCH)/$</$(DS_SI_SUF) > $(R_BENCH)/$</$(DS_SI_PP_SUF)
 
-bench: $(DRV) $(SL_BENCH) $(DS_BENCHES) $(SL_BENCH_PP) $(DS_BENCHES_PP)
+$(DS_BENCHES_R_I_FR): $(R_BENCH)/%/$(DS_RI_FR_SUF): %
+	$(DTRACE) -c './$(DRV) $< $(BENCH_SIZE) intsrt rand foldr' -s $(BENCH_FOLDR) -o $@
+
+$(DS_BENCHES_S_I_FR): $(R_BENCH)/%/$(DS_SI_FR_SUF): %
+	$(DTRACE) -c './$(DRV) $< $(BENCH_SIZE) intsrt seqinc foldr' -s $(BENCH_FOLDR) -o $@
+
+$(DS_BENCHES_R_I_FL): $(R_BENCH)/%/$(DS_RI_FL_SUF): %
+	$(DTRACE) -c './$(DRV) $< $(BENCH_SIZE) intsrt rand foldl' -s $(BENCH_FOLDL) -o $@
+
+$(DS_BENCHES_S_I_FL): $(R_BENCH)/%/$(DS_SI_FL_SUF): %
+	$(DTRACE) -c './$(DRV) $< $(BENCH_SIZE) intsrt seqinc foldl' -s $(BENCH_FOLDL) -o $@
+
+$(SL_RI_FR): $(DRV) $(R_BENCH_SD)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt rand foldr' -s $(BENCH_FOLDR) -o $@
+
+$(SL_SI_FR): $(DRV) $(R_BENCH_SD)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt seqinc foldr' -s $(BENCH_FOLDR) -o $@
+
+$(SL_RI_FL): $(DRV) $(R_BENCH_SD)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt rand foldl' -s $(BENCH_FOLDL) -o $@
+
+$(SL_SI_FL): $(DRV) $(R_BENCH_SD)
+	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt seqinc foldl' -s $(BENCH_FOLDL) -o $@
+
+bench: $(DRV) $(SL_BENCH) $(DS_BENCHES) $(SL_BENCH_PP) $(DS_BENCHES_PP) $(DS_BENCHES_F) $(SL_BENCH_F)
 
 bench_plot: 
 	$(NAWK) $(NAWK_ARGS) -f $(BENCH_PLOT)/gen.nawk

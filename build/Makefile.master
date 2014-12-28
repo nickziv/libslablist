@@ -23,6 +23,7 @@ ILLUMOS_PREFIX=		/opt/libslablist/
 LINUX_PREFIX=		/opt/libslablist
 BENCH_SIZE=		10000000
 
+
 FG_OUT_SIR=		$(FGDIR)/time/$(BENCH_SIZE)_intsrt_rand.out
 FG_SVG_SIR=		$(FG_OUT_SIR:%.out=%.svg)
 FG_CMD_SIR=		./$(DRV) sl $(BENCH_SIZE) intsrt rem rand
@@ -174,6 +175,8 @@ STACKCOLLAPSE=		$(TOOLS)/stackcollapse.pl
 FLAMEGRAPH=		$(TOOLS)/flamegraph.pl
 
 BENCH_GEN_THR_HEAP=	$(DSDIR)/throughput_plus_heap.d
+BENCH_FOLDL=		$(DSDIR)/foldl.d
+BENCH_FOLDR=		$(DSDIR)/foldr.d
 
 MACH_NAME=		zone_8GB
 
@@ -183,16 +186,29 @@ TPHRI=			throughput_plus_heap_rand_intsrt
 TPRI=			throughput_post_rand_intsrt
 TPHSI=			throughput_plus_heap_seqinc_intsrt
 TPSI=			throughput_post_seqinc_intsrt
+FLSI=			foldl_seqinc_intsrt
+FLRI=			foldl_rand_intsrt
+FRSI=			foldr_seqinc_intsrt
+FRRI=			foldr_rand_intsrt
 
 DS_RI_SUF=		$(MACH_NAME)_$(TPHRI)_$(BENCH_SIZE)
 DS_SI_SUF=		$(MACH_NAME)_$(TPHSI)_$(BENCH_SIZE)
 DS_RI_PP_SUF=		$(MACH_NAME)_$(TPRI)_$(BENCH_SIZE)
 DS_SI_PP_SUF=		$(MACH_NAME)_$(TPSI)_$(BENCH_SIZE)
+DS_RI_FR_SUF=		$(MACH_NAME)_$(FRRI)_$(BENCH_SIZE)
+DS_SI_FR_SUF=		$(MACH_NAME)_$(FRSI)_$(BENCH_SIZE)
+DS_RI_FL_SUF=		$(MACH_NAME)_$(FLRI)_$(BENCH_SIZE)
+DS_SI_FL_SUF=		$(MACH_NAME)_$(FLSI)_$(BENCH_SIZE)
 SL_BENCH_R_I=		$(R_BENCH)/sl/$(DS_RI_SUF)
 SL_BENCH_S_I=		$(R_BENCH)/sl/$(DS_SI_SUF)
 SL_BENCH_R_I_PP=	$(R_BENCH)/sl/$(DS_RI_PP_SUF)
 SL_BENCH_S_I_PP=	$(R_BENCH)/sl/$(DS_SI_PP_SUF)
+SL_RI_FR=		$(R_BENCH)/sl/$(DS_RI_FR_SUF)
+SL_SI_FR=		$(R_BENCH)/sl/$(DS_SI_FR_SUF)
+SL_RI_FL=		$(R_BENCH)/sl/$(DS_RI_FL_SUF)
+SL_SI_FL=		$(R_BENCH)/sl/$(DS_SI_FL_SUF)
 SL_BENCH=		$(SL_BENCH_R_I) $(SL_BENCH_S_I)
+SL_BENCH_F=		$(SL_RI_FR) $(SL_RI_FL) $(SL_SI_FR) $(SL_SI_FL)
 SL_BENCH_PP=		$(SL_BENCH_R_I_PP) $(SL_BENCH_S_I_PP)
 
 
@@ -200,5 +216,11 @@ DS_BENCHES_R_I:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_SUF))
 DS_BENCHES_S_I:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_SUF))
 DS_BENCHES_R_I_PP:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_PP_SUF))
 DS_BENCHES_S_I_PP:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_PP_SUF))
+DS_BENCHES_S_I_FR:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_FR_SUF))
+DS_BENCHES_S_I_FL:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_SI_FL_SUF))
+DS_BENCHES_R_I_FR:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_FR_SUF))
+DS_BENCHES_R_I_FL:=	$(DS_IMPLS_EXT:%.Z=$(R_BENCH)/%/$(DS_RI_FL_SUF))
 DS_BENCHES:=		$(DS_BENCHES_R_I) $(DS_BENCHES_S_I)
 DS_BENCHES_PP:=		$(DS_BENCHES_R_I_PP) $(DS_BENCHES_S_I_PP)
+DS_BENCHES_F:=		$(DS_BENCHES_R_I_FR) $(DS_BENCHES_R_I_FL)\
+			$(DS_BENCHES_S_I_FR) $(DS_BENCHES_S_I_FL)
