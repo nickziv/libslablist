@@ -425,7 +425,7 @@ for (p in pattern) {
 		data = pat"_foldl_"i;
 		aes = "aes(colour = '"rcol[i]"', x = struc, y = time)";
 		print prefix" + geom_"geom"(data = "data\
-		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", "props[geom]\
+		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", size = 30"\
 			");" >> output;
 	}
 	pr_legend_all_structs(prefix, output, 1);
@@ -463,7 +463,7 @@ for (p in pattern) {
 		data = pat"_foldr_"i;
 		aes = "aes(colour = '"rcol[i]"', x = struc, y = time)";
 		print prefix" + geom_"geom"(data = "data\
-		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", "props[geom]\
+		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", size = 30"\
 			");" >> output;
 	}
 	pr_legend_all_structs(prefix, output, 1);
