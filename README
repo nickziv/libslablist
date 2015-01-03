@@ -39,6 +39,9 @@ memory-efficient and cpu-efficient implementations in the world.
 `uuavl` uses 7% _less_ time than `libslablist` on random input.
 `uuavl` uses 271% _more_ memory than `libslablist` on random input.
 
+You'll find a full report here:
+http://nickziv.files.wordpress.com/2014/02/vis_ds.pdf
+
 Other AVL Tree implementations, such as those found in GNU libavl use 50% to
 100% more memory than `uuavl`. Which makes them half as competitive as `uuavl`.
 GNU libavl implementations also perform as well as `libslablist`.

@@ -4,11 +4,139 @@
 # arg3 = input size
 # arg4 = machine name
 
+function pr_legend_all_structs ( prefix, output, nofill ) {
+	print prefix " + scale_colour_identity(name ="\
+	    " 'data structure', "\
+	    >> output;
+
+	print "breaks = c(" >> output;
+
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		if (i == impl_last) {
+			print "'"rcol[i] "')," >> output;
+		} else {
+			print "'" rcol[i] "'," >> output;
+		}
+	}
+
+	print "labels = c(" >> output;
+
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		if (i == impl_last) {
+			print "'" i "')," >> output;
+		} else {
+			print "'" i "'," >> output;
+		}
+	}
+
+	print "guide = 'legend');" >> output;
+
+	print prefix " + guides(fill=FALSE, colour = guide_legend("\
+	    "override.aes = list(size="lnpt_sz")));" >> output;
+	#print prefix" + xlim($xlima, $xlimb);" >> output;
+	print prefix " + theme(title=element_text(face='bold'"\
+	    ",size="font_sz "));" >> output;
+
+	print prefix " + theme(axis.title.x=element_text("\
+	    "face='bold',size=" font_sz"));" >> output;
+
+	print prefix " + theme(axis.title.y=element_text("\
+	    "face='bold',size=" font_sz"));" >> output;
+
+	print prefix " + theme(axis.text.x=element_text(size="\
+	    font_sz"));" >> output;
+
+	print prefix " + theme(axis.text.y=element_text(size="\
+	    font_sz"));" >> output;
+
+	print prefix " + theme(legend.title=element_text(face="\
+	    "'bold',size="font_sz"));" >> output;
+
+	print prefix " + theme(legend.text=element_text(size="\
+	    font_sz"));" >> output;
+	if (nofill == 2) {
+		print prefix " + guides(fill=FALSE);" >> output;
+	}
+}
+
+function pr_legend_dup (prefix, output) {
+	print prefix" + scale_colour_identity(name = 'data structure', "\
+	    >> output;
+
+	print "breaks = c(" >> output;
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		if (i == impl_last) {
+			print "'"rcol[i]"')," >> output;
+		} else {
+			print "'"rcol[i]"'," >> output;
+		}
+	}
+	print "labels = c(" >> output;
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		if (i == impl_last) {
+			print "'" i "')," >> output;
+		} else {
+			print "'" i "'," >> output;
+		}
+	}
+
+	print "guide = 'legend');" >> output;
+	print prefix" + guides(colour = guide_legend(override.aes = list("\
+	    "size="lnpt_sz")));" >> output;
+	print prefix " + theme(title=element_text(face='bold',size="font_sz\
+	    "));" >> output;
+	print prefix " + theme(axis.title.x=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix " + theme(axis.title.y=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix " + theme(axis.text.x=element_text(size="\
+	    font_sz"));" >> output;
+	print prefix " + theme(axis.text.y=element_text(size="\
+	    font_sz"));" >> output;
+	print prefix " + theme(legend.title=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix " + theme(legend.text=element_text(size="\
+	    font_sz"));" >> output;
+}
+
+function pr_legend_pattern(prefix, output) {
+	print prefix " + scale_colour_identity(name = 'data structure', "\
+	    >> output;
+	print "breaks = c(" >> output;
+	print "'"rcol["rand"]"'," >> output;
+	print "'"rcol["seq"]"')," >> output;
+	print "labels = c(" >> output;
+	print "'"pattern[0]"'," >> output;
+	print "'"pattern[1]"')," >> output;
+	print "guide = 'legend');" >> output;
+	print prefix" + guides(colour = guide_legend(override.aes ="\
+	    " list(size="lnpt_sz")));" >> output;
+	print prefix" + theme(title=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(axis.title.x=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(axis.title.y=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(axis.text.x=element_text(size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(axis.text.y=element_text(size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(legend.title=element_text(face='bold',size="\
+	    font_sz"));" >> output;
+	print prefix" + theme(legend.text=element_text(size="\
+	    font_sz"));" >> output;
+
+}
 
 BEGIN {
 
 f1names = "c(\"ms\", \"elems\", \"heapsz\")";
 f2names = "c(\"ms\", \"elemsrate\")";
+f3names = "c(\"time\")";
 
 font_sz = 50;
 lnpt_sz = 30;
@@ -117,13 +245,15 @@ prefix = "plotvar <- plotvar";
 
 props["point"] = "size = 6";
 props["line"] = "size = 6";
+props["bar"] = "size = 6";
+
 
 # Here we generate the regular X vs. Y plots.
 z = 0;
 for (p in pattern) {
 	pat = pattern[p];
 	for (g in geometry) {
-	geom = geometry[g];
+		geom = geometry[g];
 		for (coord = 0; coord <= 2; coord++) {
 			output =outdir "/" z ".R";
 			print "jpeg('../imgs/" pat "_" x[coord] "_" y[coord]\
@@ -146,57 +276,7 @@ for (p in pattern) {
 			}
 
 			# And now the legend
-			print prefix " + scale_colour_identity(name ="\
-			    " 'data structure', "\
-			    >> output;
-
-			print "breaks = c(" >> output;
-
-			for (im = 0; im <= 11; im++) {
-				i = impl[im];
-				if (i == impl_last) {
-					print "'"rcol[i] "')," >> output;
-				} else {
-					print "'" rcol[i] "'," >> output;
-				}
-			}
-
-			print "labels = c(" >> output;
-
-			for (im = 0; im <= 11; im++) {
-				i = impl[im];
-				if (i == impl_last) {
-					print "'" i "')," >> output;
-				} else {
-					print "'" i "'," >> output;
-				}
-			}
-
-			print "guide = 'legend');" >> output;
-
-			print prefix " + guides(colour = guide_legend("\
-			    "override.aes = list(size="lnpt_sz")));" >> output;
-			#print prefix" + xlim($xlima, $xlimb);" >> output;
-			print prefix " + theme(title=element_text(face='bold'"\
-			    ",size="font_sz "));" >> output;
-
-			print prefix " + theme(axis.title.x=element_text("\
-			    "face='bold',size=" font_sz"));" >> output;
-
-			print prefix " + theme(axis.title.y=element_text("\
-			    "face='bold',size=" font_sz"));" >> output;
-
-			print prefix " + theme(axis.text.x=element_text(size="\
-			    font_sz"));" >> output;
-
-			print prefix " + theme(axis.text.y=element_text(size="\
-			    font_sz"));" >> output;
-
-			print prefix " + theme(legend.title=element_text(face="\
-			    "'bold',size="font_sz"));" >> output;
-
-			print prefix " + theme(legend.text=element_text(size="\
-			    font_sz"));" >> output;
+			pr_legend_all_structs(prefix, output, 0);
 
 			print "print(plotvar);" >> output;
 			print "dev.off();" >> output;
@@ -248,45 +328,9 @@ for (p in pattern) {
 	}
 
 	# And now the legend
-	print prefix" + scale_colour_identity(name = 'data structure', "\
-	    >> output;
-
-	print "breaks = c(" >> output;
-	for (im = 0; im <= 11; im++) {
-		i = impl[im];
-		if (i == impl_last) {
-			print "'"rcol[i]"')," >> output;
-		} else {
-			print "'"rcol[i]"'," >> output;
-		}
-	}
-	print "labels = c(" >> output;
-	for (im = 0; im <= 11; im++) {
-		i = impl[im];
-		if (i == impl_last) {
-			print "'" i "')," >> output;
-		} else {
-			print "'" i "'," >> output;
-		}
-	}
-
-	print "guide = 'legend');" >> output;
-	print prefix" + guides(colour = guide_legend(override.aes = list("\
-	    "size="lnpt_sz")));" >> output;
-	print prefix " + theme(title=element_text(face='bold',size="font_sz\
-	    "));" >> output;
-	print prefix " + theme(axis.title.x=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix " + theme(axis.title.y=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix " + theme(axis.text.x=element_text(size="\
-	    font_sz"));" >> output;
-	print prefix " + theme(axis.text.y=element_text(size="\
-	    font_sz"));" >> output;
-	print prefix " + theme(legend.title=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix " + theme(legend.text=element_text(size="\
-	    font_sz"));" >> output;
+	pr_legend_all_structs(prefix, output, 0);
+	# This was the original possibly duplicated code that was here.
+	#pr_legend_all_dup(prefix, output);
 
 
 	print "print(plotvar);" >> output;
@@ -327,31 +371,7 @@ for (im = 0; im <= 11; im++) {
 	}
 
 	# And now the legend
-	print prefix " + scale_colour_identity(name = 'data structure', "\
-	    >> output;
-	print "breaks = c(" >> output;
-	print "'"rcol["rand"]"'," >> output;
-	print "'"rcol["seq"]"')," >> output;
-	print "labels = c(" >> output;
-	print "'"pattern[0]"'," >> output;
-	print "'"pattern[1]"')," >> output;
-	print "guide = 'legend');" >> output;
-	print prefix" + guides(colour = guide_legend(override.aes ="\
-	    " list(size="lnpt_sz")));" >> output;
-	print prefix" + theme(title=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(axis.title.x=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(axis.title.y=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(axis.text.x=element_text(size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(axis.text.y=element_text(size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(legend.title=element_text(face='bold',size="\
-	    font_sz"));" >> output;
-	print prefix" + theme(legend.text=element_text(size="\
-	    font_sz"));" >> output;
+	pr_legend_pattern(prefix, output);
 
 
 	print "print(plotvar);" >> output;
@@ -359,4 +379,97 @@ for (im = 0; im <= 11; im++) {
 	z++;
 }
 
+# Now we want to generate code that will make bar charts of the fold
+# performance of the data structures. We want to segment by pattern and by
+# fold-direction. This means we can parallelize by pattern and fold direction.
+# There are 2 of each so, parallelism = 4. Impl is X axis, time is Y axis.
+
+# We don't need higher resolution for the bar-plots.
+jpw = "width = 1600";
+jph = "height = 1600";
+geom = "point";
+# The foldl code.
+for (p in pattern) {
+	pat = pattern[p];
+	output = outdir "/" z ".R";
+	print "library(ggplot2)" >> output;
+	print "jpeg('../imgs/"pat"_foldl.jpeg', "jpw", "jph")" >> output;
+	# We read in t each impl's foldX trace file.
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		# Skip Lists don't support left-folds.
+		if (i == "jmpc_skl_16") {
+			continue;
+		}
+		if (pat == "seq") {
+			file = arg2"/" i "/"arg4"_foldl_seqinc_intsrt_"arg3;
+		} else {
+			file = arg2"/" i "/"arg4"_foldl_rand_intsrt_"arg3;
+		}
+		print pat"_foldl_" i " <- read.table('"file"', col.names="\
+		    f3names");" >> output;
+		data = pat"_foldl_"i;
+		#print "print(" data ");" >> output;
+		print data"$struc <- ""\""i"\""";" >> output;
+		#print "print(" data ");" >> output;
+	}
+	print "plotvar <- ggplot();" >> output;
+	print prefix" + ggtitle(\"Total Fold-Left Time\")" >> output;
+	# And then we crunch them into plots.
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		# Skip Lists don't support left-folds.
+		if (i == "jmpc_skl_16") {
+			continue;
+		}
+		data = pat"_foldl_"i;
+		aes = "aes(colour = '"rcol[i]"', x = struc, y = time)";
+		print prefix" + geom_"geom"(data = "data\
+		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", "props[geom]\
+			");" >> output;
+	}
+	pr_legend_all_structs(prefix, output, 1);
+	print "print(plotvar);" >> output;
+	print "dev.off();" >> output;
+	z++;
 }
+
+# The foldr code
+for (p in pattern) {
+	pat = pattern[p];
+	output = outdir "/" z ".R";
+	print "library(ggplot2)" >> output;
+	print "jpeg('../imgs/"pat"_foldr.jpeg', "jpw", "jph")" >> output;
+	# We read in t each impl's foldX trace file.
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		if (pat == "seq") {
+			file = arg2"/" i "/"arg4"_foldr_seqinc_intsrt_"arg3;
+		} else {
+			file = arg2"/" i "/"arg4"_foldr_rand_intsrt_"arg3;
+		}
+		print pat"_foldr_" i " <- read.table('"file"', col.names="\
+		    f3names");" >> output;
+		data = pat"_foldr_"i;
+		print "print(" data ");" >> output;
+		print data"$struc <- ""\""i"\""";" >> output;
+		print "print(" data ");" >> output;
+	}
+	print "plotvar <- ggplot();" >> output;
+	print prefix" + ggtitle(\"Total Fold-Right Time\")" >> output;
+	# And then we crunch them into plots.
+	for (im = 0; im <= 11; im++) {
+		i = impl[im];
+		data = pat"_foldr_"i;
+		aes = "aes(colour = '"rcol[i]"', x = struc, y = time)";
+		print prefix" + geom_"geom"(data = "data\
+		    ", stat = \"identity\", fill = '"rcol[i]"', "aes", "props[geom]\
+			");" >> output;
+	}
+	pr_legend_all_structs(prefix, output, 1);
+	print "print(plotvar);" >> output;
+	print "dev.off();" >> output;
+	z++;
+}
+
+} # BEGIN

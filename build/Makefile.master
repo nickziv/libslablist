@@ -20,7 +20,7 @@ R_BENCH_SD=		$(DS_IMPLS:%=$(R_BENCH)/%)
 BENCH_DRV=		$(BENCH)/main
 BENCH_PLOT=		$(BENCH)/rplots
 ILLUMOS_PREFIX=		/opt/libslablist/
-LINUX_PREFIX=		/opt/libslablist
+LINUX_PREFIX=		/opt/libslablist/
 BENCH_SIZE=		10000000
 
 

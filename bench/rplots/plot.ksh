@@ -4,7 +4,7 @@ cd rcode
 
 print starting...
 date
-for i in {0..25}; do;
+for i in {0..29}; do;
 	R CMD BATCH $i.R &
 done;
 
