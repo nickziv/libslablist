@@ -17,11 +17,24 @@ syscall::brk:entry
 }
 
 syscall::brk:entry
-/pid == $target && self->endds != arg0/
+/pid == $target && self->endds < arg0/
 {
-	allocated += arg0 - self->endds;
+	allocated += ((uint64_t)arg0 - (uint64_t)self->endds);
 	/* printf("%d\n", self->allocated); */
 	self->endds = arg0;
+}
+syscall::brk:entry
+/pid == $target && self->endds == arg0/
+{
+	printf("self->endss is == to arg0\n");
+	exit(0);
+}
+
+syscall::brk:entry
+/pid == $target && self->endds > arg0/
+{
+	printf("self->endss is > to arg0\n");
+	exit(0);
 }
 
 slablist$target:::add_begin
@@ -37,5 +50,5 @@ pid$target::end:entry
 tick-1ms
 {
 	inter += 1;
-	printf("%d\t%d\t%d\n", inter, e, allocated);
+	printf("%u\t%u\t%u\n", inter, e, allocated);
 }
