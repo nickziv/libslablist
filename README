@@ -16,6 +16,9 @@ disk.
 See the block comment at the top of src/slablist_impl.h for implementation
 overview.
 
+Check out the development blog for historical or technical information:
+http://slablist.wordpress.com
+
 The `libslablist` API is not yet stable. It is volatile and may change.
 
 All of the code in the library follows the Illumos kernel coding style,
