@@ -742,12 +742,13 @@ ripple_aisp(slab_t *s)
 
 
 /* fwd declaration for ripple funcs below */
-static add_ctx_t *subslab_gen_add(int, slab_t *, subslab_t *, subslab_t *);
+static add_ctx_t subslab_gen_add(int, slab_t *, subslab_t *, subslab_t *);
 
 void
 ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 {
-	add_ctx_t *t = NULL;
+	add_ctx_t t;
+	bzero(&t, sizeof (add_ctx_t));
 	int status;
 	int broke = 0;
 	int skip_loop = 1;
@@ -767,10 +768,9 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 			}
 		}
 		t = subslab_gen_add(status, n, nn, n->s_below);
-		while (t->ac_subslab_new != NULL) {
+		while (t.ac_subslab_new != NULL) {
 			skip_loop = 0;
-			nn = t->ac_subslab_new;
-			rm_add_ctx(t);
+			nn = t.ac_subslab_new;
 			/*
 			 * If there is no subslab, there is no point in
 			 * continueing.
@@ -790,7 +790,8 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 		ripple_update_extrema(p);
 		ripple_inc_usr_elems(n->s_below);
 		if (!broke || skip_loop) {
-			rm_add_ctx(t);
+			//replace with bzero?
+			//rm_add_ctx(t);
 		}
 	}
 }
@@ -850,7 +851,7 @@ ripple_aispm(slab_t *s)
  * duplicate we notify the caller, by returning an add_ctx_t with an EDUP
  * error.
  */
-static add_ctx_t *
+static add_ctx_t
 gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 {
 	/*
@@ -858,13 +859,14 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 	 * `elem` that is a pointer to a slab.
 	 */
 	slab_t *ns = NULL;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	int i = slab_bin_srch(elem, s);
 	if (!sorting && !rep && sl->sl_cmp_elem(elem, s->s_arr[i]) == 0) {
 		SLABLIST_SLAB_AR(sl, NULL, elem, 0);
-		ctx->ac_how = AC_HOW_EDUP;
+		ctx.ac_how = AC_HOW_EDUP;
 		return (ctx);
 	}
 	/*
@@ -888,8 +890,8 @@ gen_add_ira(slablist_t *sl, slab_t *s, slablist_elem_t elem, int rep)
 			goto skip_rep;
 		}
 		if (sl->sl_cmp_elem(s->s_arr[i], elem) == 0) {
-			ctx->ac_repd_elem = s->s_arr[i];
-			ctx->ac_how = AC_HOW_INTO;
+			ctx.ac_repd_elem = s->s_arr[i];
+			ctx.ac_how = AC_HOW_INTO;
 			s->s_arr[i] = elem;
 			SLABLIST_SLAB_AR(sl, NULL, elem, 1);
 			return (ctx);
@@ -898,7 +900,7 @@ skip_rep:;
 		SLABLIST_SLAB_AI(sl, s, elem);
 		add_elem(s, elem, i);
 		ripple_ai(s);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 
 	} else {
 		/*
@@ -945,14 +947,14 @@ skip_rep:;
 			SLABLIST_SLAB_AISN(sl, s, elem);
 			addsn(s, elem, i);
 			ripple_aisn(s);
-			ctx->ac_how = AC_HOW_SP_NX;
+			ctx.ac_how = AC_HOW_SP_NX;
 			return (ctx);
 		}
 		if (spv != NULL && spv->s_elems < SELEM_MAX) {
 			SLABLIST_SLAB_AISP(sl, s, elem);
 			addsp(s, elem, i);
 			ripple_aisp(s);
-			ctx->ac_how = AC_HOW_SP_PV;
+			ctx.ac_how = AC_HOW_SP_PV;
 			return (ctx);
 		}
 		if (snx == NULL || snx->s_elems == SELEM_MAX) {
@@ -962,8 +964,8 @@ skip_rep:;
 			link_slab(ns, s, SLAB_LINK_AFTER);
 			addsn(s, elem, i);
 			ripple_aisnm(s);
-			ctx->ac_how = AC_HOW_SP_NX;
-			ctx->ac_slab_new = ns;
+			ctx.ac_how = AC_HOW_SP_NX;
+			ctx.ac_slab_new = ns;
 			return (ctx);
 		}
 		if (spv == NULL || spv->s_elems == SELEM_MAX) {
@@ -973,8 +975,8 @@ skip_rep:;
 			link_slab(ns, s, SLAB_LINK_BEFORE);
 			addsp(s, elem, i);
 			ripple_aispm(s);
-			ctx->ac_how = AC_HOW_SP_PV;
-			ctx->ac_slab_new = ns;
+			ctx.ac_how = AC_HOW_SP_PV;
+			ctx.ac_slab_new = ns;
 			return (ctx);
 		}
 	}
@@ -982,7 +984,7 @@ skip_rep:;
 	return (ctx);
 }
 
-static add_ctx_t *
+static add_ctx_t
 sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	/*
@@ -990,7 +992,8 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	 * `elem` that is a pointer to a slab.
 	 */
 	subslab_t *ns = NULL;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 	// int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
 
 	int i = 0;
@@ -1010,7 +1013,7 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 
 		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
 		add_slab(s, s1, s2, i);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 	} else {
 
 		subslab_t *snx = s->ss_next;
@@ -1019,15 +1022,15 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 		if (snx != NULL && snx->ss_elems < SUBELEM_MAX) {
 			SLABLIST_SUBSLAB_AISN(sl, s, s1, s2);
 			common = sub_addsn(s, s1, s2, 0);
-			ctx->ac_how = AC_HOW_SP_NX;
-			ctx->ac_subslab_common = common;
+			ctx.ac_how = AC_HOW_SP_NX;
+			ctx.ac_subslab_common = common;
 			return (ctx);
 		}
 		if (spv != NULL && spv->ss_elems < SUBELEM_MAX) {
 			SLABLIST_SUBSLAB_AISP(sl, s, s1, s2);
 			common = sub_addsp(s, s1, s2, 0);
-			ctx->ac_how = AC_HOW_SP_PV;
-			ctx->ac_subslab_common = common;
+			ctx.ac_how = AC_HOW_SP_PV;
+			ctx.ac_subslab_common = common;
 			return (ctx);
 		}
 		if (snx == NULL || snx->ss_elems == SUBELEM_MAX) {
@@ -1037,9 +1040,9 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 			SLABLIST_SUBSLAB_MK(sl);
 			link_subslab(ns, s, SLAB_LINK_AFTER);
 			common = sub_addsn(s, s1, s2, 1);
-			ctx->ac_how = AC_HOW_SP_NX;
-			ctx->ac_subslab_new = ns;
-			ctx->ac_subslab_common = common;
+			ctx.ac_how = AC_HOW_SP_NX;
+			ctx.ac_subslab_new = ns;
+			ctx.ac_subslab_common = common;
 			return (ctx);
 		}
 		if (spv == NULL || spv->ss_elems == SUBELEM_MAX) {
@@ -1049,9 +1052,9 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 			SLABLIST_SUBSLAB_MK(sl);
 			link_subslab(ns, s, SLAB_LINK_BEFORE);
 			common = sub_addsp(s, s1, s2, 1);
-			ctx->ac_how = AC_HOW_SP_PV;
-			ctx->ac_subslab_new = ns;
-			ctx->ac_subslab_common = common;
+			ctx.ac_how = AC_HOW_SP_PV;
+			ctx.ac_subslab_new = ns;
+			ctx.ac_subslab_common = common;
 			return (ctx);
 		}
 	}
@@ -1069,7 +1072,7 @@ sub_gen_add_ira(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
  *	Spill max of `s` into next, add into `s`.
  *	Create new previous slab, add into that.
  */
-static add_ctx_t *
+static add_ctx_t
 gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 {
 	/*
@@ -1078,12 +1081,13 @@ gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 	 */
 	int i = slab_bin_srch(elem, s);
 	slab_t *ns = NULL;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 	if (s->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AI(sl, s, elem);
 		add_elem(s, elem, i);
 		ripple_ai(s);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 		return (ctx);
 	}
 	if (s->s_prev != NULL && s->s_prev->s_elems < SELEM_MAX) {
@@ -1091,14 +1095,14 @@ gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 		i = slab_bin_srch(elem, s->s_prev);
 		add_elem(s->s_prev, elem, i);
 		ripple_ab(s);
-		ctx->ac_how = AC_HOW_BEFORE;
+		ctx.ac_how = AC_HOW_BEFORE;
 		return (ctx);
 	}
 	if (s->s_next != NULL && s->s_next->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AISN(sl, s, elem);
 		addsn(s, elem, i);
 		ripple_aisn(s);
-		ctx->ac_how = AC_HOW_SP_NX;
+		ctx.ac_how = AC_HOW_SP_NX;
 		return (ctx);
 	}
 	SLABLIST_SLAB_ABM(sl, s, elem);
@@ -1107,12 +1111,12 @@ gen_add_ura(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 	link_slab(ns, s, SLAB_LINK_BEFORE);
 	add_elem(s->s_prev, elem, 0);
 	ripple_abm(s);
-	ctx->ac_how = AC_HOW_BEFORE;
-	ctx->ac_slab_new = ns;
+	ctx.ac_how = AC_HOW_BEFORE;
+	ctx.ac_slab_new = ns;
 	return (ctx);
 }
 
-static add_ctx_t *
+static add_ctx_t
 sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	/*
@@ -1120,7 +1124,8 @@ sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	 * subslab pointer.
 	 */
 	int i;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 
 	if (s1 != NULL) {
 		i = subslab_bin_srch_top(s1->s_max, s);
@@ -1131,7 +1136,7 @@ sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	if (s->ss_elems < SUBELEM_MAX) {
 		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
 		add_slab(s, s1, s2, i);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 		return (ctx);
 	}
 	if (s->ss_prev != NULL && s->ss_prev->ss_elems < SUBELEM_MAX) {
@@ -1142,15 +1147,15 @@ sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 			i = subslab_bin_srch(s2->ss_max, s->ss_prev);
 		}
 		add_slab(s->ss_prev, s1, s2, i);
-		ctx->ac_how = AC_HOW_BEFORE;
+		ctx.ac_how = AC_HOW_BEFORE;
 		return (ctx);
 	}
 	subslab_t *common = NULL;
 	if (s->ss_next != NULL && s->ss_next->ss_elems < SUBELEM_MAX) {
 		SLABLIST_SUBSLAB_AISN(sl, s, s1, s2);
 		common = sub_addsn(s, s1, s2, 0);
-		ctx->ac_how = AC_HOW_SP_NX;
-		ctx->ac_subslab_common = common;
+		ctx.ac_how = AC_HOW_SP_NX;
+		ctx.ac_subslab_common = common;
 		return (ctx);
 	}
 	SLABLIST_SUBSLAB_ABM(sl, s, s1, s2);
@@ -1159,8 +1164,8 @@ sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	SLABLIST_SUBSLAB_MK(sl);
 	link_subslab(ns, s, SLAB_LINK_BEFORE);
 	add_slab(s->ss_prev, s1, s2, 0);
-	ctx->ac_how = AC_HOW_BEFORE;
-	ctx->ac_subslab_new = ns;
+	ctx.ac_how = AC_HOW_BEFORE;
+	ctx.ac_subslab_new = ns;
 	return (ctx);
 }
 
@@ -1175,18 +1180,19 @@ sub_gen_add_ura(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
  *	Spill min of `s` into prev, add into `s`.
  *	Create new next slab, add into that.
  */
-static add_ctx_t *
+static add_ctx_t
 gen_add_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 {
 	int i = slab_bin_srch(elem, s);
 	slab_t *ns = NULL;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 
 	if (s->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AI(sl, s, elem);
 		add_elem(s, elem, i);
 		ripple_ai(s);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 		return (ctx);
 	}
 	if (s->s_next != NULL && s->s_next->s_elems < SELEM_MAX) {
@@ -1194,14 +1200,14 @@ gen_add_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 		i = slab_bin_srch(elem, s->s_next);
 		add_elem(s->s_next, elem, i);
 		ripple_aa(s);
-		ctx->ac_how = AC_HOW_AFTER;
+		ctx.ac_how = AC_HOW_AFTER;
 		return (ctx);
 	}
 	if (s->s_prev != NULL && s->s_prev->s_elems < SELEM_MAX) {
 		SLABLIST_SLAB_AISP(sl, s, elem);
 		addsp(s, elem, i);
 		ripple_aisp(s);
-		ctx->ac_how = AC_HOW_SP_PV;
+		ctx.ac_how = AC_HOW_SP_PV;
 		return (ctx);
 	}
 	SLABLIST_SLAB_AAM(sl, s, elem);
@@ -1210,16 +1216,17 @@ gen_add_ora(slablist_t *sl, slab_t *s, slablist_elem_t elem)
 	link_slab(ns, s, SLAB_LINK_AFTER);
 	add_elem(s->s_next, elem, 0);
 	ripple_aam(s);
-	ctx->ac_how = AC_HOW_AFTER;
-	ctx->ac_slab_new = ns;
+	ctx.ac_how = AC_HOW_AFTER;
+	ctx.ac_slab_new = ns;
 	return (ctx);
 }
 
-static add_ctx_t *
+static add_ctx_t
 sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 {
 	int i = 0;
-	add_ctx_t *ctx = mk_add_ctx();
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 
 	if (s1 != NULL) {
 		i = subslab_bin_srch_top(s1->s_max, s);
@@ -1230,7 +1237,7 @@ sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	if (s->ss_elems < SUBELEM_MAX) {
 		SLABLIST_SUBSLAB_AI(sl, s, s1, s2);
 		add_slab(s, s1, s2, i);
-		ctx->ac_how = AC_HOW_INTO;
+		ctx.ac_how = AC_HOW_INTO;
 		return (ctx);
 	}
 	if (s->ss_next != NULL && s->ss_next->ss_elems < SUBELEM_MAX) {
@@ -1241,15 +1248,15 @@ sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 			i = subslab_bin_srch(s2->ss_max, s->ss_next);
 		}
 		add_slab(s->ss_next, s1, s2, i);
-		ctx->ac_how = AC_HOW_AFTER;
+		ctx.ac_how = AC_HOW_AFTER;
 		return (ctx);
 	}
 	subslab_t *common = NULL;
 	if (s->ss_prev != NULL && s->ss_prev->ss_elems < SUBELEM_MAX) {
 		SLABLIST_SUBSLAB_AISP(sl, s, s1, s2);
 		common = sub_addsp(s, s1, s2, 0);
-		ctx->ac_how = AC_HOW_SP_PV;
-		ctx->ac_subslab_common = common;
+		ctx.ac_how = AC_HOW_SP_PV;
+		ctx.ac_subslab_common = common;
 		return (ctx);
 	}
 	SLABLIST_SUBSLAB_AAM(sl, s, s1, s2);
@@ -1258,8 +1265,8 @@ sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
 	SLABLIST_SUBSLAB_MK(sl);
 	link_subslab(ns, s, SLAB_LINK_AFTER);
 	add_slab(s->ss_next, s1, s2, 0);
-	ctx->ac_how = AC_HOW_AFTER;
-	ctx->ac_subslab_new = ns;
+	ctx.ac_how = AC_HOW_AFTER;
+	ctx.ac_subslab_new = ns;
 	return (ctx);
 }
 
@@ -1273,10 +1280,11 @@ sub_gen_add_ora(slablist_t *sl, subslab_t *s, slab_t *s1, subslab_t *s2)
  * was found, and on whether the slab (and the slabs adjacent to it) are at
  * capacity. See the above three functions for more details.
  */
-static add_ctx_t *
+static add_ctx_t
 slab_gen_add(int status, slablist_elem_t elem, slab_t *s, int rep)
 {
-	add_ctx_t *ctx = NULL;
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 	slablist_t *sl = s->s_list;
 
 	if (status == FS_IN_RANGE) {
@@ -1297,11 +1305,12 @@ slab_gen_add(int status, slablist_elem_t elem, slab_t *s, int rep)
 	return (ctx);
 }
 
-static add_ctx_t *
+static add_ctx_t
 subslab_gen_add(int status, slab_t *s1, subslab_t *s2, subslab_t *s)
 {
 	slablist_t *sl = s->ss_list;
-	add_ctx_t *ctx = NULL;
+	add_ctx_t ctx;
+	bzero(&ctx, sizeof (add_ctx_t));
 
 	if (status == FS_IN_RANGE) {
 		ctx = sub_gen_add_ira(sl, s, s1, s2);
@@ -1384,11 +1393,10 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 			fs = find_linear_scan(sl, elem, &s);
 		}
 
-		add_ctx_t *ctx = slab_gen_add(fs, elem, s, rep);
-		if (ctx->ac_how == AC_HOW_EDUP) {
+		add_ctx_t ctx = slab_gen_add(fs, elem, s, rep);
+		if (ctx.ac_how == AC_HOW_EDUP) {
 			edup++;
 		}
-		rm_add_ctx(ctx);
 
 		slablist_t *usl = NULL;
 
