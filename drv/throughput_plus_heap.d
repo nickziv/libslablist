@@ -24,13 +24,6 @@ syscall::brk:entry
 }
 
 syscall::brk:entry
-/pid == $target && self->endss == arg0/
-{
-	printf("self->ednss is == to arg0\n");
-	exit(0);
-}
-
-syscall::brk:entry
 /pid == $target && self->endss > arg0/
 {
 	printf("self->ednss is > to arg0\n");

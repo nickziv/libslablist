@@ -6,7 +6,6 @@ dtrace:::BEGIN
 {
 	allocated = 0;
 	inter = 0;
-	prev = 0;
 	e = 0;
 }
 
@@ -22,12 +21,6 @@ syscall::brk:entry
 	allocated += ((uint64_t)arg0 - (uint64_t)self->endds);
 	/* printf("%d\n", self->allocated); */
 	self->endds = arg0;
-}
-syscall::brk:entry
-/pid == $target && self->endds == arg0/
-{
-	printf("self->endss is == to arg0\n");
-	exit(0);
 }
 
 syscall::brk:entry
