@@ -189,9 +189,7 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 	 */
 	if (SLABLIST_TEST_ADD_ELEM_ENABLED()) {
 		int f = test_add_elem(s, elem, i);
-		if (f) {
-			SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
-		}
+		SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
 	}
 
 	int ip = 0;		/* insertion-point */
@@ -242,9 +240,7 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 
 	if (SLABLIST_TEST_ADD_ELEM_ENABLED()) {
 		int f = test_slab_extrema(s);
-		if (f) {
-			SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
-		}
+		SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
 	}
 }
 
@@ -342,9 +338,7 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	 */
 	if (SLABLIST_TEST_ADD_SLAB_ENABLED()) {
 		int f = test_add_slab(s, s1, s2, i);
-		if (f) {
-			SLABLIST_TEST_ADD_SLAB(f, s, s1, s2, i);
-		}
+		SLABLIST_TEST_ADD_SLAB(f, s, s1, s2, i);
 	}
 
 
