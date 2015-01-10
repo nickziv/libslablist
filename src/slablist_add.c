@@ -212,7 +212,14 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 	if (ip == 0) {
 		s->s_min = s->s_arr[0];
 		SLABLIST_SLAB_SET_MIN(s);
-	} else if (ip == (s->s_elems)) {
+	}
+
+	/*
+	 * Though it may seem like this if-statement should be attached to the
+	 * previous one with an 'else', this is not so. If we are inserting
+	 * into an empty slab, we have to change _both_ of the extrema.
+	 */
+	if (ip == (s->s_elems)) {
 		s->s_max = s->s_arr[(s->s_elems)];
 		SLABLIST_SLAB_SET_MAX(s);
 	}
@@ -240,6 +247,7 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 		SLABLIST_TEST_ADD_ELEM(f, s, elem, i);
 	}
 }
+
 
 /*
  * This function adds either slab `s1` or subslab `s2` into subslab `s`, at
@@ -383,7 +391,14 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	if (ip == 0) {
 		s->ss_min = min;
 		SLABLIST_SUBSLAB_SET_MIN(s);
-	} else if (ip == (s->ss_elems)) {
+	}
+
+	/*
+	 * Though it may seem like this if-statement should be attached to the
+	 * previous one with an 'else', this is not so. If we are inserting
+	 * into an empty slab, we have to change _both_ of the extrema.
+	 */
+	if (ip == (s->ss_elems)) {
 		s->ss_max = max;
 		SLABLIST_SUBSLAB_SET_MAX(s);
 	}
