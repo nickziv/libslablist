@@ -196,26 +196,23 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 
 	ip = i;
 
-	SLABLIST_FWDSHIFT_BEGIN(s->s_list, s, i);
 	size_t shiftsz = (s->s_elems - (size_t)i) * 8;
-	bcopy(&(s->s_arr[i]), &(s->s_arr[(i+1)]), shiftsz);
-	SLABLIST_FWDSHIFT_END();
+	if (shiftsz > 0) {
+		SLABLIST_FWDSHIFT_BEGIN(s->s_list, s, i);
+		bcopy(&(s->s_arr[i]), &(s->s_arr[(i+1)]), shiftsz);
+		SLABLIST_FWDSHIFT_END();
+	}
 	s->s_arr[i] = elem;
 
 	/*
 	 * If we added at the beginning of the slab, we have to change the
-	 * minimum.
+	 * minimum. If we added to the end of the slab, we have to change the
+	 * maximum.
 	 */
 	if (ip == 0) {
 		s->s_min = s->s_arr[0];
 		SLABLIST_SLAB_SET_MIN(s);
-	}
-
-	/*
-	 * If we added at the end of the slab, we have to change the
-	 * maximum.
-	 */
-	if (ip == (s->s_elems)) {
+	} else if (ip == (s->s_elems)) {
 		s->s_max = s->s_arr[(s->s_elems)];
 		SLABLIST_SLAB_SET_MAX(s);
 	}
@@ -232,10 +229,10 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 		s->s_elems++;
 		SLABLIST_SLAB_INC_ELEMS(s);
 	} else {
-		s->s_max = s->s_arr[(SELEM_MAX - 1)];
 		s->s_min = s->s_arr[0];
-		SLABLIST_SLAB_SET_MAX(s);
+		s->s_max = s->s_arr[(SELEM_MAX - 1)];
 		SLABLIST_SLAB_SET_MIN(s);
+		SLABLIST_SLAB_SET_MAX(s);
 	}
 
 	if (SLABLIST_TEST_ADD_ELEM_ENABLED()) {
@@ -354,7 +351,10 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 	SLABLIST_SUBFWDSHIFT_BEGIN(s->ss_list, s, i);
 	size_t shiftsz = (s->ss_elems - i) * 8;
 	int ixi = i + 1;
-	bcopy(&(GET_SUBSLAB_ELEM(s, i)), &(GET_SUBSLAB_ELEM(s, ixi)), shiftsz);
+	if (shiftsz > 0) {
+		bcopy(&(GET_SUBSLAB_ELEM(s, i)), &(GET_SUBSLAB_ELEM(s, ixi)),
+		    shiftsz);
+	}
 
 	slablist_elem_t max;
 	slablist_elem_t min;
@@ -377,18 +377,13 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 
 	/*
 	 * If we added at the beginning of the slab, we have to change the
-	 * minimum.
+	 * minimum. And if we added to the end of it, we have to change the
+	 * maximum.
 	 */
 	if (ip == 0) {
 		s->ss_min = min;
 		SLABLIST_SUBSLAB_SET_MIN(s);
-	}
-
-	/*
-	 * If we added at the end of the slab, we have to change the
-	 * maximum.
-	 */
-	if (ip == (s->ss_elems)) {
+	} else if (ip == (s->ss_elems)) {
 		s->ss_max = max;
 		SLABLIST_SUBSLAB_SET_MAX(s);
 	}
