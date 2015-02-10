@@ -580,7 +580,7 @@ slab_bin_srch(slablist_elem_t elem, slab_t *s)
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		slablist_elem_t mid_elem = s->s_arr[mid];
-		SLABLIST_SLAB_BIN_SRCH(s, mid_elem);
+		SLABLIST_SLAB_BIN_SRCH(s, mid_elem, mid);
 		c = sl->sl_cmp_elem(elem, mid_elem);
 		if (c > 0) {
 			min = mid + 1;
@@ -659,7 +659,7 @@ subslab_bin_srch(slablist_elem_t elem, subslab_t *s)
 	while (max >= min) {
 		int mid = (min + max) >> 1;
 		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
-		SLABLIST_SUBSLAB_BIN_SRCH(s, (subslab_t *)mid_elem);
+		SLABLIST_SUBSLAB_BIN_SRCH(s, (subslab_t *)mid_elem, mid);
 		c = sl->sl_bnd_elem(elem, ((subslab_t *)mid_elem)->ss_min,
 			((subslab_t *)mid_elem)->ss_max);
 		if (c > 0) {
@@ -745,26 +745,41 @@ subslab_bin_srch_top(slablist_elem_t elem, subslab_t *s)
 	int c = 0;
 	slablist_t *sl = s->ss_list;
 	int sorting = SLIST_IS_SORTING_TEMP(sl->sl_flags);
-	while (max >= min) {
-		int mid = (min + max) >> 1;
-		void *mid_elem = GET_SUBSLAB_ELEM(s, mid);
-		SLABLIST_SUBSLAB_BIN_SRCH_TOP(s, (slab_t *)mid_elem);
-		c = sl->sl_bnd_elem(elem, ((slab_t *)mid_elem)->s_min,
-			((slab_t *)mid_elem)->s_max);
-		if (c > 0) {
-			min = mid + 1;
-			continue;
-		}
-		if (c < 0) {
-			max = mid - 1;
-			continue;
-		}
-		if (c == 0) {
-			if (sorting) {
-				return (subslab_get_last_slab(sl, elem, s,
-				    mid));
+	void **arr = s->ss_arr->sa_data;
+	if (!sorting) {
+		while (max >= min) {
+			int mid = (min + max) >> 1;
+			void *mid_elem = arr[mid];
+			slab_t *mid_slab = (slab_t *)mid_elem;
+			c = sl->sl_bnd_elem(elem, mid_slab->s_min,
+				mid_slab->s_max);
+			if (c > 0) {
+				min = mid + 1;
+				continue;
+			}
+			if (c < 0) {
+				max = mid - 1;
+				continue;
 			}
 			return (mid);
+		}
+	} else {
+		while (max >= min) {
+			int mid = (min + max) >> 1;
+			void *mid_elem = arr[mid];
+			slab_t *mid_slab = (slab_t *)mid_elem;
+			c = sl->sl_bnd_elem(elem, mid_slab->s_min,
+				mid_slab->s_max);
+			if (c > 0) {
+				min = mid + 1;
+				continue;
+			}
+			if (c < 0) {
+				max = mid - 1;
+				continue;
+			}
+			return (subslab_get_last_slab(sl, elem, s,
+			    mid));
 		}
 	}
 
@@ -823,9 +838,9 @@ subslab_lin_srch_top(slablist_elem_t elem, subslab_t *s)
 
 
 /*
- *  This function tries to find the slab that contains elem in slab s.
- *  `crumbs` points to the ptr, that will hold either the bread crumb with the
- *  slab with `elem`, or the slab nearest to it.
+ *  This function tries to find the slab that contains elem in slab s.  `found`
+ *  points to the ptr of the subslab with the slab with `elem`, or the slab
+ *  nearest to it.
  */
 int
 find_subslab_in_subslab(subslab_t *s, slablist_elem_t elem, subslab_t **found)
@@ -1013,7 +1028,7 @@ end:;
 
 /*
  * Finds the slab into which `elem` could fit, by using the base-layer as a
- * starting point. Records all subslabs that were walked over into the `crumbs`.
+ * starting point.
  */
 int
 find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)

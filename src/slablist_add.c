@@ -196,7 +196,7 @@ add_elem(slab_t *s, slablist_elem_t elem, int i)
 
 	ip = i;
 
-	size_t shiftsz = (s->s_elems - (size_t)i) * 8;
+	size_t shiftsz = (s->s_elems - (size_t)i) << 3;
 	if (shiftsz > 0) {
 		SLABLIST_FWDSHIFT_BEGIN(s->s_list, s, i);
 		bcopy(&(s->s_arr[i]), &(s->s_arr[(i+1)]), shiftsz);
@@ -357,7 +357,7 @@ add_slab(subslab_t *s, slab_t *s1, subslab_t *s2, uint64_t i)
 
 
 	SLABLIST_SUBFWDSHIFT_BEGIN(s->ss_list, s, i);
-	size_t shiftsz = (s->ss_elems - i) * 8;
+	size_t shiftsz = (s->ss_elems - i) << 3;
 	int ixi = i + 1;
 	if (shiftsz > 0) {
 		bcopy(&(GET_SUBSLAB_ELEM(s, i)), &(GET_SUBSLAB_ELEM(s, ixi)),

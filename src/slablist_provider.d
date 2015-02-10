@@ -247,22 +247,20 @@ provider slablist {
 	 * When bin searching a subslab. Arg0 is the subslab being searched.
 	 * Arg1 is the subslab we are about to compare.
 	 */
-	probe subslab_bin_srch(subslab_t *s, subslab_t *e) :
-		(subslabinfo_t *s, subslabinfo_t *e);
+	probe subslab_bin_srch(subslab_t *s, subslab_t *e, int mid) :
+		(subslabinfo_t *s, subslabinfo_t *e, int mid);
 	/*
 	 * When bin searching a subslab. Arg0 is the subslab being searched.
 	 * Arg1 is the slab we are about to compare.
 	 */
-	probe subslab_bin_srch_top(subslab_t *s, slab_t *e) :
-		(subslabinfo_t *s, slabinfo_t *e);
+	probe subslab_bin_srch_top(subslab_t *s, slab_t *e, int mid) :
+		(subslabinfo_t *s, slabinfo_t *e, int mid);
 	/*
 	 * When bin searching a slab. Arg0 is the subslab being searched.  Arg1
 	 * is the elem we are about to compare.
 	 */
-	probe slab_bin_srch(slab_t *s, slablist_elem_t e) :
-		(slabinfo_t *s, slablist_elem_t e);
-	probe bin_search(int, int, int);
-	probe bin_search_loop(int, int, int, int, int, void *);
+	probe slab_bin_srch(slab_t *s, slablist_elem_t e, int mid) :
+		(slabinfo_t *s, slablist_elem_t e, int mid);
 	/*
 	 * The following two probes fire when a linear scan begins and ends.
 	 */

@@ -23,7 +23,7 @@ $(D_HDRS):
 # error messages.
 #
 fuckit: 
-	echo $(TEST_RES)
+	echo $(DS_BENCHES)
 	echo $(TEST_SCR)
 
 .PHONY: $(DS_IMPLS)
@@ -173,6 +173,8 @@ $(SL_SI_FL): $(DRV) $(R_BENCH_SD)
 	$(DTRACE) -c './$(DRV) sl $(BENCH_SIZE) intsrt seqinc foldl' -s $(BENCH_FOLDL) -o $@
 
 bench: $(DRV) $(SL_BENCH) $(DS_BENCHES) $(SL_BENCH_PP) $(DS_BENCHES_PP) $(DS_BENCHES_F) $(SL_BENCH_F)
+
+sl_bench: $(SL_BENCH)
 
 bench_plot: 
 	$(NAWK) $(NAWK_ARGS) -f $(BENCH_PLOT)/gen.nawk

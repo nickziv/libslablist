@@ -40,24 +40,6 @@ extern "C" {
 #define	SLABLIST_ATTACH_SUBLAYER_ENABLED() \
 	__dtraceenabled_slablist___attach_sublayer(0)
 #endif
-#define	SLABLIST_BIN_SEARCH(arg0, arg1, arg2) \
-	__dtrace_slablist___bin_search(arg0, arg1, arg2)
-#ifndef	__sparc
-#define	SLABLIST_BIN_SEARCH_ENABLED() \
-	__dtraceenabled_slablist___bin_search()
-#else
-#define	SLABLIST_BIN_SEARCH_ENABLED() \
-	__dtraceenabled_slablist___bin_search(0)
-#endif
-#define	SLABLIST_BIN_SEARCH_LOOP(arg0, arg1, arg2, arg3, arg4, arg5) \
-	__dtrace_slablist___bin_search_loop(arg0, arg1, arg2, arg3, arg4, arg5)
-#ifndef	__sparc
-#define	SLABLIST_BIN_SEARCH_LOOP_ENABLED() \
-	__dtraceenabled_slablist___bin_search_loop()
-#else
-#define	SLABLIST_BIN_SEARCH_LOOP_ENABLED() \
-	__dtraceenabled_slablist___bin_search_loop(0)
-#endif
 #define	SLABLIST_BUBBLE_UP(arg0, arg1) \
 	__dtrace_slablist___bubble_up(arg0, arg1)
 #ifndef	__sparc
@@ -679,8 +661,8 @@ extern "C" {
 #define	SLABLIST_SLAB_AR_ENABLED() \
 	__dtraceenabled_slablist___slab_ar(0)
 #endif
-#define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1) \
-	__dtrace_slablist___slab_bin_srch(arg0, arg1)
+#define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1, arg2) \
+	__dtrace_slablist___slab_bin_srch(arg0, arg1, arg2)
 #ifndef	__sparc
 #define	SLABLIST_SLAB_BIN_SRCH_ENABLED() \
 	__dtraceenabled_slablist___slab_bin_srch()
@@ -931,8 +913,8 @@ extern "C" {
 #define	SLABLIST_SUBSLAB_AISPM_ENABLED() \
 	__dtraceenabled_slablist___subslab_aispm(0)
 #endif
-#define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1) \
-	__dtrace_slablist___subslab_bin_srch(arg0, arg1)
+#define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1, arg2) \
+	__dtrace_slablist___subslab_bin_srch(arg0, arg1, arg2)
 #ifndef	__sparc
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() \
 	__dtraceenabled_slablist___subslab_bin_srch()
@@ -940,8 +922,8 @@ extern "C" {
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() \
 	__dtraceenabled_slablist___subslab_bin_srch(0)
 #endif
-#define	SLABLIST_SUBSLAB_BIN_SRCH_TOP(arg0, arg1) \
-	__dtrace_slablist___subslab_bin_srch_top(arg0, arg1)
+#define	SLABLIST_SUBSLAB_BIN_SRCH_TOP(arg0, arg1, arg2) \
+	__dtrace_slablist___subslab_bin_srch_top(arg0, arg1, arg2)
 #ifndef	__sparc
 #define	SLABLIST_SUBSLAB_BIN_SRCH_TOP_ENABLED() \
 	__dtraceenabled_slablist___subslab_bin_srch_top()
@@ -1328,18 +1310,6 @@ extern void __dtrace_slablist___attach_sublayer(slablist_t *, slablist_t *);
 extern int __dtraceenabled_slablist___attach_sublayer(void);
 #else
 extern int __dtraceenabled_slablist___attach_sublayer(long);
-#endif
-extern void __dtrace_slablist___bin_search(int, int, int);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___bin_search(void);
-#else
-extern int __dtraceenabled_slablist___bin_search(long);
-#endif
-extern void __dtrace_slablist___bin_search_loop(int, int, int, int, int, void *);
-#ifndef	__sparc
-extern int __dtraceenabled_slablist___bin_search_loop(void);
-#else
-extern int __dtraceenabled_slablist___bin_search_loop(long);
 #endif
 extern void __dtrace_slablist___bubble_up(slablist_t *, subslab_t *);
 #ifndef	__sparc
@@ -1755,7 +1725,7 @@ extern int __dtraceenabled_slablist___slab_ar(void);
 #else
 extern int __dtraceenabled_slablist___slab_ar(long);
 #endif
-extern void __dtrace_slablist___slab_bin_srch(slab_t *, slablist_elem_t);
+extern void __dtrace_slablist___slab_bin_srch(slab_t *, slablist_elem_t, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___slab_bin_srch(void);
 #else
@@ -1923,13 +1893,13 @@ extern int __dtraceenabled_slablist___subslab_aispm(void);
 #else
 extern int __dtraceenabled_slablist___subslab_aispm(long);
 #endif
-extern void __dtrace_slablist___subslab_bin_srch(subslab_t *, subslab_t *);
+extern void __dtrace_slablist___subslab_bin_srch(subslab_t *, subslab_t *, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___subslab_bin_srch(void);
 #else
 extern int __dtraceenabled_slablist___subslab_bin_srch(long);
 #endif
-extern void __dtrace_slablist___subslab_bin_srch_top(subslab_t *, slab_t *);
+extern void __dtrace_slablist___subslab_bin_srch_top(subslab_t *, slab_t *, int);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___subslab_bin_srch_top(void);
 #else
@@ -2184,10 +2154,6 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_ADD_END_ENABLED() (0)
 #define	SLABLIST_ATTACH_SUBLAYER(arg0, arg1)
 #define	SLABLIST_ATTACH_SUBLAYER_ENABLED() (0)
-#define	SLABLIST_BIN_SEARCH(arg0, arg1, arg2)
-#define	SLABLIST_BIN_SEARCH_ENABLED() (0)
-#define	SLABLIST_BIN_SEARCH_LOOP(arg0, arg1, arg2, arg3, arg4, arg5)
-#define	SLABLIST_BIN_SEARCH_LOOP_ENABLED() (0)
 #define	SLABLIST_BUBBLE_UP(arg0, arg1)
 #define	SLABLIST_BUBBLE_UP_ENABLED() (0)
 #define	SLABLIST_BUBBLE_UP_BEGIN(arg0)
@@ -2326,7 +2292,7 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SLAB_AISPM_ENABLED() (0)
 #define	SLABLIST_SLAB_AR(arg0, arg1, arg2, arg3)
 #define	SLABLIST_SLAB_AR_ENABLED() (0)
-#define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1)
+#define	SLABLIST_SLAB_BIN_SRCH(arg0, arg1, arg2)
 #define	SLABLIST_SLAB_BIN_SRCH_ENABLED() (0)
 #define	SLABLIST_SLAB_DEC_ELEMS(arg0)
 #define	SLABLIST_SLAB_DEC_ELEMS_ENABLED() (0)
@@ -2382,9 +2348,9 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_SUBSLAB_AISP_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_AISPM(arg0, arg1, arg2, arg3)
 #define	SLABLIST_SUBSLAB_AISPM_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1)
+#define	SLABLIST_SUBSLAB_BIN_SRCH(arg0, arg1, arg2)
 #define	SLABLIST_SUBSLAB_BIN_SRCH_ENABLED() (0)
-#define	SLABLIST_SUBSLAB_BIN_SRCH_TOP(arg0, arg1)
+#define	SLABLIST_SUBSLAB_BIN_SRCH_TOP(arg0, arg1, arg2)
 #define	SLABLIST_SUBSLAB_BIN_SRCH_TOP_ENABLED() (0)
 #define	SLABLIST_SUBSLAB_DEC_ELEMS(arg0)
 #define	SLABLIST_SUBSLAB_DEC_ELEMS_ENABLED() (0)
