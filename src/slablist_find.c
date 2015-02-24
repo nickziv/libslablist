@@ -317,6 +317,24 @@ slablist_end(slablist_t *sl)
 	return (ret);
 }
 
+int
+slablist_cur(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
+{
+	if (IS_SMALL_LIST(sl)) {
+		if (b->sb_node != NULL) {
+			small_list_t *sm = b->sb_node;
+			*e = sm->sml_data;
+			return (0);
+		}
+	}
+	if (b->sb_node != NULL) {
+		slab_t *s = b->sb_node;
+		*e = s->s_arr[(uint64_t)(b->sb_index)];
+		return (0);
+	}
+	return (-1);
+}
+
 /*
  * 0 is success, -1 is end.
  */
@@ -431,6 +449,8 @@ slablist_prev(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 		return (0);
 	}
 }
+
+
 
 extern void link_slab(slab_t *, slab_t *, int);
 
@@ -1098,6 +1118,108 @@ find_bubble_up(slablist_t *sl, slablist_elem_t elem, slab_t **sbptr)
 }
 
 /*
+ * This function, finds the smallest element within a range, and stores it in
+ * `ret`, while also storing a reference to in the bookmark `bm`. This function
+ * returns either -1, 0, or 1. If 0, that means that the value we found is
+ * within the range. If 1 or -1, that means the value is over or under the
+ * range, respectively.
+ *
+ * Naturally, changes to the slablist can cause an inconsistency between the
+ * bookmark and the actual data in the slablist, so don't modify the slablist,
+ * or you'll have to re-run this function.
+ */
+int
+slablist_range_min(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
+    slablist_elem_t max, slablist_elem_t *ret)
+{
+	if (IS_SMALL_LIST(sl)) {
+		int smlret = 0;
+		int smlbnd;
+		while (smlret == 0) {
+			smlret = slablist_next(sl, bm, ret);
+			smlbnd = sl->sl_bnd_elem(*ret, min, max);
+			/*
+			 * We have reached the rage. And by virtue of using
+			 * slablist_next, we've filled out the bookmark and the
+			 * return-pointer.
+			 */
+			if (smlbnd == 0) {
+				return (0);
+			} else if (smlbnd > 0) {
+				break;
+			}
+		}
+		/*
+		 * We're here because we either reached the end of the list, or
+		 * because we never found anything in the range min..max.
+		 */
+		return (smlbnd);
+	}
+	slab_t *smin = NULL;
+	int i;
+	find_bubble_up(sl, min, &smin);
+	i = slab_bin_srch(min, smin);
+	/*
+	 * Because slab_bin_srch _always_ returns the insertion point,
+	 * smin->s_arr[i] is always >= the element that we are searching for.
+	 *
+	 * The only exceptions are if the range doesn't exist. In which case
+	 * this is reflected in the non-zero return status of this function.
+	 */
+	bm->sb_node = smin;
+	bm->sb_index = i;
+	*ret = smin->s_arr[i];
+	return (sl->sl_bnd_elem(smin->s_arr[i], min, max));
+}
+
+/*
+ * Same as above, but it finds the _end_ of the range.
+ */
+int
+slablist_range_max(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
+    slablist_elem_t max, slablist_elem_t *ret)
+{
+	if (IS_SMALL_LIST(sl)) {
+		int smlret = 0;
+		int smlbnd;
+		while (smlret == 0) {
+			smlret = slablist_next(sl, bm, ret);
+			smlbnd = sl->sl_bnd_elem(*ret, min, max);
+			/*
+			 * We have reached the rage. And by virtue of using
+			 * slablist_next, we've filled out the bookmark and the
+			 * return-pointer.
+			 */
+			if (smlbnd == 0) {
+				return (0);
+			} else if (smlbnd > 0) {
+				break;
+			}
+		}
+		/*
+		 * We're here because we either reached the end of the list, or
+		 * because we never found anything in the range min..max.
+		 */
+		return (smlbnd);
+	}
+	slab_t *smax = NULL;
+	int i;
+	find_bubble_up(sl, max, &smax);
+	i = slab_bin_srch(max, smax);
+	/*
+	 * Because slab_bin_srch _always_ returns the insertion point,
+	 * smax->s_arr[i] is always >= the element that we are searching for.
+	 *
+	 * The only exceptions are if the range doesn't exist. In which case
+	 * this is reflected in the non-zero return status of this function.
+	 */
+	bm->sb_node = smax;
+	bm->sb_index = i;
+	*ret = smax->s_arr[i];
+	return (sl->sl_bnd_elem(smax->s_arr[i], min, max));
+
+}
+/*
  * Function tries to find `key` in `sl`, and records the found elem into the
  * user-supplied backpointer `found`.
  */
@@ -1169,6 +1291,9 @@ typedef struct subseq {
 slablist_elem_t
 subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
 {
+	(void)acc;
+	(void)arr;
+	(void)elems;
 /*
  * Because this code sets off clang analyzer warnings, we make is 'hidden' or
  * 'ignored' via the undefined macro below.

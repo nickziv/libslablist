@@ -72,6 +72,13 @@ extern void slablist_bm_destroy(slablist_bm_t *);
 extern int slablist_next(slablist_t *, slablist_bm_t *, slablist_elem_t *);
 
 extern int slablist_prev(slablist_t *, slablist_bm_t *, slablist_elem_t *);
+extern int slablist_cur(slablist_t *, slablist_bm_t *, slablist_elem_t *);
+
+extern int slablist_range_min(slablist_t *, slablist_bm_t *,
+    slablist_elem_t min, slablist_elem_t max, slablist_elem_t *);
+
+extern int slablist_range_max(slablist_t *, slablist_bm_t *,
+    slablist_elem_t min, slablist_elem_t max, slablist_elem_t *);
 
 extern slablist_elem_t slablist_foldl(slablist_t *, slablist_fold_t,
 slablist_elem_t zero);
