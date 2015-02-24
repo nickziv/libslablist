@@ -424,6 +424,21 @@ slablist_destroy(slablist_t *sl)
 	small_list_t *sml;
 	small_list_t *smln;
 
+	/*
+	 * If we are dealing with a non-empty small list, we remove
+	 * the individual linked list nodes.
+	 */
+	if (IS_SMALL_LIST(sl) && sl->sl_head != NULL) {
+		sml = sl->sl_head;
+		uint64_t i = 0;
+		while (i < sl->sl_elems) {
+			smln = sml->sml_next;
+			rm_sml_node(sml);
+			sml = smln;
+			i++;
+		}
+	}
+
 	slablist_t *p;
 	slablist_t *q;
 	p = sl->sl_sublayer;
@@ -443,21 +458,6 @@ slablist_destroy(slablist_t *sl)
 			remove_subslabs(p);
 			p = q->sl_sublayer;
 			rm_slablist(q);
-		}
-	}
-
-	/*
-	 * If however, we are dealing with a non-empty small list, we remove
-	 * the individual linked list nodes.
-	 */
-	if (IS_SMALL_LIST(sl) && sl->sl_head != NULL) {
-		sml = sl->sl_head;
-		uint64_t i = 0;
-		while (i < sl->sl_elems) {
-			smln = sml->sml_next;
-			rm_sml_node(sml);
-			sml = smln;
-			i++;
 		}
 	}
 
@@ -946,8 +946,17 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
-	find_bubble_up(sl, min, &smin);
-	find_bubble_up(sl, max, &smax);
+	/*
+	 * XXX just because we use slabs doesn't mean we have sublayer. We have
+	 * to use linear scan, in situations.
+	 */
+	if (sl->sl_sublayers > 0) {
+		find_bubble_up(sl, min, &smin);
+		find_bubble_up(sl, max, &smax);
+	} else {
+		find_linear_scan(sl, min, &smin);
+		find_linear_scan(sl, max, &smax);
+	}
 	int i;
 	int j;
 	if (smin == smax) {
@@ -981,8 +990,13 @@ slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
-	find_bubble_up(sl, min, &smin);
-	find_bubble_up(sl, max, &smax);
+	if (sl->sl_sublayers > 0) {
+		find_bubble_up(sl, min, &smin);
+		find_bubble_up(sl, max, &smax);
+	} else {
+		find_linear_scan(sl, min, &smin);
+		find_linear_scan(sl, max, &smax);
+	}
 	int i;
 	int j;
 	if (smin == smax) {
