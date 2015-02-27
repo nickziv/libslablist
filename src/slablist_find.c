@@ -1157,7 +1157,11 @@ slablist_range_min(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
 	}
 	slab_t *smin = NULL;
 	int i;
-	find_bubble_up(sl, min, &smin);
+	if (sl->sl_sublayers > 0) {
+		find_bubble_up(sl, min, &smin);
+	} else {
+		find_linear_scan(sl, min, &smin);
+	}
 	i = slab_bin_srch(min, smin);
 	/*
 	 * Because slab_bin_srch _always_ returns the insertion point,
@@ -1204,7 +1208,11 @@ slablist_range_max(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
 	}
 	slab_t *smax = NULL;
 	int i;
-	find_bubble_up(sl, max, &smax);
+	if (sl->sl_sublayers > 0) {
+		find_bubble_up(sl, max, &smax);
+	} else {
+		find_linear_scan(sl, max, &smax);
+	}
 	i = slab_bin_srch(max, smax);
 	/*
 	 * Because slab_bin_srch _always_ returns the insertion point,
