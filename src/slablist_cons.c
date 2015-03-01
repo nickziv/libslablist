@@ -946,10 +946,6 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	}
 	slab_t *smin = NULL;
 	slab_t *smax = NULL;
-	/*
-	 * XXX just because we use slabs doesn't mean we have sublayer. We have
-	 * to use linear scan, in situations.
-	 */
 	if (sl->sl_sublayers > 0) {
 		find_bubble_up(sl, min, &smin);
 		find_bubble_up(sl, max, &smax);
@@ -974,7 +970,17 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 		slab = slab->s_next;
 	}
 	i = slab_bin_srch(max, slab);
-	accumulator = f(accumulator, slab->s_arr, i+1);
+	/*
+	 * If slab_bin_srch returns an index that represents the insertion
+	 * point at the end of the slab -- beyond the last element -- we have
+	 * to set the size to the number of elements. Otherwise, we set the
+	 * size to 1 greater than the index.
+	 */
+	if (i == slab->s_elems) {
+		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
+	} else {
+		accumulator = f(accumulator, slab->s_arr, i+1);
+	}
 	return (accumulator);
 }
 
