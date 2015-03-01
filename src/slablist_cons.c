@@ -973,12 +973,16 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	/*
 	 * If slab_bin_srch returns an index that represents the insertion
 	 * point at the end of the slab -- beyond the last element -- we have
-	 * to set the size to the number of elements. Otherwise, we set the
-	 * size to 1 greater than the index.
+	 * to set the size to the number of elements. If the returned index is
+	 * at the beginning of the slab, we may be able to ignore that elem, if
+	 * it's not greater than max. If we are neither at the end or beginning
+	 * of the slab, we set the size to 1 greater than the index.
 	 */
 	if (i == slab->s_elems) {
 		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
-	} else {
+	} else if (i == 0 && (sl->sl_cmp_elem(slab->s_arr[i], max) <= 0)) {
+		accumulator = f(accumulator, slab->s_arr, 1);
+	} else if (i != 0) {
 		accumulator = f(accumulator, slab->s_arr, i+1);
 	}
 	return (accumulator);
