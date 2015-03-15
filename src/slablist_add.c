@@ -480,7 +480,7 @@ ripple_inc_usr_elems(subslab_t *found)
 static subslab_t *
 sub_addsn(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
-	(void)mk; /* we will use this in the future */
+	(void) mk; /* we will use this in the future */
 	uint16_t lst_index = s->ss_elems - 1;
 	uint16_t b4_lst_index = s->ss_elems - 2;
 	slab_t *lst_slab = NULL;
@@ -570,7 +570,7 @@ addsp(slab_t *s, slablist_elem_t elem, int q)
 static subslab_t *
 sub_addsp(subslab_t *s, slab_t *s1, subslab_t *s2, int mk)
 {
-	(void)mk; /* we will use this in the future */
+	(void) mk; /* we will use this in the future */
 	/*
 	 * Whenever this function gets called we assume the `s` is FULL.
 	 */
@@ -793,10 +793,6 @@ ripple_common(slab_t *s, subslab_t *p, slab_t *n, subslab_t *nn)
 		 */
 		ripple_update_extrema(p);
 		ripple_inc_usr_elems(n->s_below);
-		if (!broke || skip_loop) {
-			//replace with bzero?
-			//rm_add_ctx(t);
-		}
 	}
 }
 

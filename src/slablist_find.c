@@ -1299,9 +1299,9 @@ typedef struct subseq {
 slablist_elem_t
 subseq_cb(slablist_elem_t acc, slablist_elem_t *arr, uint64_t elems)
 {
-	(void)acc;
-	(void)arr;
-	(void)elems;
+	(void) acc;
+	(void) arr;
+	(void) elems;
 /*
  * Because this code sets off clang analyzer warnings, we make is 'hidden' or
  * 'ignored' via the undefined macro below.
