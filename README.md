@@ -148,8 +148,11 @@ implementation used in the Illumos kernel. It is among the most
 memory-efficient and cpu-efficient implementations in the world.
 
 `uuavl` uses 10% _less_ time than `libslablist` on sequential input.
+
 `uuavl` uses 365% _more_ memory than `libslablist` on sequential input.
+
 `uuavl` uses 7% _less_ time than `libslablist` on random input.
+
 `uuavl` uses 271% _more_ memory than `libslablist` on random input.
 
 You'll find a full report here:
