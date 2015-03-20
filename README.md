@@ -68,47 +68,46 @@ sometimes referred to as BJNF (Bill Joy Normal Form).
 
 Here is an explanation of what each file does.
 
-	- `slablist_impl.h`: Common structures, constants, as well as detailed
-	documentation of the implementation.
+* `slablist_impl.h`: Common structures, constants, as well as detailed
+documentation of the implementation.
 
-	- `slablist.h`: The consumer-facing function declarations and constants.
+* `slablist.h`: The consumer-facing function declarations and constants.
 
-	- `slablist_add.c`: The element insertion routines.
+* `slablist_add.c`: The element insertion routines.
 
-	- `slablist_rem.c`: The element removal routines.
+* `slablist_rem.c`: The element removal routines.
 
-	- `slablist_umem.c`: The memory allocation routines.
+* `slablist_umem.c`: The memory allocation routines.
 
-	- `slablist_find.c`: The search routines. Everything for searching slabs,
-	subslabs, and slablists.
+* `slablist_find.c`: The search routines. Everything for searching slabs,
+subslabs, and slablists.
 
-	- `slablist_cons.c`: Slablist creation, destruction, reaping routines.
-	Also, linking routines for slabs, subslabs, and small_lists. Also,
-	sublayer attach/detach routines. Routines for converting between
-	singly-linked-lists and slab lists. Finally foldr, foldl, and map
-	routines, as well as their ranged variants. Basically, a dumping ground
-	for everything that doesn't fit in _add, _rem, or _umem source files.
+* `slablist_cons.c`: Slablist creation, destruction, reaping routines.
+Also, linking routines for slabs, subslabs, and `small_lists`. Also, sublayer
+attach/detach routines. Routines for converting between singly-linked-lists and
+slab lists. Finally foldr, foldl, and map routines, as well as their ranged
+variants. Basically, a dumping ground for everything that doesn't fit in
+`_add`, `_rem`, or `_umem source files`.
 
-	- `slablist_test.c`: A large collection of testing routines. These
-	routines sanity check the state of the slablist. For example, it checks
-	that the number of elements in a slab never exceeds the maximum, and
-	that a removal doesn't leave a gap in the slab, and so forth.
-	Basically, these tests are like very powerful and very expensive
-	ASSERTs. They are very expensive to run all the time, so they are
-	wrapped in DTrace IS_ENABLED() probes. This means they won't be run
-	unless we enable specific DTrace probes at run time. This means that
-	they are _always_ present but remain dormant until activated by
-	someone. For this reason there is no DEBUG conditional-macro in the
-	code. We ship with all of our probes and test functions, because they
-	have negligible costs when disabled.
+* `slablist_test.c`: A large collection of testing routines. These
+routines sanity check the state of the slablist. For example, it checks that
+the number of elements in a slab never exceeds the maximum, and that a removal
+doesn't leave a gap in the slab, and so forth.  Basically, these tests are like
+very powerful and very expensive `ASSERT`s. They are very expensive to run all
+the time, so they are wrapped in DTrace `IS_ENABLED()` probes. This means they
+won't be run unless we enable specific DTrace probes at run time. This means
+that they are _always_ present but remain dormant until activated by someone.
+For this reason there is no `DEBUG` conditional-macro in the code. We ship with
+all of our probes and test functions, because they have negligible costs when
+disabled.
 
-	- `slablist_provider.d`: A DTrace source file that defines the DTrace
-	probes provided by the library.
+* `slablist_provider.d`: A DTrace source file that defines the DTrace
+probes provided by the library.
 
-	- `slablist_provider.h`: A header file generated from the
-	`slablist_provider.d` file. It has to live in the tree, to facilitate
-	compilation on systems where the `dtrace` command may not be present (such as
-	Linux).
+* `slablist_provider.h`: A header file generated from the
+`slablist_provider.d` file. It has to live in the tree, to facilitate
+compilation on systems where the `dtrace` command may not be present (such as
+Linux).
 
 The `tools/` directory contains tools that can be used in development, or that
 are used by the benchmarking code. The `tests/` directory contains D scripts
