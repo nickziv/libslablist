@@ -100,13 +100,19 @@ small_list_rem(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 
 	} else {
 
-		uint64_t mod = pos % sl->sl_elems;
 		small_list_t *sml = sl->sl_head;
 
 
 		if (sl->sl_elems < pos && !SLIST_IS_CIRCULAR(sl->sl_flags)) {
 			ret = SL_ENCIRC;
 			goto end;
+		}
+
+		uint64_t mod;
+		if (sl->sl_elems < pos) {
+			mod = pos % sl->sl_elems;
+		} else {
+			mod = pos;
 		}
 
 		uint64_t i = 0;
