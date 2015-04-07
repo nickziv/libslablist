@@ -860,10 +860,10 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 
 	int i = 0;
 	int j = nodes - 1;
-	while (sl->sl_cmp_elem(elems[i], min) < 0) {
+	while (i < nodes && sl->sl_cmp_elem(elems[i], min) < 0) {
 		i++;
 	}
-	while (sl->sl_cmp_elem(elems[j], max) > 0) {
+	while (j >= 0 && sl->sl_cmp_elem(elems[j], max) > 0) {
 		j--;
 	}
 	/*
