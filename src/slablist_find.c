@@ -1225,8 +1225,8 @@ slablist_range_max(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
 	bm->sb_index = i;
 	*ret = smax->s_arr[i];
 	return (sl->sl_bnd_elem(smax->s_arr[i], min, max));
-
 }
+
 /*
  * Function tries to find `key` in `sl`, and records the found elem into the
  * user-supplied backpointer `found`.

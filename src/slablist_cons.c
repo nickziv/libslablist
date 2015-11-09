@@ -371,7 +371,7 @@ unlink_subslab(subslab_t *s)
  * Removes all slabs from `sl`. Used as a catch-all.
  */
 static void
-remove_slabs(slablist_t *sl)
+remove_slabs(slablist_t *sl, slablist_rem_cb_t cb)
 {
 	slab_t *s;
 	slab_t *sn;
@@ -380,9 +380,16 @@ remove_slabs(slablist_t *sl)
 	uint64_t nslabs = sl->sl_slabs;
 	while (i < nslabs) {
 		sn = s->s_next;
-		/*
-		 * We are not responsible for user-allocated objects.
-		 */
+		if (cb == NULL) {
+			goto skip_cb;
+		}
+
+		int j = 0;
+		while (j <= s->s_elems) {
+			cb(s->s_arr[j]);
+			j++;
+		}
+skip_cb:;
 		unlink_slab(s);
 		rm_slab(s);
 		SLABLIST_SLAB_RM(sl);
@@ -415,10 +422,13 @@ remove_subslabs(slablist_t *sl)
 
 /*
  * Destroys a slab list, and frees all slabs as well as removing `sl` from
- * memory.
+ * memory. If a callback is present, it is called on each element in the
+ * slablist as we iterate from left to right. This is useful if you want to
+ * free the elements before their pointers are destroyed (along with the slabs
+ * they're stored in).
  */
 void
-slablist_destroy(slablist_t *sl)
+slablist_destroy(slablist_t *sl, slablist_rem_cb_t cb)
 {
 	SLABLIST_DESTROY(sl);
 	small_list_t *sml;
@@ -433,6 +443,9 @@ slablist_destroy(slablist_t *sl)
 		uint64_t i = 0;
 		while (i < sl->sl_elems) {
 			smln = sml->sml_next;
+			if (cb != NULL) {
+				cb(sml->sml_data);
+			}
 			rm_sml_node(sml);
 			sml = smln;
 			i++;
@@ -446,7 +459,7 @@ slablist_destroy(slablist_t *sl)
 	 * We remove all of the slabs in the top layer/
 	 */
 	if (!(IS_SMALL_LIST(sl)) && sl->sl_head != NULL) {
-		remove_slabs(sl);
+		remove_slabs(sl, NULL);
 	}
 
 	/*

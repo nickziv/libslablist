@@ -1342,8 +1342,8 @@ slablist_add_impl(slablist_t *sl, slablist_elem_t elem, int rep)
 
 	int ret;
 	/*
-	 * The number of elements is too small to justify the use of
-	 * slabs. So we store the data in a singly linked list.
+	 * The number of elements is too small to justify the use of slabs. So
+	 * we store the data in a singly linked list.
 	 */
 	if (IS_SMALL_LIST(sl) && sl->sl_elems <= (SMELEM_MAX - 1)) {
 		SLABLIST_ADD_BEGIN(sl, elem, rep);
@@ -1520,7 +1520,7 @@ slablist_sort(slablist_t *sl, slablist_cmp_t cmp, slablist_bnd_t bnd)
 		sl->sl_head = tmp->sl_head;
 	}
 	tmp->sl_head = NULL;
-	slablist_destroy(tmp);
+	slablist_destroy(tmp, NULL);
 	return (SL_SUCCESS);
 }
 

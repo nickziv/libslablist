@@ -97,7 +97,7 @@ slablist_elem_t, slablist_elem_t, slablist_elem_t zero);
 slablist_t *slablist_create(char *, slablist_cmp_t, slablist_bnd_t, uint8_t);
 //mt_slablist_t *slablist_mt_create(char *, slablist_cmp_t, slablist_bnd_t, uint8_t);
 
-extern void slablist_destroy(slablist_t *);
+extern void slablist_destroy(slablist_t *, slablist_rem_cb_t);
 //extern void slablist_mt_destroy(mt_slablist_t *);
 
 extern void slablist_set_reap_pslabs(slablist_t *, uint8_t);
