@@ -1586,11 +1586,10 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
 
 	sl->sl_elems--;
 	SLABLIST_SL_DEC_ELEMS(sl);
-end:;
 	if (rcb != NULL) {
 		rcb(rdl);
 	}
-
+end:;
 	SLABLIST_REM_END(ret);
 
 	return (ret);
