@@ -1170,6 +1170,9 @@ slablist_range_min(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
 	 * The only exceptions are if the range doesn't exist. In which case
 	 * this is reflected in the non-zero return status of this function.
 	 */
+	if (i >= smin->s_elems) {
+		i = smin->s_elems - 1;
+	}
 	bm->sb_node = smin;
 	bm->sb_index = i;
 	*ret = smin->s_arr[i];
@@ -1221,6 +1224,9 @@ slablist_range_max(slablist_t *sl, slablist_bm_t *bm, slablist_elem_t min,
 	 * The only exceptions are if the range doesn't exist. In which case
 	 * this is reflected in the non-zero return status of this function.
 	 */
+	if (i >= smax->s_elems) {
+		i = smax->s_elems - 1;
+	}
 	bm->sb_node = smax;
 	bm->sb_index = i;
 	*ret = smax->s_arr[i];
