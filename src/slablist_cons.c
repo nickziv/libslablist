@@ -629,14 +629,13 @@ slab_to_small_list(slablist_t *sl)
 {
 	slab_t *h = sl->sl_head;
 	sl->sl_head = NULL;
-	uint64_t nelems = sl->sl_elems;
 	sl->sl_elems = 0;
 	uint64_t i = 0;
 	/*
 	 * We copy the data from the head slab into sml_nodes, which we link up
 	 * into a singly linked list.
 	 */
-	while (i < nelems) {
+	while (i < h->s_elems) {
 		small_list_add(sl, h->s_arr[i], 0, NULL);
 		i++;
 	}
