@@ -49,7 +49,7 @@ slablist$target:::sum_usr_elems
 slablist$target:::test_find_bubble_up
 /arg0 != 0/
 {
-	printf("ERROR: %d  %s\n", arg0, e_test_descr[arg0]);
+	printf("ERROR: %d  %s\n", arg0, sl_e_test_descr[arg0]);
 }
 
 slablist$target:::test_find_bubble_up

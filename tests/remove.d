@@ -62,7 +62,7 @@ slablist$target:::test_slab_move_prev
 /arg0/
 {
 	self->fail = arg0;
-	self->error = e_test_descr[arg0];
+	self->error = sl_e_test_descr[arg0];
 	printf("ERROR: %s\n", self->error);
 	printf("context: %s\n", self->context);
 	printf("scp[from] = scp[%d]\n", arg4);
@@ -105,7 +105,7 @@ slablist$target:::test_subslab_move_prev
 /arg0/
 {
 	self->fail = arg0;
-	self->error = e_test_descr[arg0];
+	self->error = sl_e_test_descr[arg0];
 	printf("ERROR: %s\n", self->error);
 	printf("context: %s\n", self->context);
 	printf("scp[from] = scp[%d]\n", arg4);
@@ -168,7 +168,7 @@ slablist$target:::test_remove_elem
 slablist$target:::test_rem_range
 /arg0/
 {
-	printf("ERROR: %d  %s\n", arg0, e_test_descr[arg0]);
+	printf("ERROR: %d  %s\n", arg0, sl_e_test_descr[arg0]);
 }
 
 slablist$target:::test_rem_range
@@ -212,7 +212,7 @@ slablist$target:::test_remove_elem,
 slablist$target:::test_remove_slab
 /arg0/
 {
-	printf("ERROR: %d  %s\n", arg0, e_test_descr[arg0]);
+	printf("ERROR: %d  %s\n", arg0, sl_e_test_descr[arg0]);
 	printf("SLAB[i]: %p[%d]\n", arg1, arg2);
 }
 

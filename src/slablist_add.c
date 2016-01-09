@@ -144,15 +144,11 @@ small_list_add(slablist_t *sl, slablist_elem_t elem, int rep,
 	/*
 	 * We place the element at the end of the list.
 	 */
-	uint64_t i = 0;
 	sml = sl->sl_head;
-	while (i < (sl->sl_elems - 1)) {
-		sml = sml->sml_next;
-		i++;
-	}
+	small_list_t *end_node = sl->sl_end;
 	nsml = mk_sml_node();
 	nsml->sml_data = elem;
-	link_sml_node(sl, sml, nsml);
+	link_sml_node(sl, end_node, nsml);
 	sl->sl_end = nsml;
 	SLABLIST_SET_END(sl, elem);
 

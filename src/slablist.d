@@ -47,7 +47,7 @@ inline int E_TEST_ELEM_POS = 46;
 inline int E_TEST_SLAB_BELOW = 47;
 inline int E_TEST_FBU_NOT_LAYERED = 48;
 
-inline string e_test_descr[int err] =
+inline string sl_e_test_descr[int err] =
 	err == 0 ? "[ PASS ]" :
 	err == E_TEST_SLAB_NULL ? "[null slab]" :
 	err == E_TEST_SLAB_LIST_NULL ? "[null slab list bptr]" :
