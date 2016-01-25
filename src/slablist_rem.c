@@ -1492,7 +1492,6 @@ slablist_rem_impl(slablist_t *sl, slablist_elem_t elem, uint64_t pos,
     slablist_rem_cb_t *rcb)
 {
 
-
 	slablist_elem_t rdl;
 	uint64_t off_pos;
 	slab_t *s = NULL;

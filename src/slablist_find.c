@@ -126,7 +126,7 @@ slab_get_elem_pos(slablist_t *sl, uint64_t pos, uint64_t *off_pos)
 		while (i < sl->sl_slabs) {
 			sum_usr_elems += slab->s_elems;
 
-			if (sum_usr_elems >= act_pos) {
+			if (sum_usr_elems > act_pos) {
 				elems_skipped = sum_usr_elems - slab->s_elems;
 				*off_pos = act_pos - elems_skipped;
 				return (slab);
