@@ -903,6 +903,9 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 slablist_elem_t
 slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
+	if (sl->sl_elems == 0) {
+		return (zero);
+	}
 	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
 		return (ret);
@@ -930,6 +933,9 @@ slablist_foldr(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 slablist_elem_t
 slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
+	if (sl->sl_elems == 0) {
+		return (zero);
+	}
 	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_sml(sl, f, zero);
 		return (ret);
@@ -950,6 +956,9 @@ slablist_elem_t
 slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
+	if (sl->sl_elems == 0) {
+		return (zero);
+	}
 	slablist_elem_t accumulator = zero;
 	if (IS_SMALL_LIST(sl)) {
 		slablist_elem_t ret = slablist_fold_range_sml(sl, f, min, max,
@@ -970,32 +979,51 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	if (smin == smax) {
 		i = slab_bin_srch(min, smin);
 		j = slab_bin_srch(max, smin);
-		accumulator = f(accumulator, (smin->s_arr)+i, j-i);
+		if (i == smin->s_elems) {
+			i--;
+		}
+		if (j == smin->s_elems) {
+			j--;
+		}
+		/*
+		 * The binary search returns an insertion point, the value of
+		 * which might not be in range. If the insertion for the min
+		 * elem is not in range, we know that there is no element in
+		 * that range. If the insertion point for the max elem is not
+		 * in range, we are off by one.
+		 */
+		if (sl->sl_bnd_elem(smin->s_arr[i], min, max) != 0) {
+			return (zero);
+		}
+		if (sl->sl_bnd_elem(smin->s_arr[j], min, max) != 0) {
+			if (j > 0) {
+				j--;
+			}
+		}
+		accumulator = f(accumulator, (smin->s_arr)+i, j-i+1);
 		return (accumulator);
 	}
 	slab_t *slab = smin;
 	i = slab_bin_srch(min, smin);
-	accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+	if (sl->sl_bnd_elem(slab->s_arr[i], min, max) == 0) {
+		accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+	}
 	slab = slab->s_next;
 	while (slab != smax) {
 		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
 		slab = slab->s_next;
 	}
 	i = slab_bin_srch(max, slab);
-	/*
-	 * If slab_bin_srch returns an index that represents the insertion
-	 * point at the end of the slab -- beyond the last element -- we have
-	 * to set the size to the number of elements. If the returned index is
-	 * at the beginning of the slab, we may be able to ignore that elem, if
-	 * it's not greater than max. If we are neither at the end or beginning
-	 * of the slab, we set the size to 1 greater than the index.
-	 */
-	if (i == slab->s_elems) {
-		accumulator = f(accumulator, slab->s_arr, slab->s_elems);
-	} else if (i == 0 && (sl->sl_cmp_elem(slab->s_arr[i], max) <= 0)) {
-		accumulator = f(accumulator, slab->s_arr, 1);
-	} else if (i != 0) {
-		accumulator = f(accumulator, slab->s_arr, i+1);
+		if (i == slab->s_elems) {
+			i--;
+		}
+	if (sl->sl_bnd_elem(slab->s_arr[i], min, max) == 0) {
+		accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+	} else {
+		if (i > 0) {
+			i--;
+			accumulator = f(accumulator, (slab->s_arr)+i, i+1);
+		}
 	}
 	return (accumulator);
 }
