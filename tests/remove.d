@@ -7,6 +7,11 @@ dtrace:::BEGIN
 	heap_test = 0;
 }
 
+slablist$target::test_remove_elem:got_here,
+slablist$target::test_slab:got_here
+{
+	printf("line: %d\n", arg0);
+}
 
 pid$target::mk_slab:return
 /heap_test/

@@ -514,6 +514,8 @@ provider slablist {
 	probe test_is_slab_list(int);
 	probe test_get_elem_pos(int i, slab_t *s, slab_t *s2, uint64_t i1, uint64_t i2) :
 		(int i, slabinfo_t *s, slabinfo_t *s2, uint64_t i1, uint64_t i2);
+	probe test_foldr_range(int);
+	probe test_foldl_range(int);
 };
 
 #pragma D attributes Evolving/Evolving/ISA      provider slablist provider

@@ -18,7 +18,7 @@
  * CDDL HEADER END
  */
 /*
- * Copyright 2012 Nicholas Zivkovic. All rights reserved.
+ * Copyright 2016 Nicholas Zivkovic. All rights reserved.
  * Use is subject to license terms.
  */
 
@@ -161,3 +161,4 @@ extern void slablist_reverse(slablist_t *);
 //extern void slablist_mt_reverse(mt_slablist_t *);
 
 extern slablist_t *slablist_xtract(slablist_t *, char *, slablist_elem_t, slablist_elem_t);
+extern int slablist_cmp(slablist_t *sl1, slablist_t *sl2);

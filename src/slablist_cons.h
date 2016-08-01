@@ -34,3 +34,7 @@ extern void attach_sublayer(slablist_t *);
 extern void detach_sublayer(slablist_t *);
 extern void try_reap(slablist_t *);
 extern void try_reap_all(slablist_t *);
+extern selem_t slablist_foldl_range_impl(slablist_t *, slablist_fold_t,
+selem_t, selem_t, selem_t);
+extern selem_t slablist_foldr_range_impl(slablist_t *, slablist_fold_t,
+selem_t, selem_t, selem_t);

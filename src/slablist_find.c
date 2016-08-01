@@ -347,6 +347,7 @@ slablist_next(slablist_t *sl, slablist_bm_t *b, slablist_elem_t *e)
 	int i;
 	if (b->sb_node == NULL) {
 		if (IS_SMALL_LIST(sl)) {
+			/* XXX this is null */
 			sml = sl->sl_head;
 			b->sb_node = sml;
 			*e = sml->sml_data;

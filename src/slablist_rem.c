@@ -1472,7 +1472,7 @@ slablist_rem_range(slablist_t *sl, slablist_elem_t min, slablist_elem_t max,
 		sup = sup->sl_superlayer;
 		layer--;
 	}
-	if (!(IS_SMALL_LIST(sl)) && sl->sl_elems == SMELEM_MAX) {
+	if (!(IS_SMALL_LIST(sl)) && sl->sl_elems <= SMELEM_MAX) {
 		/*
 		 * If we have lowered the number of elems to 1/2 a slab, we
 		 * turn the slab into a small linked list.

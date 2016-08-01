@@ -46,6 +46,10 @@ inline int E_TEST_SUBSLAB_USR_ELEMS_UNDER = 45;
 inline int E_TEST_ELEM_POS = 46;
 inline int E_TEST_SLAB_BELOW = 47;
 inline int E_TEST_FBU_NOT_LAYERED = 48;
+inline int E_TEST_FOLD_RANGE_FIRST = 49;
+inline int E_TEST_FOLD_RANGE_LAST = 50;
+inline int E_TEST_FOLD_RANGE_TOUCHED = 51;
+
 
 inline string sl_e_test_descr[int err] =
 	err == 0 ? "[ PASS ]" :
@@ -98,6 +102,9 @@ inline string sl_e_test_descr[int err] =
 	err == E_TEST_ELEM_POS ? "[get_elem_pos != get_elem_pos_old]" :
 	err == E_TEST_SLAB_BELOW ? "[slab->s_below == NULL]" :
 	err == E_TEST_FBU_NOT_LAYERED ? "[bubbling up on non-layered SL]" :
+	err == E_TEST_FOLD_RANGE_FIRST ? "[folds touch diff first elem]" :
+	err == E_TEST_FOLD_RANGE_LAST ? "[folds touch diff last elem]" :
+	err == E_TEST_FOLD_RANGE_TOUCHED  ? "[folds touch diff num elems]" :
 	"[[BAD ERROR CODE]]";
 
 

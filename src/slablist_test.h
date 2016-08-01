@@ -46,3 +46,5 @@ int test_subslab_ref(subslab_t *s);
 int test_subslab_move_next(subslab_t *, subslab_t *, subslab_t *, int *);
 int test_subslab_move_prev(subslab_t *, subslab_t *, subslab_t *, int *);
 int test_subslab_usr_elems(subslab_t *s);
+int test_slablist_foldr_range(slablist_t *, selem_t, selem_t);
+int test_slablist_foldl_range(slablist_t *, selem_t, selem_t);

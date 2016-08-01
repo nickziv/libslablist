@@ -78,6 +78,9 @@
 #define	E_TEST_ELEM_POS			46
 #define	E_TEST_SLAB_BELOW		47
 #define	E_TEST_FBU_NOT_LAYERED		48
+#define	E_TEST_FOLD_RANGE_FIRST		49
+#define	E_TEST_FOLD_RANGE_LAST		50
+#define	E_TEST_FOLD_RANGE_TOUCHED	51
 
 int
 test_slab_get_elem_pos(slablist_t *sl, slab_t *s, slab_t **f, uint64_t pos,
@@ -1033,6 +1036,120 @@ test_subslab_move_prev(subslab_t *scp, subslab_t *sp,
 		}
 		j--;
 		k--;
+	}
+
+	return (0);
+}
+
+#define FOLDL	0
+#define FOLDR	1
+typedef struct fold_info {
+	slablist_t	*fi_sl;
+	uint8_t		fi_started;
+	selem_t		fi_first;
+	selem_t		fi_last;
+	int		fi_dir;
+	uint64_t	fi_touched;
+	selem_t		fi_min;
+	selem_t		fi_max;
+} fold_info_t;
+
+selem_t
+test_foldr_range_cb(selem_t z, selem_t *e, uint64_t sz)
+{
+	fold_info_t *fi = z.sle_p;
+	slablist_t *sl = fi->fi_sl;
+	uint64_t i = 0;
+	while (i < sz) {
+		if (sl->sl_bnd_elem(e[i], fi->fi_min, fi->fi_max) == 0) {
+			if (!(fi->fi_started)) {
+				fi->fi_started = 1;
+				fi->fi_first = e[i];
+			}
+			fi->fi_touched++;
+			fi->fi_last = e[i];
+		}
+		i++;
+	}
+	return (z);
+}
+
+int
+test_slablist_foldr_range(slablist_t *sl, selem_t min, selem_t max)
+{
+	fold_info_t f1;
+	fold_info_t f2;
+	bzero(&f1, sizeof (fold_info_t));
+	bzero(&f2, sizeof (fold_info_t));
+	f1.fi_dir = FOLDR;
+	f2.fi_dir = FOLDR;
+	f1.fi_sl = sl;
+	f2.fi_sl = sl;
+	f1.fi_min = min;
+	f1.fi_max = max;
+	f2.fi_min = min;
+	f2.fi_max = max;
+	selem_t sf1;
+	selem_t sf2;
+	sf1.sle_p = &f1;
+	sf2.sle_p = &f2;
+
+	slablist_foldr(sl, test_foldr_range_cb, sf1);
+	slablist_foldr_range_impl(sl, test_foldr_range_cb, min, max, sf2);
+
+	if (f1.fi_first.sle_u != f2.fi_first.sle_u) {
+		return (E_TEST_FOLD_RANGE_FIRST);
+	} else if (f1.fi_last.sle_u != f2.fi_last.sle_u) {
+		return (E_TEST_FOLD_RANGE_LAST);
+	} else if (f1.fi_touched != f2.fi_touched) {
+		return (E_TEST_FOLD_RANGE_TOUCHED);
+	}
+
+	return (0);
+}
+
+selem_t
+test_foldl_range_cb(selem_t z, selem_t *e, uint64_t sz)
+{
+	fold_info_t *fi = z.sle_p;
+	int64_t i = (int64_t)sz - 1;
+	while (i >= 0) {
+		if (!(fi->fi_started)) {
+			fi->fi_started = 1;
+			fi->fi_first = e[i];
+		}
+		fi->fi_touched++;
+		fi->fi_last = e[i];
+		i--;
+	}
+	return (z);
+}
+
+int
+test_slablist_foldl_range(slablist_t *sl, selem_t min, selem_t max)
+{
+	fold_info_t f1;
+	fold_info_t f2;
+	bzero(&f1, sizeof (fold_info_t));
+	bzero(&f2, sizeof (fold_info_t));
+	f1.fi_dir = FOLDL;
+	f2.fi_dir = FOLDL;
+	f1.fi_sl = sl;
+	f2.fi_sl = sl;
+	selem_t sf1;
+	selem_t sf2;
+	sf1.sle_p = &f1;
+	sf2.sle_p = &f2;
+
+	slablist_foldl(sl, test_foldl_range_cb, sf1);
+	slablist_foldl_range_impl(sl, test_foldl_range_cb, min, max, sf2);
+
+	if (f1.fi_first.sle_u != f2.fi_first.sle_u) {
+		return (E_TEST_FOLD_RANGE_FIRST);
+	} else if (f1.fi_last.sle_u != f2.fi_last.sle_u) {
+		return (E_TEST_FOLD_RANGE_LAST);
+	} else if (f1.fi_touched != f2.fi_touched) {
+		return (E_TEST_FOLD_RANGE_TOUCHED);
 	}
 
 	return (0);

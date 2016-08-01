@@ -1075,6 +1075,24 @@ extern "C" {
 #define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() \
 	__dtraceenabled_slablist___test_find_bubble_up(0)
 #endif
+#define	SLABLIST_TEST_FOLDL_RANGE(arg0) \
+	__dtrace_slablist___test_foldl_range(arg0)
+#ifndef	__sparc
+#define	SLABLIST_TEST_FOLDL_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_foldl_range()
+#else
+#define	SLABLIST_TEST_FOLDL_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_foldl_range(0)
+#endif
+#define	SLABLIST_TEST_FOLDR_RANGE(arg0) \
+	__dtrace_slablist___test_foldr_range(arg0)
+#ifndef	__sparc
+#define	SLABLIST_TEST_FOLDR_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_foldr_range()
+#else
+#define	SLABLIST_TEST_FOLDR_RANGE_ENABLED() \
+	__dtraceenabled_slablist___test_foldr_range(0)
+#endif
 #define	SLABLIST_TEST_GET_ELEM_POS(arg0, arg1, arg2, arg3, arg4) \
 	__dtrace_slablist___test_get_elem_pos(arg0, arg1, arg2, arg3, arg4)
 #ifndef	__sparc
@@ -2001,6 +2019,18 @@ extern int __dtraceenabled_slablist___test_find_bubble_up(void);
 #else
 extern int __dtraceenabled_slablist___test_find_bubble_up(long);
 #endif
+extern void __dtrace_slablist___test_foldl_range(int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_foldl_range(void);
+#else
+extern int __dtraceenabled_slablist___test_foldl_range(long);
+#endif
+extern void __dtrace_slablist___test_foldr_range(int);
+#ifndef	__sparc
+extern int __dtraceenabled_slablist___test_foldr_range(void);
+#else
+extern int __dtraceenabled_slablist___test_foldr_range(long);
+#endif
 extern void __dtrace_slablist___test_get_elem_pos(int, slab_t *, slab_t *, uint64_t, uint64_t);
 #ifndef	__sparc
 extern int __dtraceenabled_slablist___test_get_elem_pos(void);
@@ -2384,6 +2414,10 @@ extern int __dtraceenabled_slablist___unlink_subslab(long);
 #define	SLABLIST_TEST_BREAD_CRUMBS_ENABLED() (0)
 #define	SLABLIST_TEST_FIND_BUBBLE_UP(arg0, arg1, arg2, arg3, arg4)
 #define	SLABLIST_TEST_FIND_BUBBLE_UP_ENABLED() (0)
+#define	SLABLIST_TEST_FOLDL_RANGE(arg0)
+#define	SLABLIST_TEST_FOLDL_RANGE_ENABLED() (0)
+#define	SLABLIST_TEST_FOLDR_RANGE(arg0)
+#define	SLABLIST_TEST_FOLDR_RANGE_ENABLED() (0)
 #define	SLABLIST_TEST_GET_ELEM_POS(arg0, arg1, arg2, arg3, arg4)
 #define	SLABLIST_TEST_GET_ELEM_POS_ENABLED() (0)
 #define	SLABLIST_TEST_IS_SLAB_LIST(arg0)

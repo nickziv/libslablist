@@ -18,7 +18,7 @@
  * CDDL HEADER END
  */
 /*
- * Copyright 2012 Nicholas Zivkovic. All rights reserved.
+ * Copyright 2016 Nicholas Zivkovic. All rights reserved.
  * Use is subject to license terms.
  */
 
@@ -872,16 +872,17 @@ slablist_fold_range_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 
 	int i = 0;
 	int j = nodes - 1;
-	while (i < nodes && sl->sl_cmp_elem(elems[i], min) < 0) {
+	int b = 0;
+	while (i < nodes && (b = sl->sl_bnd_elem(elems[i], min, max)) != 0) {
 		i++;
 	}
-	while (j >= 0 && sl->sl_cmp_elem(elems[j], max) > 0) {
+	if (b != 0) {
+		return (accumulator);
+	}
+	while (j >= 0 && (b = sl->sl_bnd_elem(elems[j], min, max)) != 0) {
 		j--;
 	}
-	/*
-	 * We couldn't find the appropriate range.
-	 */
-	if (j < i) {
+	if (b != 0) {
 		return (accumulator);
 	}
 	nodes = j - i + 1;
@@ -953,8 +954,8 @@ slablist_foldl(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 }
 
 slablist_elem_t
-slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
-    slablist_elem_t max, slablist_elem_t zero)
+slablist_foldr_range_impl(slablist_t *sl, slablist_fold_t f,
+    slablist_elem_t min, slablist_elem_t max, slablist_elem_t zero)
 {
 	if (sl->sl_elems == 0) {
 		return (zero);
@@ -1007,6 +1008,20 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	i = slab_bin_srch(min, smin);
 	if (sl->sl_bnd_elem(slab->s_arr[i], min, max) == 0) {
 		accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+	} else {
+		if (i >= (smin->s_elems - 1)) {
+			smin = smin->s_next;
+			if (smin != NULL) {
+				i = 0;
+			} else {
+				return (zero);
+			}
+		} else {
+			i++;
+		}
+		if (sl->sl_bnd_elem(smin->s_arr[i], min, max) != 0) {
+			return (zero);
+		}
 	}
 	slab = slab->s_next;
 	while (slab != smax) {
@@ -1014,22 +1029,33 @@ slablist_foldr_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 		slab = slab->s_next;
 	}
 	i = slab_bin_srch(max, slab);
-		if (i == slab->s_elems) {
-			i--;
-		}
+	if (i == slab->s_elems) {
+		i--;
+	}
 	if (sl->sl_bnd_elem(slab->s_arr[i], min, max) == 0) {
-		accumulator = f(accumulator, (slab->s_arr)+i, (slab->s_elems)-i);
+		accumulator = f(accumulator, slab->s_arr, (slab->s_elems)-i);
 	} else {
 		if (i > 0) {
 			i--;
-			accumulator = f(accumulator, (slab->s_arr)+i, i+1);
+			accumulator = f(accumulator, slab->s_arr, i+1);
 		}
 	}
 	return (accumulator);
 }
 
 slablist_elem_t
-slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
+slablist_foldr_range(slablist_t *sl, slablist_fold_t f,
+    slablist_elem_t min, slablist_elem_t max, slablist_elem_t zero)
+{
+	if (SLABLIST_TEST_FOLDR_RANGE_ENABLED()) {
+		int res = test_slablist_foldr_range(sl, min, max);
+		SLABLIST_TEST_FOLDR_RANGE(res);
+	}
+	return (slablist_foldr_range_impl(sl, f, min, max, zero));
+}
+
+slablist_elem_t
+slablist_foldl_range_impl(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
     slablist_elem_t max, slablist_elem_t zero)
 {
 	slablist_elem_t accumulator = zero;
@@ -1066,4 +1092,77 @@ slablist_foldl_range(slablist_t *sl, slablist_fold_t f, slablist_elem_t min,
 	i = slab_bin_srch(min, slab);
 	accumulator = f(accumulator, slab->s_arr+i, slab->s_elems - i);
 	return (accumulator);
+}
+
+slablist_elem_t
+slablist_foldl_range(slablist_t *sl, slablist_fold_t f,
+    slablist_elem_t min, slablist_elem_t max, slablist_elem_t zero)
+{
+	if (SLABLIST_TEST_FOLDL_RANGE_ENABLED()) {
+		int res = test_slablist_foldl_range(sl, min, max);
+		SLABLIST_TEST_FOLDL_RANGE(res);
+	}
+	return (slablist_foldl_range_impl(sl, f, min, max, zero));
+}
+
+/*
+ * Returns 0 if 2 lists are equivalent, 1 if not.
+ */
+int
+slablist_cmp(slablist_t *sl1, slablist_t *sl2)
+{
+	if (sl1->sl_elems != sl2->sl_elems) {
+		return (1);
+	}
+
+	uint64_t i = 0;
+	if (sl1->sl_elems <= SMELEM_MAX) {
+		small_list_t *n1 = NULL;
+		small_list_t *n2 = NULL;
+		n1 = sl1->sl_head;
+		n2 = sl2->sl_head;
+		selem_t e1;
+		selem_t e2;
+		while (i < sl1->sl_elems) {
+			e1 = n1->sml_data;
+			e2 = n2->sml_data;
+			if (sl1->sl_cmp_elem(e1, e2)) {
+				return (1);
+			}
+			n1 = n1->sml_next;
+			n2 = n2->sml_next;
+			i++;
+		}
+		return (0);
+	}
+
+
+	slab_t *s1 = NULL;
+	slab_t *s2 = NULL;
+	s1 = sl1->sl_head;
+	s2 = sl2->sl_head;
+	selem_t e1;
+	selem_t e2;
+	uint64_t i1 = 0;
+	uint64_t i2 = 0;
+	while (i < sl1->sl_elems) {
+		e1.sle_u = s1->s_arr[i1].sle_u;
+		e2.sle_u = s1->s_arr[i2].sle_u;
+		i1++;
+		i2++;
+		if (sl1->sl_cmp_elem(e1, e2)) {
+			return (1);
+		}
+		if (i1 == s1->s_elems) {
+			i1 = 0;
+			s1 = s1->s_next;
+		}
+		if (i2 == s2->s_elems) {
+			i2 = 0;
+			s2 = s2->s_next;
+		}
+		i++;
+	}
+	return (0);
+
 }

@@ -18,7 +18,7 @@
  * CDDL HEADER END
  */
 /*
- * Copyright 2012 Nicholas Zivkovic. All rights reserved.
+ * Copyright 2016 Nicholas Zivkovic. All rights reserved.
  * Use is subject to license terms.
  */
 
@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <strings.h>
 #include <stdio.h>
 #include "slablist_impl.h"
 #include "slablist_provider.h"
