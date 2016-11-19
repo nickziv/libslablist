@@ -829,7 +829,9 @@ slablist_elem_t
 slablist_fold_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 {
 	uint64_t nodes = sl->sl_elems;
+	ASSERT(nodes <= SMELEM_MAX);
 	uint64_t node = 0;
+	ASSERT(node < nodes);
 	small_list_t *s = (small_list_t *)sl->sl_head;
 	slablist_elem_t accumulator = zero;
 	/*
@@ -843,6 +845,7 @@ slablist_fold_sml(slablist_t *sl, slablist_fold_t f, slablist_elem_t zero)
 		s = s->sml_next;
 		node++;
 	}
+	ASSERT(f != NULL);
 	accumulator = f(accumulator, elems, nodes);
 	return (accumulator);
 }

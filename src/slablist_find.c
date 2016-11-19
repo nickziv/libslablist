@@ -1272,6 +1272,15 @@ slablist_find(slablist_t *sl, slablist_elem_t key, slablist_elem_t *found)
 		}
 
 		i = slab_bin_srch(key, potential);
+		/*
+		 * If we find an insertion point, we skip the comparison and
+		 * return ENFOUND. It makes no sense to force cmp_elem to
+		 * compare something that wasn't inserted into the list by the
+		 * user. Which would be a 0-valued number, most likely.
+		 */
+		if (i == potential->s_elems) {
+			return (SL_ENFOUND);
+		}
 		ret = potential->s_arr[i];
 
 		*found  = ret;

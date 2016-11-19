@@ -34,8 +34,10 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <strings.h>
+#include <assert.h>
 #include "slablist.h"
 
+#define ASSERT(x) assert(x)
 
 /*
  * These are not currently used, but may be used in the future.
