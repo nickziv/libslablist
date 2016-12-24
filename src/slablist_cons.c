@@ -1036,7 +1036,7 @@ slablist_foldr_range_impl(slablist_t *sl, slablist_fold_t f,
 		i--;
 	}
 	if (sl->sl_bnd_elem(slab->s_arr[i], min, max) == 0) {
-		accumulator = f(accumulator, slab->s_arr, (slab->s_elems)-i);
+		accumulator = f(accumulator, slab->s_arr, i + 1);
 	} else {
 		if (i > 0) {
 			i--;
